@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\journal-entries\JournalEntryFormPage.vue-->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-24">
     <div
@@ -84,6 +85,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/authStore'
 
 import { useJournalEntryStore } from '@/modules/accounting/stores/journalEntryStore'
 import { useAccountStore } from '@/modules/accounting/stores/accountStore'
@@ -105,6 +107,7 @@ const costCenterStore = useCostCenterStore()
 const currencyStore = useCurrencyStore()
 const fiscalYearStore = useFiscalYearStore()
 
+const authStore = useAuthStore()
 const isEditMode = computed(() => !!route.params.id)
 const isSaving = ref(false)
 const isLoadingData = ref(false)
@@ -132,8 +135,17 @@ const fetchRequiredData = async () => {
 
   await Promise.all(promises)
 
-  if (!isEditMode.value && currencyStore.baseCurrency) {
-    form.value.currency_id = currencyStore.baseCurrency.id
+  // حالة "إنشاء قيد جديد" (ليس تعديلاً)
+  if (!isEditMode.value) {
+    // 1. العملة الافتراضية
+    if (currencyStore.baseCurrency) {
+      form.value.currency_id = currencyStore.baseCurrency.id
+    }
+
+    // 2. 🌟 السحر هنا: مركز التكلفة الافتراضي للمستخدم
+    if (authStore.user && authStore.user.default_cost_center_id) {
+      form.value.cost_center_id = authStore.user.default_cost_center_id
+    }
   }
 }
 

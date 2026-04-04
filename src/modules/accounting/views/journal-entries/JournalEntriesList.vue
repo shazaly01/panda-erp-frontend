@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\journal-entries\JournalEntriesList.vue-->
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">

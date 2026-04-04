@@ -6,6 +6,11 @@ import { useAuthStore } from '@/stores/authStore'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import AuthLayout from '@/components/layout/AuthLayout.vue'
 
+// 1. تأكد أولاً من استيراد المكونات في الأعلى (إذا لم تكن مستوردة)
+const UsersList = () => import('@/views/users/UsersList.vue')
+const RolesList = () => import('@/views/roles/RolesList.vue')
+const BackupsList = () => import('@/views/settings/BackupsList.vue')
+
 // --- استيراد الصفحات الأساسية ---
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
@@ -49,6 +54,24 @@ const routes = [
       // ...hrRoutes,
       // ...inventoryRoutes,
 
+      {
+        path: 'users',
+        name: 'UsersList',
+        component: UsersList,
+        meta: { permission: 'user.view' },
+      },
+      {
+        path: 'roles',
+        name: 'RolesList',
+        component: RolesList,
+        meta: { permission: 'role.view' },
+      },
+      {
+        path: 'settings/backups',
+        name: 'BackupsList',
+        component: BackupsList,
+        meta: { permission: 'backup.view' },
+      },
       // إعادة توجيه المسار الرئيسي للتطبيق إلى لوحة التحكم
       { path: '', redirect: '/app/dashboard' },
     ],

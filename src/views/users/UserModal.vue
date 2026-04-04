@@ -1,16 +1,15 @@
-<!-- src/views/users/UserModal.vue -->
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"
     @click.self="close"
   >
     <div
-      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-lg transform transition-all duration-300 scale-95"
-      :class="{ 'scale-100': isOpen }"
+      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-4xl transform transition-all duration-300"
+      :class="isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'"
     >
       <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-        <h3 class="text-lg font-semibold text-text-primary">{{ title }}</h3>
+        <h3 class="text-lg font-bold text-text-primary">{{ title }}</h3>
         <button
           @click="close"
           class="text-text-muted hover:text-text-primary text-2xl leading-none"

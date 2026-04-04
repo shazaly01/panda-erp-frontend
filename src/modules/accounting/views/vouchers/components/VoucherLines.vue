@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\vouchers\components\VoucherLines.vue-->
 <template>
   <div
     class="bg-surface-section rounded-xl border border-surface-border mb-6 shadow-sm flex flex-col"

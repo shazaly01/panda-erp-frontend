@@ -215,13 +215,16 @@ const selectedCurrencyCode = computed(() => {
 watch(
   () => props.modelValue,
   (newVal) => {
-    if (newVal.bank_account_id) {
+    // 🌟 التعديل هنا: فحص الافتراضيات لتحديد نوع الدفع
+    if (newVal.bank_account_id && !newVal.box_id) {
+      // إذا كان الموظف لديه بنك افتراضي فقط (أو تم اختيار بنك)
       localPaymentMethod.value = 'bank'
     } else if (newVal.box_id) {
+      // إذا كان لديه خزينة افتراضية (نجعلها الأولوية لأنها الأكثر شيوعاً)
       localPaymentMethod.value = 'box'
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true }, // 👈 إضافة deep مهمة لالتقاط التغييرات الداخلية
 )
 
 // معالجة تغيير طريقة الدفع

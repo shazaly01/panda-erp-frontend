@@ -1,13 +1,10 @@
-<!-- src/views/users/UsersList.vue -->
 <template>
   <div>
-    <!-- رأس الصفحة -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-800 dark:text-text-primary">إدارة المستخدمين</h1>
       <AppButton @click="openUserModal()"> إضافة مستخدم </AppButton>
     </div>
 
-    <!-- جدول عرض المستخدمين -->
     <AppCard>
       <AppTable
         :headers="tableHeaders"
@@ -15,7 +12,6 @@
         :is-loading="loading"
         @row-click="openUserModal"
       >
-        <!-- تخصيص عرض خلية الدور -->
         <template #cell-role="{ item }">
           <span
             v-if="item.roles && item.roles.length > 0"
@@ -26,20 +22,18 @@
           <span v-else class="text-text-muted"> لا يوجد دور </span>
         </template>
 
-        <!-- تخصيص عرض خلية الإجراءات -->
         <template #cell-actions="{ item }">
           <div class="flex justify-end space-x-4 space-x-reverse">
             <button
               @click.stop="openUserModal(item)"
-              class="font-semibold text-blue-500 hover:text-blue-700"
+              class="font-semibold text-blue-500 hover:text-blue-700 transition-colors"
             >
               تعديل
             </button>
-            <!-- منع حذف المستخدم الذي يحمل دور Super Admin -->
             <button
               v-if="!hasSuperAdminRole(item)"
               @click.stop="openDeleteDialog(item)"
-              class="font-semibold text-danger hover:text-red-700"
+              class="font-semibold text-danger hover:text-red-700 transition-colors"
             >
               حذف
             </button>
@@ -50,7 +44,6 @@
       <AppPagination :meta="pagination" @page-change="handlePageChange" />
     </AppCard>
 
-    <!-- نافذة الإضافة والتعديل -->
     <UserModal
       v-model="isModalOpen"
       :user="selectedUser"
@@ -58,7 +51,6 @@
       @save="handleSaveUser"
     />
 
-    <!-- حوار تأكيد الحذف -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف المستخدم"
@@ -87,7 +79,7 @@ const userStore = useUserStore()
 const { users, loading, pagination } = storeToRefs(userStore)
 const toast = useToast()
 
-// تعريف أعمدة الجدول
+// تعريف أعمدة الجدول (بقيت كما هي، الافتراضيات تظهر فقط داخل الـ Modal)
 const tableHeaders = [
   { key: 'id', label: '#' },
   { key: 'full_name', label: 'الاسم الكامل' },
@@ -124,6 +116,9 @@ const openUserModal = (user = null) => {
     toast.info('لا يمكن تعديل مستخدم Super Admin.')
     return
   }
+
+  // ملاحظة: الـ user هنا سيحتوي تلقائياً على default_cost_center_id وغيرها
+  // لأننا أضفناها في UserResource.php في الباك إند
   selectedUser.value = user
   isModalOpen.value = true
 }
@@ -138,9 +133,11 @@ const handleSaveUser = async (formData) => {
       await userStore.createUser(formData)
       toast.success(`تمت إضافة المستخدم '${formData.full_name}' بنجاح.`)
     }
-    await userStore.fetchUsers(pagination.value.current_page)
+    // تحديث القائمة بعد الحفظ لضمان مزامنة البيانات الجديدة
+    await userStore.fetchUsers(pagination.value.current_page || 1)
     isModalOpen.value = false
   } catch (error) {
+    // التقاط رسائل الخطأ التفصيلية من الباك إند (مثل خطأ الـ Validation)
     const message = error.response?.data?.message || 'حدث خطأ أثناء حفظ البيانات.'
     toast.error(message)
   } finally {
@@ -161,13 +158,15 @@ const deleteSelectedUser = async () => {
   if (userToDelete.value) {
     try {
       await userStore.deleteUser(userToDelete.value.id)
-      // لا نحتاج لـ fetch هنا لأن الـ store يقوم بالفلترة
       toast.success(`تم حذف المستخدم '${userToDelete.value.full_name}' بنجاح.`)
+      // يفضل إعادة الجلب للتأكد من ترقيم الصفحات الصحيح بعد الحذف
+      await userStore.fetchUsers(pagination.value.current_page || 1)
     } catch (error) {
       const message = error.response?.data?.message || 'حدث خطأ أثناء محاولة الحذف.'
       toast.error(message)
     } finally {
       userToDelete.value = null
+      isDeleteDialogOpen.value = false
     }
   }
 }

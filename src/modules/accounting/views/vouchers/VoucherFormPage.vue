@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\vouchers\VoucherFormPage.vue-->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-24">
     <div v-if="isLoadingData" class="flex justify-center items-center py-20">
@@ -67,7 +68,7 @@ import { useCurrencyStore } from '@/modules/accounting/stores/currencyStore'
 import { useAccountStore } from '@/modules/accounting/stores/accountStore'
 import { useCostCenterStore } from '@/modules/accounting/stores/costCenterStore'
 import { useFiscalYearStore } from '@/modules/accounting/stores/fiscalYearStore'
-
+import { useAuthStore } from '@/stores/authStore'
 import AppButton from '@/components/ui/AppButton.vue'
 import VoucherHeader from './components/VoucherHeader.vue'
 import VoucherLines from './components/VoucherLines.vue'
@@ -90,6 +91,7 @@ const currencyStore = useCurrencyStore()
 const accountStore = useAccountStore()
 const costCenterStore = useCostCenterStore()
 const fiscalYearStore = useFiscalYearStore()
+const authStore = useAuthStore()
 
 const isEditMode = computed(() => !!route.params.id)
 const isSaving = ref(false)
@@ -114,7 +116,7 @@ const form = ref({
   amount: 0,
   payee_name: '',
   description: '',
-  details: [{ _key: 1, account_id: '', cost_center_id: '', amount: 0, description: '' }],
+  details: [],
 })
 
 // الفروع هي نفسها مراكز التكلفة النشطة
@@ -137,8 +139,35 @@ const fetchRequiredData = async () => {
   await Promise.all(promises)
 
   if (!isEditMode.value) {
-    if (currencyStore.baseCurrency) form.value.currency_id = currencyStore.baseCurrency.id
-    if (branches.value.length > 0) form.value.branch_id = branches.value[0].id
+    // 1. العملة الافتراضية
+    if (currencyStore.baseCurrency) {
+      form.value.currency_id = currencyStore.baseCurrency.id
+    }
+
+    // 2. 🌟 حقن الافتراضيات الذكية من بيانات المستخدم
+    if (authStore.user) {
+      // حقن مركز التكلفة (الفرع) الافتراضي
+      if (authStore.user.default_cost_center_id) {
+        form.value.branch_id = authStore.user.default_cost_center_id
+        // تعيينه للسطر الأول الافتراضي أيضاً
+        if (form.value.details.length > 0) {
+          form.value.details[0].cost_center_id = authStore.user.default_cost_center_id
+        }
+      } else if (branches.value.length > 0) {
+        // حالة احتياطية: إذا لم يكن لديه فرع افتراضي، اختر الأول
+        form.value.branch_id = branches.value[0].id
+      }
+
+      // حقن الخزينة الافتراضية
+      if (authStore.user.default_box_id) {
+        form.value.box_id = authStore.user.default_box_id
+      }
+
+      // حقن الحساب البنكي الافتراضي
+      if (authStore.user.default_bank_account_id) {
+        form.value.bank_account_id = authStore.user.default_bank_account_id
+      }
+    }
   }
 }
 

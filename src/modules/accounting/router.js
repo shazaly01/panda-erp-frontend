@@ -18,6 +18,9 @@ const JournalEntryFormPage = () => import('./views/journal-entries/JournalEntryF
 
 // --- استيراد شاشات التقارير ---
 const AccountStatement = () => import('./views/reports/AccountStatement.vue')
+const TrialBalance = () => import('./views/reports/TrialBalance.vue')
+const IncomeStatement = () => import('./views/reports/IncomeStatement.vue')
+const BalanceSheet = () => import('./views/reports/BalanceSheet.vue')
 
 export default [
   {
@@ -71,6 +74,25 @@ export default [
         // ملاحظة: لن نستخدم props هنا، لأن الشاشة ستقرأ الفلاتر مباشرة من route.query
       },
 
+      {
+        path: 'reports/trial-balance',
+        name: 'trial-balance.index',
+        component: TrialBalance,
+        meta: { permission: 'report.trial_balance.view' },
+      },
+      {
+        path: 'reports/income-statement',
+        name: 'income-statement.index',
+        component: IncomeStatement,
+        meta: { permission: 'report.income_statement.view' },
+      },
+
+      {
+        path: 'reports/balance-sheet',
+        name: 'balance-sheet.index',
+        component: BalanceSheet,
+        meta: { permission: 'report.balance_sheet.view' },
+      },
       // ==========================================
       // مسارات سندات القبض (Receipts)
       // ==========================================

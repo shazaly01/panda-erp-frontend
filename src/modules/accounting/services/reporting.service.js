@@ -5,20 +5,36 @@ const resource = '/accounting/reports'
 
 export default {
   /**
-   * كشف حساب (محدث ليدعم الترجمة الذكية للكيانات)
-   * @param {Object} params - { from_date, to_date, target_type, target_id, cost_center_id }
+   * 1. كشف حساب تفصيلي (Account Statement / Ledger)
+   * @param {Object} params - { from_date, to_date, target_type, target_id, cost_center_id, include_drafts }
    */
   getAccountStatement(params) {
     return apiClient.get(`${resource}/account-statement`, { params })
   },
 
-  // ميزان مراجعة (يُترك كما هو للمستقبل)
+  /**
+   * 2. ميزان المراجعة (Trial Balance)
+   * يعتمد على تاريخ التوقف (as_of_date) لأنه تقرير أرصدة تراكمية
+   * @param {Object} params - { as_of_date, include_drafts }
+   */
   getTrialBalance(params) {
-    // params: { start_date, end_date }
     return apiClient.get(`${resource}/trial-balance`, { params })
   },
 
-  // مستقبلاً: قائمة الدخل والميزانية العمومية
+  /**
+   * 3. قائمة الدخل - الأرباح والخسائر (Income Statement)
+   * تعتمد على فترة محددة لأنها تقيس نشاط الشركة خلال هذه الفترة
+   * @param {Object} params - { from_date, to_date, include_drafts }
+   */
+  getIncomeStatement(params) {
+    return apiClient.get(`${resource}/income-statement`, { params })
+  },
+
+  /**
+   * 4. الميزانية العمومية - المركز المالي (Balance Sheet)
+   * تعتمد على تاريخ التوقف (as_of_date) لأنها تمثل لقطة للمركز المالي في لحظة معينة
+   * @param {Object} params - { as_of_date, include_drafts }
+   */
   getBalanceSheet(params) {
     return apiClient.get(`${resource}/balance-sheet`, { params })
   },
