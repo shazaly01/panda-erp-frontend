@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
@@ -75,6 +75,7 @@ const { bankAccounts, pagination, loading, allowedAccounts } = storeToRefs(bankA
 // -- حالة الفلاتر والبحث --
 const searchQuery = ref('')
 const statusFilter = ref('')
+
 let searchTimeout = null
 
 const onSearch = () => {
@@ -175,4 +176,15 @@ const deleteSelected = async () => {
     }
   }
 }
+
+watch(
+  [searchQuery, statusFilter],
+  () => {
+    bankAccountStore.fetchBankAccounts({
+      searchQuery: searchQuery.value,
+      statusFilter: statusFilter.value,
+    })
+  },
+  { debounce: 500 },
+) // أضفنا debounce لكي لا يرهق السيرفر مع كل حرف يكتبه المستخدم
 </script>

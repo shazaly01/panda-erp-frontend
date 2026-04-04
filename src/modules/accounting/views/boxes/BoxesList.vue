@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\boxes\BoxesList.vue-->
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
@@ -50,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
@@ -92,8 +93,8 @@ const onSearch = () => {
 const handlePageChange = async (page = 1) => {
   const filters = {
     page,
-    search: searchQuery.value,
-    is_active: statusFilter.value,
+    searchQuery: searchQuery.value, // ✅ تعديل الاسم
+    statusFilter: statusFilter.value, // ✅ تعديل الاسم
   }
 
   try {
@@ -188,4 +189,15 @@ const deleteSelected = async () => {
     }
   }
 }
+
+watch(
+  [searchQuery, statusFilter],
+  () => {
+    boxStore.fetchBankAccounts({
+      searchQuery: searchQuery.value,
+      statusFilter: statusFilter.value,
+    })
+  },
+  { debounce: 500 },
+)
 </script>

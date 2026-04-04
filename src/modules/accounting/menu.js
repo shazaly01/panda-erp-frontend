@@ -71,7 +71,7 @@ export default [
     permission: 'accounting.view',
     children: [
       {
-        name: 'الدليل المحاسبي',
+        name: 'شجرة الحسابات',
         routeName: 'AccountsList',
         permission: 'account.view',
       },

@@ -10,7 +10,7 @@
         />
       </div>
 
-      <div class="w-full md:w-64">
+      <!-- <div class="w-full md:w-64">
         <AppDropdown
           :model-value="statusFilter"
           :options="[
@@ -20,7 +20,7 @@
           ]"
           @update:model-value="$emit('update:statusFilter', $event)"
         />
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

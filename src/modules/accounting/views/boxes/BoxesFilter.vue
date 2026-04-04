@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\boxes\BoxesFilter.vue-->
 <template>
   <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6">
     <div class="flex flex-col md:flex-row gap-4">

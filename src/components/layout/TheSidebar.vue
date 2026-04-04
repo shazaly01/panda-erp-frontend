@@ -5,7 +5,7 @@
     <div class="flex h-16 items-center justify-between px-5 flex-shrink-0">
       <RouterLink :to="{ name: 'Dashboard' }" class="flex items-center gap-2">
         <img src="/MainLogo2.png" alt="Project Logo" class="w-8 h-8 rounded-md" />
-        <h1 class="text-xl font-bold text-text-primary">نظام الـ ERP</h1>
+        <h1 class="text-xl font-bold text-text-primary">باندا الشامل</h1>
       </RouterLink>
       <button
         @click="$emit('close-sidebar')"
@@ -164,7 +164,7 @@ const handleLogout = async () => {
 .nav-link:hover {
   @apply bg-surface-border text-text-primary;
 }
-.router-link-exact-active {
+.nav-link.router-link-exact-active {
   @apply bg-gradient-to-b from-primary-light to-primary-dark text-white;
   --tw-shadow-color: theme('colors.primary.DEFAULT');
   --tw-shadow: 0 4px 14px 0 var(--tw-shadow-color);
