@@ -1,3 +1,4 @@
+<!--src\components\layout\TheSidebar.vue-->
 <template>
   <aside
     class="flex h-full flex-col bg-surface-section border-l border-surface-border lg:border-l-0 lg:border-r"
@@ -97,7 +98,14 @@ const route = useRoute()
 // ==========================================
 // استخدام القائمة المستوردة بدلاً من كتابتها هنا
 // ==========================================
-const allNavLinks = ref(appMenus)
+import { useAppStore } from '@/stores/appStore' // 1. استدعاء الستور
+
+const appStore = useAppStore() // 2. التهيئة
+
+// 3. جعل allNavLinks تتغير آلياً عندما يضغط المستخدم على زر المبدل في الأعلى
+const allNavLinks = computed(() => {
+  return appMenus[appStore.activeModule] || []
+})
 
 // باقي المنطق الخاص بك ممتاز ولم نمسه!
 const isGroupActive = (group) => {

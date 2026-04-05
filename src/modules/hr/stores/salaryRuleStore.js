@@ -1,0 +1,113 @@
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import salaryRuleService from '../services/salaryRule.service'
+
+export const useSalaryRuleStore = defineStore('hrSalaryRule', () => {
+  // ==========================
+  // 1. State
+  // ==========================
+  const rules = ref([])
+  const singleRule = ref(null)
+  const pagination = ref({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 15,
+  })
+
+  const loading = ref(false)
+  const error = ref(null)
+
+  // ==========================
+  // 2. Actions
+  // ==========================
+
+  async function fetchRules(filters = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await salaryRuleService.get(filters)
+      rules.value = response.data.data
+      if (response.data.meta) {
+        pagination.value = response.data.meta
+      }
+    } catch (err) {
+      error.value = 'فشل تحميل قائمة قواعد الرواتب'
+      console.error(err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchRuleById(id) {
+    loading.value = true
+    error.value = null
+    singleRule.value = null
+    try {
+      const response = await salaryRuleService.find(id)
+      singleRule.value = response.data.data
+      return singleRule.value
+    } catch (err) {
+      error.value = 'فشل جلب تفاصيل القاعدة'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createRule(payload) {
+    loading.value = true
+    error.value = null
+    try {
+      await salaryRuleService.create(payload)
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل إضافة قاعدة الراتب'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateRule(id, payload) {
+    loading.value = true
+    error.value = null
+    try {
+      await salaryRuleService.update(id, payload)
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل تحديث قاعدة الراتب'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteRule(id) {
+    loading.value = true
+    error.value = null
+    try {
+      await salaryRuleService.delete(id)
+      rules.value = rules.value.filter((rule) => rule.id !== id)
+      pagination.value.total -= 1
+    } catch (err) {
+      error.value =
+        err.response?.data?.message || 'لا يمكن حذف القاعدة (مستخدمة في هياكل رواتب حالية)'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    rules,
+    singleRule,
+    pagination,
+    loading,
+    error,
+
+    fetchRules,
+    fetchRuleById,
+    createRule,
+    updateRule,
+    deleteRule,
+  }
+})

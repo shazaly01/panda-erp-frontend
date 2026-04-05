@@ -1,3 +1,4 @@
+<!--src\components\layout\AppLayout.vue-->
 <template>
   <div class="h-screen bg-surface-ground text-text-primary">
     <!-- القائمة الجانبية للهاتف (منبثقة) - تبقى كما هي لأنها تستخدم position: fixed -->

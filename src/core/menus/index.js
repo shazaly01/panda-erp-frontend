@@ -6,44 +6,45 @@ import {
   CircleStackIcon,
   Cog6ToothIcon,
 } from '@heroicons/vue/24/outline'
+
 import accountingMenu from '@/modules/accounting/menu'
+// import hrMenu from '@/modules/hr/menu' // سنقوم بتفعيلها بعد قليل
 
-export const appMenus = [
-  // 1. لوحة التحكم
-  {
-    name: 'لوحة التحكم',
-    routeName: 'Dashboard',
-    icon: HomeIcon,
-    permission: 'dashboard.view',
-  },
+// عناصر مشتركة نريد إظهارها في جميع القوائم الجانبية
+const commonDashboard = {
+  name: 'لوحة التحكم',
+  routeName: 'Dashboard',
+  icon: HomeIcon,
+  permission: 'dashboard.view',
+}
 
-  // 2. موديول المحاسبة (نثر المصفوفة)
-  ...accountingMenu,
+const systemSettings = {
+  name: 'إدارة النظام',
+  icon: Cog6ToothIcon,
+  permission: 'user.view',
+  children: [
+    { name: 'المستخدمين', routeName: 'UsersList', icon: UsersIcon, permission: 'user.view' },
+    {
+      name: 'الأدوار والصلاحيات',
+      routeName: 'RolesList',
+      icon: ShieldCheckIcon,
+      permission: 'role.view',
+    },
+    {
+      name: 'النسخ الاحتياطي',
+      routeName: 'BackupsList',
+      icon: CircleStackIcon,
+      permission: 'backup.view',
+    },
+  ],
+}
 
-  // 3. 🌟 قسم إدارة النظام (الجديد)
-  {
-    name: 'إدارة النظام',
-    icon: Cog6ToothIcon,
-    permission: 'user.view', // تظهر إذا كان يملك صلاحية عرض المستخدمين
-    children: [
-      {
-        name: 'المستخدمين',
-        routeName: 'UsersList',
-        icon: UsersIcon,
-        permission: 'user.view',
-      },
-      {
-        name: 'الأدوار والصلاحيات',
-        routeName: 'RolesList',
-        icon: ShieldCheckIcon,
-        permission: 'role.view',
-      },
-      {
-        name: 'النسخ الاحتياطي',
-        routeName: 'BackupsList',
-        icon: CircleStackIcon,
-        permission: 'backup.view',
-      },
-    ],
-  },
-]
+// 🌟 هيكلة جديدة: كائن يحتوي على الأنظمة
+export const appMenus = {
+  accounting: [commonDashboard, ...accountingMenu, systemSettings],
+  hr: [
+    commonDashboard,
+    // ...hrMenu, // قائمة الموارد البشرية التي سنصنعها
+    systemSettings,
+  ],
+}

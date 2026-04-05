@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\vouchers\VouchersFilter.vue-->
 <template>
   <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
