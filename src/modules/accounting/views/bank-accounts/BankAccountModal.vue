@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\bank-accounts\BankAccountModal.vue-->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"

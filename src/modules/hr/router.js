@@ -1,71 +1,67 @@
 // src/modules/hr/router.js
 
 // ==========================================
-// 1. استيراد شاشات إعدادات الموارد البشرية (الهيكل التنظيمي)
+// 1. إعدادات الموارد البشرية (الهيكل والورديات)
 // ==========================================
 const DepartmentsList = () => import('./views/departments/DepartmentsList.vue')
 const PositionsList = () => import('./views/positions/PositionsList.vue')
+const ShiftsList = () => import('./views/shifts/ShiftsList.vue')
 
 // ==========================================
-// 2. استيراد شاشات شؤون الموظفين والعقود
+// 2. شؤون الموظفين والعقود
 // ==========================================
 const EmployeesList = () => import('./views/employees/EmployeesList.vue')
 const EmployeeFormPage = () => import('./views/employees/EmployeeFormPage.vue')
+const EmployeeProfile = () => import('./views/employees/EmployeeProfile.vue')
 
 const ContractsList = () => import('./views/contracts/ContractsList.vue')
 const ContractFormPage = () => import('./views/contracts/ContractFormPage.vue')
 
 // ==========================================
-// 3. استيراد شاشات الحضور والطلبات (الخدمة الذاتية والإدارة)
+// 3. الحضور والطلبات
 // ==========================================
-const AttendanceList = () => import('./views/attendance/AttendanceList.vue')
+const AttendanceList = () => import('./views/attendance/AttendanceLogList.vue')
 const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
 
 // ==========================================
-// 4. استيراد شاشات الرواتب والأجور
+// 4. الرواتب والأجور
 // ==========================================
 const SalaryRulesList = () => import('./views/payroll/SalaryRulesList.vue')
 const SalaryStructuresList = () => import('./views/payroll/SalaryStructuresList.vue')
+// 💡 استيراد شاشة الفورم الجديدة للهياكل
+const SalaryStructureForm = () => import('./views/payroll/SalaryStructureFormPage.vue')
 const PayrollInputsList = () => import('./views/payroll/PayrollInputsList.vue')
-const PayrollBatchesList = () => import('./views/payroll/PayrollBatchesList.vue') // شاشة توليد وترحيل الرواتب
+const PayrollBatchesList = () => import('./views/payroll/batches/PayrollBatchesList.vue')
 
 export default [
   {
     path: 'hr',
     children: [
-      // --- إعدادات الموارد (الإدارات والوظائف) ---
-      {
-        path: 'departments',
-        name: 'DepartmentsList',
-        component: DepartmentsList,
-        meta: { permission: 'department.view' },
-      },
-      {
-        path: 'positions',
-        name: 'PositionsList',
-        component: PositionsList,
-        meta: { permission: 'position.view' },
-      },
-
       // --- شؤون الموظفين ---
       {
         path: 'employees',
         name: 'EmployeesList',
         component: EmployeesList,
-        meta: { permission: 'employee.view' },
+        meta: { permission: 'hr.employees.view' },
       },
       {
         path: 'employees/create',
         name: 'employees.create',
         component: EmployeeFormPage,
-        meta: { permission: 'employee.create' },
+        meta: { permission: 'hr.employees.create' },
+      },
+      {
+        path: 'employees/:id',
+        name: 'EmployeeProfile',
+        component: EmployeeProfile,
+        meta: { permission: 'hr.employees.view' },
       },
       {
         path: 'employees/:id/edit',
         name: 'employees.edit',
         component: EmployeeFormPage,
-        meta: { permission: 'employee.update' },
+        meta: { permission: 'hr.employees.update' },
       },
 
       // --- العقود ---
@@ -73,19 +69,19 @@ export default [
         path: 'contracts',
         name: 'ContractsList',
         component: ContractsList,
-        meta: { permission: 'contract.view' },
+        meta: { permission: 'hr.contracts.view' },
       },
       {
         path: 'contracts/create',
         name: 'contracts.create',
         component: ContractFormPage,
-        meta: { permission: 'contract.create' },
+        meta: { permission: 'hr.contracts.manage' },
       },
       {
         path: 'contracts/:id/edit',
         name: 'contracts.edit',
         component: ContractFormPage,
-        meta: { permission: 'contract.update' },
+        meta: { permission: 'hr.contracts.manage' },
       },
 
       // --- الحضور والطلبات ---
@@ -93,19 +89,19 @@ export default [
         path: 'attendance',
         name: 'AttendanceList',
         component: AttendanceList,
-        meta: { permission: 'attendance.view' },
+        meta: { permission: 'hr.attendance.view' },
       },
       {
         path: 'leaves',
         name: 'LeavesList',
         component: LeavesList,
-        meta: { permission: 'leave.view' },
+        meta: { permission: 'hr.leaves.view' },
       },
       {
         path: 'loans',
         name: 'LoansList',
         component: LoansList,
-        meta: { permission: 'loan.view' },
+        meta: { permission: 'hr.loans.view' },
       },
 
       // --- الرواتب والأجور ---
@@ -113,25 +109,58 @@ export default [
         path: 'salary-rules',
         name: 'SalaryRulesList',
         component: SalaryRulesList,
-        meta: { permission: 'salary_rule.view' },
+        meta: { permission: 'hr.settings.manage' },
       },
       {
         path: 'salary-structures',
         name: 'SalaryStructuresList',
         component: SalaryStructuresList,
-        meta: { permission: 'salary_structure.view' },
+        meta: { permission: 'hr.settings.manage' },
+      },
+      // 🚀 إضافة مسارات إنشاء وتعديل هياكل الرواتب المفقودة
+      {
+        path: 'salary-structures/create',
+        name: 'salary-structures.create',
+        component: SalaryStructureForm,
+        meta: { permission: 'hr.settings.manage' },
+      },
+      {
+        path: 'salary-structures/:id/edit',
+        name: 'salary-structures.edit',
+        component: SalaryStructureForm,
+        meta: { permission: 'hr.settings.manage' },
       },
       {
         path: 'payroll-inputs',
         name: 'PayrollInputsList',
         component: PayrollInputsList,
-        meta: { permission: 'payroll_input.view' },
+        meta: { permission: 'hr.payroll_inputs.view' },
       },
       {
         path: 'payroll-batches',
         name: 'PayrollBatchesList',
         component: PayrollBatchesList,
-        meta: { permission: 'payroll.view' },
+        meta: { permission: 'hr.payroll.view' },
+      },
+
+      // --- الإعدادات والهيكل التنظيمي ---
+      {
+        path: 'departments',
+        name: 'DepartmentsList',
+        component: DepartmentsList,
+        meta: { permission: 'hr.departments.view' },
+      },
+      {
+        path: 'positions',
+        name: 'PositionsList',
+        component: PositionsList,
+        meta: { permission: 'hr.positions.view' },
+      },
+      {
+        path: 'shifts',
+        name: 'ShiftsList',
+        component: ShiftsList,
+        meta: { permission: 'hr.shifts.view' },
       },
     ],
   },

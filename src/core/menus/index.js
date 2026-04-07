@@ -8,7 +8,7 @@ import {
 } from '@heroicons/vue/24/outline'
 
 import accountingMenu from '@/modules/accounting/menu'
-// import hrMenu from '@/modules/hr/menu' // سنقوم بتفعيلها بعد قليل
+import hrMenu from '@/modules/hr/menu' // ✅ تم استيرادها بنجاح هنا
 
 // عناصر مشتركة نريد إظهارها في جميع القوائم الجانبية
 const commonDashboard = {
@@ -44,7 +44,7 @@ export const appMenus = {
   accounting: [commonDashboard, ...accountingMenu, systemSettings],
   hr: [
     commonDashboard,
-    // ...hrMenu, // قائمة الموارد البشرية التي سنصنعها
+    ...hrMenu, // ✅ إزالة التعليق هنا لتظهر القائمة!
     systemSettings,
   ],
 }

@@ -27,12 +27,17 @@ export const useSalaryRuleStore = defineStore('hrSalaryRule', () => {
     error.value = null
     try {
       const response = await salaryRuleService.get(filters)
-      rules.value = response.data.data
-      if (response.data.meta) {
+
+      // 🛡️ تأمين البيانات: نضمن دائماً وصول مصفوفة للجدول حتى لو فشل الرد
+      const incomingData = response.data?.data || response.data || []
+      rules.value = Array.isArray(incomingData) ? incomingData : []
+
+      if (response.data?.meta) {
         pagination.value = response.data.meta
       }
     } catch (err) {
       error.value = 'فشل تحميل قائمة قواعد الرواتب'
+      rules.value = [] // تفريغ القائمة لمنع الأخطاء في القالب (Template)
       console.error(err)
     } finally {
       loading.value = false
@@ -45,7 +50,8 @@ export const useSalaryRuleStore = defineStore('hrSalaryRule', () => {
     singleRule.value = null
     try {
       const response = await salaryRuleService.find(id)
-      singleRule.value = response.data.data
+      // تأمين جلب السجل الواحد
+      singleRule.value = response.data?.data || response.data
       return singleRule.value
     } catch (err) {
       error.value = 'فشل جلب تفاصيل القاعدة'
@@ -60,6 +66,8 @@ export const useSalaryRuleStore = defineStore('hrSalaryRule', () => {
     error.value = null
     try {
       await salaryRuleService.create(payload)
+      // يفضل إعادة الجلب بعد الإضافة لضمان تحديث القائمة فوراً
+      await fetchRules()
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل إضافة قاعدة الراتب'
       throw err
@@ -73,6 +81,7 @@ export const useSalaryRuleStore = defineStore('hrSalaryRule', () => {
     error.value = null
     try {
       await salaryRuleService.update(id, payload)
+      await fetchRules() // تحديث القائمة لتعكس التعديلات
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل تحديث قاعدة الراتب'
       throw err
@@ -86,8 +95,12 @@ export const useSalaryRuleStore = defineStore('hrSalaryRule', () => {
     error.value = null
     try {
       await salaryRuleService.delete(id)
-      rules.value = rules.value.filter((rule) => rule.id !== id)
-      pagination.value.total -= 1
+      if (Array.isArray(rules.value)) {
+        rules.value = rules.value.filter((rule) => rule.id !== id)
+      }
+      if (pagination.value.total > 0) {
+        pagination.value.total -= 1
+      }
     } catch (err) {
       error.value =
         err.response?.data?.message || 'لا يمكن حذف القاعدة (مستخدمة في هياكل رواتب حالية)'

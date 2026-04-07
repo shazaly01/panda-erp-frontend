@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\journal-entries\components\JournalEntryHeader.vue-->
 <template>
   <div class="bg-surface-section p-5 rounded-xl border border-surface-border mb-6 space-y-6">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">

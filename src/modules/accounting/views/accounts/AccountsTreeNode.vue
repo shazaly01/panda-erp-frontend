@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\accounts\AccountsTreeNode.vue-->
 <template>
   <div>
     <div

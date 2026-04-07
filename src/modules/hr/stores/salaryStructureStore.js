@@ -6,7 +6,7 @@ export const useSalaryStructureStore = defineStore('hrSalaryStructure', () => {
   // ==========================
   // 1. State
   // ==========================
-  const structures = ref([])
+  const structures = ref([]) // مصفوفة فارغة افتراضياً
   const singleStructure = ref(null)
   const pagination = ref({
     current_page: 1,
@@ -27,12 +27,20 @@ export const useSalaryStructureStore = defineStore('hrSalaryStructure', () => {
     error.value = null
     try {
       const response = await salaryStructureService.get(filters)
-      structures.value = response.data.data
-      if (response.data.meta) {
+
+      /** * 🛡️ شبكة الأمان:
+       * نتحقق من وجود البيانات في response.data.data (للـ Paginated Resource)
+       * أو في response.data مباشرة، وإذا فشل كلاهما نضع مصفوفة فارغة []
+       */
+      const incomingData = response.data?.data || response.data || []
+      structures.value = Array.isArray(incomingData) ? incomingData : []
+
+      if (response.data?.meta) {
         pagination.value = response.data.meta
       }
     } catch (err) {
       error.value = 'فشل تحميل قائمة هياكل الرواتب'
+      structures.value = [] // لضمان عدم بقاء الجدول في حالة error مع undefined
       console.error(err)
     } finally {
       loading.value = false
@@ -45,7 +53,8 @@ export const useSalaryStructureStore = defineStore('hrSalaryStructure', () => {
     singleStructure.value = null
     try {
       const response = await salaryStructureService.find(id)
-      singleStructure.value = response.data.data
+      // حماية مماثلة هنا
+      singleStructure.value = response.data?.data || response.data
       return singleStructure.value
     } catch (err) {
       error.value = 'فشل جلب تفاصيل هيكل الرواتب'
@@ -86,8 +95,13 @@ export const useSalaryStructureStore = defineStore('hrSalaryStructure', () => {
     error.value = null
     try {
       await salaryStructureService.delete(id)
-      structures.value = structures.value.filter((struct) => struct.id !== id)
-      pagination.value.total -= 1
+      // تأكد من أن structures قيمة صالحة قبل الفلترة
+      if (Array.isArray(structures.value)) {
+        structures.value = structures.value.filter((struct) => struct.id !== id)
+      }
+      if (pagination.value.total > 0) {
+        pagination.value.total -= 1
+      }
     } catch (err) {
       error.value =
         err.response?.data?.message || 'لا يمكن حذف هذا الهيكل لارتباطه بعقود موظفين حالية'

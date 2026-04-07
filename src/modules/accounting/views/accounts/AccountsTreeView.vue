@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\accounts\AccountsTreeView.vue-->
 <template>
   <AppCard>
     <div v-if="loading" class="flex justify-center items-center p-8">

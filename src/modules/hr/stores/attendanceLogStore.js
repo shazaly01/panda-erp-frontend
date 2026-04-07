@@ -1,3 +1,4 @@
+//src\modules\hr\stores\attendanceLogStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import attendanceLogService from '../services/attendanceLog.service'

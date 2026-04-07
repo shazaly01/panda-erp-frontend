@@ -123,6 +123,7 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 
 const handleLogin = async () => {
+  console.log('--- تمت الاستجابة للضغط على زر الدخول ---') // أضف هذا السطر فقط
   isLoading.value = true
   errorMessage.value = ''
   try {

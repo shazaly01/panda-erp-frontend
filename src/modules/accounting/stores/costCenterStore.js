@@ -1,3 +1,4 @@
+//src\modules\accounting\stores\costCenterStore.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import costCenterService from '../services/costCenter.service'

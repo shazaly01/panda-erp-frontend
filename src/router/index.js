@@ -19,7 +19,7 @@ import DashboardView from '@/views/dashboard/DashboardView.vue'
 // 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، إلخ)
 // ==============================================================
 import accountingRoutes from '@/modules/accounting/router'
-// import hrRoutes from '@/modules/hr/router'
+import hrRoutes from '@/modules/hr/router'
 // import inventoryRoutes from '@/modules/inventory/router'
 
 const routes = [
@@ -51,7 +51,7 @@ const routes = [
       // 🌟 دمج مسارات الموديولات هنا كأبناء لـ AppLayout
       // ==============================================================
       ...accountingRoutes,
-      // ...hrRoutes,
+      ...hrRoutes,
       // ...inventoryRoutes,
 
       {
@@ -97,17 +97,17 @@ const router = createRouter({
 // --- حارس التنقل العام (Global Navigation Guard) ---
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  const { isAuthenticated, can } = authStore
 
   if (to.meta.requiresAuth) {
-    if (!isAuthenticated) {
+    // تم إلغاء التفكيك (Destructuring) هنا، ونستدعي الخصائص مباشرة من الكائن
+    if (!authStore.isAuthenticated) {
       // حفظ المسار الذي حاول المستخدم الدخول إليه للعودة إليه بعد تسجيل الدخول
       authStore.returnUrl = to.fullPath
       next({ name: 'Login' })
     } else {
       const requiredPermission = to.meta.permission
       // التحقق من الصلاحيات إذا كان المسار يتطلب ذلك
-      if (requiredPermission && !can(requiredPermission)) {
+      if (requiredPermission && !authStore.can(requiredPermission)) {
         console.warn(
           `Access denied: route "${String(to.name)}" requires permission "${requiredPermission}"`,
         )

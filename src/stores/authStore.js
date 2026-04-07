@@ -2,9 +2,25 @@
 import { defineStore } from 'pinia'
 import authService from '@/services/authService'
 
+// دالة مساعدة لضمان عدم انهيار التطبيق عند وجود بيانات فاسدة في المتصفح
+const safelyParseJSON = (jsonString) => {
+  try {
+    // إذا كانت القيمة غير موجودة أو عبارة عن النص "undefined" حرفياً، نرجع null
+    if (!jsonString || jsonString === 'undefined') {
+      return null
+    }
+    return JSON.parse(jsonString)
+  } catch (error) {
+    console.error('Failed to parse user data from localStorage. Clearing corrupted data.', error)
+    localStorage.removeItem('user') // تنظيف فوري للبيانات الفاسدة
+    return null
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
+    // التعديل الجذري هنا: استخدام الدالة الآمنة بدلاً من JSON.parse المباشرة
+    user: safelyParseJSON(localStorage.getItem('user')),
     token: localStorage.getItem('token') || null,
     returnUrl: null,
   }),
@@ -36,12 +52,10 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        // محاولة استدعاء الـ API لتسجيل الخروج من السيرفر
         await authService.logout()
       } catch (error) {
         console.error('Logout API call failed, but clearing local state anyway:', error)
       } finally {
-        // --- تنظيف الحالة المحلية ---
         this.user = null
         this.token = null
         this.returnUrl = null
@@ -49,8 +63,6 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
 
-        // --- [الحل هنا] التوجيه الإجباري لصفحة الدخول ---
-        // نستخدم window.location.href لضمان تنظيف الذاكرة تماماً
         window.location.href = '/login'
       }
     },

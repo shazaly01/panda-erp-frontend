@@ -1,48 +1,75 @@
 // src/modules/hr/menu.js
 import {
   UserGroupIcon,
-  BriefcaseIcon,
+  Cog8ToothIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  Cog8ToothIcon,
+  CalendarDaysIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
+  // 1. شؤون الموظفين
   {
     name: 'شؤون الموظفين',
     icon: UserGroupIcon,
-    permission: 'hr.view', // عدل الصلاحيات حسب نظامك
+    permission: 'hr.employees.view',
     children: [
-      { name: 'الموظفون', routeName: 'EmployeesList', permission: 'employee.view' },
-      { name: 'العقود', routeName: 'ContractsList', permission: 'contract.view' },
+      { name: 'قائمة الموظفين', routeName: 'EmployeesList', permission: 'hr.employees.view' },
+      { name: 'العقود والتوظيف', routeName: 'ContractsList', permission: 'hr.contracts.view' },
     ],
   },
+
+  // 2. الحضور والطلبات
   {
-    name: 'الحضور والطلبات',
+    name: 'الحضور والعمليات',
     icon: ClockIcon,
-    permission: 'hr.view',
+    permission: 'hr.attendance.view',
     children: [
-      { name: 'سجلات الحضور', routeName: 'AttendanceList', permission: 'attendance.view' },
-      { name: 'طلبات الإجازات', routeName: 'LeavesList', permission: 'leave.view' },
-      { name: 'السلف والعهد', routeName: 'LoansList', permission: 'loan.view' },
+      { name: 'سجلات الحضور', routeName: 'AttendanceList', permission: 'hr.attendance.view' },
+      { name: 'طلبات الإجازات', routeName: 'LeavesList', permission: 'hr.leaves.view' },
+      { name: 'السلف والعهد', routeName: 'LoansList', permission: 'hr.loans.view' },
     ],
   },
+
+  // 3. الرواتب والأجور
   {
     name: 'الرواتب والأجور',
     icon: CurrencyDollarIcon,
-    permission: 'hr.view',
+    permission: 'hr.payroll.view',
     children: [
-      { name: 'المدخلات المالية', routeName: 'PayrollInputsList', permission: 'payroll.view' },
-      { name: 'مسيرات الرواتب', routeName: 'PayrollBatchesList', permission: 'payroll.view' },
+      {
+        name: 'المدخلات المالية',
+        routeName: 'PayrollInputsList',
+        permission: 'hr.payroll_inputs.view',
+      },
+      { name: 'مسيرات الرواتب', routeName: 'PayrollBatchesList', permission: 'hr.payroll.view' },
     ],
   },
+
+  // 4. إعدادات الموارد البشرية
   {
     name: 'إعدادات الموارد',
     icon: Cog8ToothIcon,
-    permission: 'hr.view',
+    permission: 'hr.settings.manage',
     children: [
-      { name: 'الإدارات', routeName: 'DepartmentsList', permission: 'department.view' },
-      { name: 'الوظائف', routeName: 'PositionsList', permission: 'position.view' },
+      {
+        name: 'الهيكل التنظيمي (أقسام)',
+        routeName: 'DepartmentsList',
+        permission: 'hr.departments.view',
+      },
+      { name: 'المسميات الوظيفية', routeName: 'PositionsList', permission: 'hr.positions.view' },
+      { name: 'إعدادات الورديات', routeName: 'ShiftsList', permission: 'hr.shifts.view' },
+      {
+        name: 'تعريف قواعد الرواتب',
+        routeName: 'SalaryRulesList',
+        permission: 'hr.settings.manage',
+      },
+
+      {
+        name: 'هياكل الرواتب المجمعة',
+        routeName: 'SalaryStructuresList',
+        permission: 'hr.settings.manage',
+      },
     ],
   },
 ]

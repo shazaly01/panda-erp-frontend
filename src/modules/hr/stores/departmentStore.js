@@ -44,22 +44,26 @@ export const useDepartmentStore = defineStore('hrDepartment', () => {
   // 3. Actions
   // ==========================
 
+  // داخل دالة fetchDepartments
   async function fetchDepartments(filters = {}) {
     loading.value = true
     error.value = null
     try {
       const response = await departmentService.get(filters)
 
-      // حفظ الشجرة وتحديث الترقيم إن وجد
-      departmentTree.value = response.data.data
-      if (response.data.meta) {
+      // ✅ الحماية: نضمن أننا نأخذ مصفوفة حتى لو فشل الباك-إند
+      const data = response.data?.data || []
+      departmentTree.value = data
+
+      if (response.data?.meta) {
         pagination.value = response.data.meta
       }
 
-      // بناء القائمة المسطحة فوراً لتكون جاهزة للاستخدام في شاشات أخرى (مثل شاشة الموظفين)
-      flatDepartments.value = buildFlatList(departmentTree.value)
+      // ✅ الحماية: لا نستدعي الدالة إلا إذا كانت المصفوفة تحتوي على عناصر
+      flatDepartments.value = data.length > 0 ? buildFlatList(data) : []
     } catch (err) {
       error.value = 'فشل تحميل قائمة الإدارات'
+      flatDepartments.value = [] // تفريغ القائمة عند الخطأ لمنع انهيار الواجهة
       console.error(err)
     } finally {
       loading.value = false
