@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\payroll\SalaryStructuresList.vue-->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

@@ -7,7 +7,7 @@
           إدارة سجلات الموظفين، بياناتهم الشخصية، ومراكزهم الوظيفية.
         </p>
       </div>
-      <AppButton v-if="authStore.can('employee.create')" @click="goToCreate" icon="plus">
+      <AppButton v-if="authStore.can('hr.employees.create')" @click="goToCreate" icon="plus">
         تسجيل موظف جديد
       </AppButton>
     </div>
@@ -83,6 +83,7 @@ const filters = reactive({
 let searchTimeout = null
 
 const onFilterChange = () => {
+  employeeStore.loading = true // 🌟 إضافة التفعيل الفوري لحالة التحميل
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     handlePageChange(1)

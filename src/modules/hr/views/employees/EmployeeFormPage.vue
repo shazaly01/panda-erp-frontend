@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\employees\EmployeeFormPage.vue-->
 <template>
   <div class="space-y-6 max-w-5xl mx-auto pb-12">
     <div class="flex items-center justify-between">
@@ -152,7 +151,16 @@
             />
           </div>
 
-          <div class="lg:col-span-2">
+          <div>
+            <AppDropdown
+              id="status"
+              label="حالة الموظف *"
+              v-model="form.status"
+              :options="statusOptions"
+              required
+            />
+          </div>
+          <div>
             <AppDropdown
               id="department_id"
               label="الإدارة / القسم"
@@ -175,7 +183,7 @@
             />
           </div>
 
-          <div class="lg:col-span-2">
+          <div class="lg:col-span-3">
             <AppDropdown
               id="manager_id"
               label="المدير المباشر"
@@ -248,6 +256,14 @@ const employmentTypeOptions = [
   { id: 'intern', name: 'تدريب' },
 ]
 
+const statusOptions = [
+  { id: 'active', name: 'نشط' },
+  { id: 'on_leave', name: 'في إجازة' },
+  { id: 'resigned', name: 'مستقيل' },
+  { id: 'terminated', name: 'منهى خدماته' },
+  { id: 'probation', name: 'فترة تجربة' },
+]
+
 // تصفية المدراء (استبعاد الموظف نفسه في حالة التعديل حتى لا يكون مديراً لنفسه)
 const availableManagers = computed(() => {
   const allEmployees = employeeStore.employees || []
@@ -266,6 +282,7 @@ const defaultForm = () => ({
   gender: null,
   marital_status: null,
   employment_type: 'full_time',
+  status: 'active',
   department_id: null,
   position_id: null,
   manager_id: null,
@@ -298,9 +315,10 @@ onMounted(async () => {
         gender: employeeData.gender || null,
         marital_status: employeeData.marital_status || null,
         employment_type: employeeData.employment_type || 'full_time',
+        status: employeeData.status || 'active',
         department_id: employeeData.department?.id || null,
         position_id: employeeData.position?.id || null,
-        manager_id: employeeData.manager_id || null,
+        manager_id: employeeData.manager?.id || null,
         user_id: employeeData.user_id || null,
       }
     }
@@ -335,8 +353,6 @@ const submit = async () => {
     }
     goBack()
   } catch (error) {
-    // الأخطاء المتعلقة بالحقول الفريدة (unique) من الـ Backend
-    // مثل تكرار البريد الإلكتروني أو الهوية أو رقم الموظف
     const errorMsg = error.response?.data?.message || 'فشل حفظ البيانات. يرجى مراجعة الحقول.'
     toast.error(errorMsg)
   } finally {

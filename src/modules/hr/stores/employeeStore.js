@@ -32,7 +32,8 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
     try {
       const response = await employeeService.get(filters)
       // نفترض أن لارافيل يعيد البيانات بداخل "data" والترقيم بداخل "meta"
-      employees.value = response.data.data
+      const incomingData = response.data?.data || response.data || []
+      employees.value = Array.isArray(incomingData) ? incomingData : []
       if (response.data.meta) {
         pagination.value = response.data.meta
       }

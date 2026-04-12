@@ -33,9 +33,14 @@
       </template>
 
       <template #cell-contact="{ item }">
-        <div class="flex flex-col gap-1 text-xs text-text-secondary">
-          <div v-if="item.phone" class="flex items-center gap-1" dir="ltr">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="flex flex-col gap-2 text-xs text-text-secondary">
+          <div v-if="item.phone" class="flex items-center justify-start gap-1.5">
+            <svg
+              class="w-3.5 h-3.5 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -43,10 +48,16 @@
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
               />
             </svg>
-            {{ item.phone }}
+            <span dir="ltr" class="mt-0.5">{{ item.phone }}</span>
           </div>
-          <div v-if="item.email" class="flex items-center gap-1">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+          <div v-if="item.email" class="flex items-center justify-start gap-1.5">
+            <svg
+              class="w-3.5 h-3.5 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -54,7 +65,9 @@
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            <span class="truncate max-w-[120px]" :title="item.email">{{ item.email }}</span>
+            <span dir="ltr" class="truncate max-w-[130px] mt-0.5" :title="item.email">
+              {{ item.email }}
+            </span>
           </div>
         </div>
       </template>
@@ -71,7 +84,7 @@
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
-            v-if="authStore.can('employee.update')"
+            v-if="authStore.can('hr.employees.update')"
             @click.stop="$emit('edit', item)"
             class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
             title="تعديل ملف الموظف"
@@ -87,7 +100,7 @@
           </button>
 
           <button
-            v-if="authStore.can('employee.delete')"
+            v-if="authStore.can('hr.employees.delete')"
             @click.stop="$emit('delete', item)"
             class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
             title="حذف الموظف"
