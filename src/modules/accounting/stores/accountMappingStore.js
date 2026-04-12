@@ -1,6 +1,6 @@
 //src\modules\accounting\stores\accountMappingStore.js
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import accountMappingService from '../services/accountMapping.service'
 
 export const useAccountMappingStore = defineStore('accountingMapping', () => {
@@ -23,7 +23,7 @@ export const useAccountMappingStore = defineStore('accountingMapping', () => {
     error.value = null
     try {
       const response = await accountMappingService.get()
-      mappings.value = response.data.data
+      mappings.value = Array.isArray(response.data) ? response.data : response.data.data || []
     } catch (err) {
       error.value = 'فشل تحميل إعدادات التوجيه المحاسبي'
       console.error(err)
@@ -64,7 +64,7 @@ export const useAccountMappingStore = defineStore('accountingMapping', () => {
   // مثال: تبويب "مبيعات"، تبويب "رواتب"...
   // هذا يتطلب أن يكون لديك حقل 'group' أو تعتمد على بداية الـ key
   // سنفترض التحليل بناءً على الـ Key
-  const groupedMappings = () => {
+  const groupedMappings = computed(() => {
     const groups = {
       hr: [],
       sales: [],
@@ -74,6 +74,9 @@ export const useAccountMappingStore = defineStore('accountingMapping', () => {
     }
 
     mappings.value.forEach((m) => {
+      // نتحقق من وجود key أولاً لتجنب الأخطاء
+      if (!m.key) return
+
       if (m.key.startsWith('hr_')) groups.hr.push(m)
       else if (m.key.startsWith('sales_') || m.key.startsWith('vat_output')) groups.sales.push(m)
       else if (m.key.startsWith('purchase_') || m.key.startsWith('vat_input'))
@@ -83,7 +86,7 @@ export const useAccountMappingStore = defineStore('accountingMapping', () => {
     })
 
     return groups
-  }
+  })
 
   return {
     mappings,

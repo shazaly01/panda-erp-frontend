@@ -27,12 +27,16 @@ export const useContractStore = defineStore('hrContract', () => {
     error.value = null
     try {
       const response = await contractService.get(filters)
-      contracts.value = response.data.data
-      if (response.data.meta) {
+      // شبكة الأمان للتعامل مع البيانات القادمة
+      const incomingData = response.data?.data || response.data || []
+      contracts.value = Array.isArray(incomingData) ? incomingData : []
+
+      if (response.data?.meta) {
         pagination.value = response.data.meta
       }
     } catch (err) {
       error.value = 'فشل تحميل قائمة العقود'
+      contracts.value = []
       console.error(err)
     } finally {
       loading.value = false
@@ -45,7 +49,7 @@ export const useContractStore = defineStore('hrContract', () => {
     singleContract.value = null
     try {
       const response = await contractService.find(id)
-      singleContract.value = response.data.data
+      singleContract.value = response.data?.data || response.data
       return singleContract.value
     } catch (err) {
       error.value = 'فشل جلب تفاصيل العقد'
@@ -68,13 +72,49 @@ export const useContractStore = defineStore('hrContract', () => {
     }
   }
 
+  async function updateContract(id, payload) {
+    loading.value = true
+    error.value = null
+    try {
+      await contractService.update(id, payload)
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل تحديث العقد'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function terminateContract(id) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await contractService.terminate(id)
+      // تحديث حالة العقد محلياً دون الحاجة لجلب القائمة من جديد
+      const updatedContract = response.data?.data || response.data
+      const index = contracts.value.findIndex((c) => c.id === id)
+      if (index !== -1) {
+        contracts.value[index] = updatedContract
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل إنهاء العقد'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function deleteContract(id) {
     loading.value = true
     error.value = null
     try {
       await contractService.delete(id)
-      contracts.value = contracts.value.filter((contract) => contract.id !== id)
-      pagination.value.total -= 1
+      if (Array.isArray(contracts.value)) {
+        contracts.value = contracts.value.filter((contract) => contract.id !== id)
+      }
+      if (pagination.value.total > 0) {
+        pagination.value.total -= 1
+      }
     } catch (err) {
       error.value =
         err.response?.data?.message ||
@@ -95,6 +135,8 @@ export const useContractStore = defineStore('hrContract', () => {
     fetchContracts,
     fetchContractById,
     createContract,
+    updateContract,
+    terminateContract,
     deleteContract,
   }
 })

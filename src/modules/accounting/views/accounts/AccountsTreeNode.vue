@@ -1,37 +1,83 @@
-<!--src\modules\accounting\views\accounts\AccountsTreeNode.vue-->
 <template>
   <div>
     <div
-      class="grid grid-cols-12 gap-4 py-3 px-4 border-b border-surface-border hover:bg-surface-section/50 transition-colors items-center group"
+      class="grid grid-cols-12 gap-4 py-2 px-4 border-b border-surface-border hover:bg-surface-section/50 transition-colors items-center group cursor-pointer"
       :class="{ 'bg-surface-section/30': !node.is_transactional }"
+      @click="toggle"
     >
-      <div
-        class="col-span-5 flex items-center gap-2"
-        :style="{ paddingInlineStart: `${level * 1.5}rem` }"
-      >
-        <button
-          v-if="hasChildren"
-          @click="toggle"
-          class="w-6 h-6 flex items-center justify-center rounded hover:bg-surface-border text-text-muted transition-transform"
-          :class="{ 'rotate-90': isExpanded }"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="col-span-5 flex items-center gap-2 overflow-hidden">
+        <div class="flex shrink-0" v-if="level > 0">
+          <div v-for="i in level" :key="'spacer-' + i" class="w-6"></div>
+        </div>
+
+        <div class="w-6 h-6 flex items-center justify-center shrink-0">
+          <svg
+            v-if="hasChildren && isExpanded"
+            class="w-6 h-6 text-amber-500"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M19 20H4C2.89 20 2 19.1 2 18V6C2 4.89 2.89 4 4 4H10L12 6H19C20.1 6 21 6.89 21 8V18C21 19.1 20.1 20 19 20M19 8H4V18H19V8Z"
+              opacity="0.3"
+            />
+            <path
+              d="M19 20H4C2.89 20 2 19.1 2 18V6C2 4.89 2.89 4 4 4H10L12 6H19C20.1 6 21 6.89 21 8V18C21 19.1 20.1 20 19 20M19 8H4V18H19V8M19 10H4V18H19V10Z"
+            />
+          </svg>
+
+          <svg
+            v-else-if="hasChildren && !isExpanded"
+            class="w-6 h-6 text-amber-500"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M10 4H4C2.89 4 2 4.89 2 6V18C2 19.1 2.89 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.89 21.1 6 20 6H12L10 4Z"
+            />
+          </svg>
+
+          <svg
+            v-else-if="node.is_transactional"
+            class="w-5 h-5 text-sky-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
+              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
             />
           </svg>
-        </button>
-        <div v-else class="w-6 h-6"></div>
 
-        <div class="flex flex-col">
+          <svg
+            v-else
+            class="w-6 h-6 text-amber-500 opacity-40"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"
+            />
+          </svg>
+        </div>
+
+        <div class="flex flex-col flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <span class="font-mono font-bold text-primary tracking-wider text-sm">
+            <span class="font-mono font-bold text-primary tracking-wider text-sm shrink-0">
               {{ node.code }}
             </span>
-            <span v-if="node.requires_cost_center" title="يتطلب مركز تكلفة" class="text-orange-500">
+            <span
+              v-if="node.requires_cost_center"
+              title="يتطلب مركز تكلفة"
+              class="text-orange-500 shrink-0"
+            >
               <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fill-rule="evenodd"
@@ -42,12 +88,13 @@
             </span>
           </div>
           <span
-            :class="[
+            class="truncate text-sm"
+            :class="
               node.is_transactional
                 ? 'text-text-secondary font-medium'
-                : 'text-text-primary font-bold',
-              'text-sm',
-            ]"
+                : 'text-text-primary font-bold'
+            "
+            :title="node.name"
           >
             {{ node.name }}
           </span>
@@ -56,7 +103,7 @@
         <button
           v-if="!node.is_transactional && authStore.can('account.create')"
           @click.stop="$emit('add-child', node)"
-          class="opacity-0 group-hover:opacity-100 p-1 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded transition-all ml-2"
+          class="opacity-0 group-hover:opacity-100 p-1 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded transition-all shrink-0 ms-auto"
           title="إضافة حساب فرعي"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -116,7 +163,7 @@
         <button
           v-if="authStore.can('account.update')"
           @click.stop="$emit('edit', node)"
-          class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+          class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors shrink-0"
           title="تعديل"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -132,7 +179,7 @@
         <button
           v-if="authStore.can('account.delete')"
           @click.stop="$emit('delete', node)"
-          class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+          class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
           title="حذف"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,17 +194,19 @@
       </div>
     </div>
 
-    <div v-show="isExpanded && hasChildren">
-      <AccountsTreeNode
-        v-for="child in node.children"
-        :key="child.id"
-        :node="child"
-        :level="level + 1"
-        @add-child="$emit('add-child', $event)"
-        @edit="$emit('edit', $event)"
-        @delete="$emit('delete', $event)"
-      />
-    </div>
+    <transition @enter="onEnter" @after-enter="onAfterEnter" @leave="onLeave">
+      <div v-show="isExpanded && hasChildren" class="overflow-hidden">
+        <AccountsTreeNode
+          v-for="child in node.children"
+          :key="child.id"
+          :node="child"
+          :level="level + 1"
+          @add-child="$emit('add-child', $event)"
+          @edit="$emit('edit', $event)"
+          @delete="$emit('delete', $event)"
+        />
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -175,9 +224,36 @@ const authStore = useAuthStore()
 
 const isExpanded = ref(props.level === 0)
 const hasChildren = computed(() => props.node.children && props.node.children.length > 0)
-const toggle = () => (isExpanded.value = !isExpanded.value)
 
-// دالة تحويل النوع إلى لغة عربية
+const toggle = () => {
+  if (hasChildren.value) {
+    isExpanded.value = !isExpanded.value
+  }
+}
+
+const onEnter = (el) => {
+  el.style.height = '0px'
+  el.style.opacity = '0'
+  void el.offsetHeight
+  el.style.transition = 'height 0.25s ease-out, opacity 0.25s ease-out'
+  el.style.height = el.scrollHeight + 'px'
+  el.style.opacity = '1'
+}
+
+const onAfterEnter = (el) => {
+  el.style.transition = ''
+  el.style.height = ''
+  el.style.opacity = ''
+}
+
+const onLeave = (el) => {
+  el.style.height = el.scrollHeight + 'px'
+  void el.offsetHeight
+  el.style.transition = 'height 0.2s ease-in, opacity 0.2s ease-in'
+  el.style.height = '0px'
+  el.style.opacity = '0'
+}
+
 const formatType = (type) => {
   const types = {
     asset: 'أصول',

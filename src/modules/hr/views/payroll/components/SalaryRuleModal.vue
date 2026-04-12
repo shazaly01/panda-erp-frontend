@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\payroll\components\SalaryRuleModal.vue-->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"

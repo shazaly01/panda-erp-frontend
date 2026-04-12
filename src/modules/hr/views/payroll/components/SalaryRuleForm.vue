@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\payroll\components\SalaryRuleForm.vue--->
 <template>
   <div class="space-y-5">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -123,11 +124,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import apiClient from '@/services/apiClient' // تأكد من أن هذا هو مسار ملف الـ axios الخاص بمشروعك
+import { onMounted, computed } from 'vue'
+// إزالة apiClient لأنه لم يعد هناك حاجة له
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
+
+// استدعاء المخزن الخاص بالتوجيه المحاسبي
+import { useAccountMappingStore } from '@/modules/accounting/stores/accountMappingStore'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
@@ -135,7 +139,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-// الدالة المسؤولة عن إرسال التحديث للأب دون تعديل الـ Prop مباشرة
 const updateField = (field, value) => {
   emit('update:modelValue', {
     ...props.modelValue,
@@ -144,26 +147,26 @@ const updateField = (field, value) => {
 }
 
 // ==========================================
-// القوائم التفاعلية (الديناميكية)
+// القوائم التفاعلية (الديناميكية) باستخدام Pinia Store
 // ==========================================
-const accountMappingOptions = ref([])
+const accountMappingStore = useAccountMappingStore()
+
+// نستخدم computed لكي تتحدث القائمة المنسدلة تلقائياً إذا تغيرت بيانات الـ Store
+const accountMappingOptions = computed(() => {
+  // 1. تم إزالة الأقواس () لأن groupedMappings أصبحت computed في الـ Store
+  const hrMappings = accountMappingStore.groupedMappings.hr || []
+
+  return hrMappings.map((mapping) => ({
+    id: mapping.key,
+    // 2. استخدام account_code مباشرة لأن هذا هو شكل البيانات في الـ JSON المرسل من السيرفر
+    name: mapping.account_code ? `${mapping.name} (${mapping.account_code})` : mapping.name,
+  }))
+})
 
 onMounted(async () => {
-  try {
-    // جلب كل مفاتيح الربط من موديول الحسابات
-    const response = await apiClient.get('/accounting/account-mappings')
-    const allMappings = response.data?.data || response.data || []
-
-    // فلترة المفاتيح لتشمل فقط الموارد البشرية (التي تبدأ بـ hr_)
-    const hrMappings = allMappings.filter((mapping) => mapping.key.startsWith('hr_'))
-
-    // تشكيل البيانات لتناسب مكوّن AppDropdown
-    accountMappingOptions.value = hrMappings.map((mapping) => ({
-      id: mapping.key,
-      name: mapping.account ? `${mapping.name} (${mapping.account.code})` : mapping.name,
-    }))
-  } catch (error) {
-    console.error('فشل جلب مفاتيح الربط المحاسبي:', error)
+  // للتحسين: نطلب البيانات من السيرفر فقط إذا لم تكن موجودة مسبقاً في الـ Store
+  if (accountMappingStore.mappings.length === 0) {
+    await accountMappingStore.fetchMappings()
   }
 })
 

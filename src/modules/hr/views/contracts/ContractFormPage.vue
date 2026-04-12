@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\contracts\ContractFormPage.vue-->
 <template>
   <div class="space-y-6 max-w-4xl mx-auto pb-12">
     <div class="flex items-center justify-between">
@@ -150,9 +151,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 
+// استيراد مكونات الواجهة الأساسية
+import AppCard from '@/components/ui/AppCard.vue'
+import AppInput from '@/components/ui/AppInput.vue'
+import AppDropdown from '@/components/ui/AppDropdown.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+
+// استيراد المتاجر (Stores)
 import { useContractStore } from '@/modules/hr/stores/contractStore'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
-// تم تفعيل استيراد متجر هياكل الرواتب الحقيقي
 import { useSalaryStructureStore } from '@/modules/hr/stores/salaryStructureStore'
 
 const router = useRouter()
@@ -195,7 +202,7 @@ onMounted(async () => {
     }
     employees.value = employeeStore.employees
 
-    // 2. جلب هياكل الرواتب النشطة فقط من المتجر الحقيقي
+    // 2. جلب هياكل الرواتب النشطة فقط
     await salaryStructureStore.fetchStructures({ per_page: 500, is_active: 1 })
     salaryStructures.value = salaryStructureStore.structures
 
@@ -262,7 +269,6 @@ const submit = async () => {
       // تنبيه لارافيل: عند استخدام FormData لتحديث مورد، يجب إرسالها كـ POST مع تمرير _method=PUT
       formData.append('_method', 'PUT')
 
-      // سنفترض أن service.update سيقوم بالتعامل معها كـ POST إذا كان Payload من نوع FormData
       await contractStore.updateContract(contractId.value, formData)
       toast.success('تم تحديث العقد بنجاح.')
     } else {

@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\payroll\components\SalaryRulesTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="rules" :is-loading="loading">
@@ -44,11 +45,24 @@
       </template>
 
       <template #cell-mapping="{ item }">
+        <div v-if="item.account_details" class="flex flex-col py-1">
+          <span class="text-xs font-bold text-text-primary">
+            {{ item.account_details.account_name }}
+          </span>
+          <span class="text-[11px] font-mono text-text-muted mt-0.5">
+            كود: {{ item.account_details.account_code }}
+          </span>
+        </div>
+
         <span
-          class="text-xs font-mono text-text-secondary bg-surface-ground px-1.5 py-0.5 rounded border border-surface-border"
+          v-else-if="item.account_mapping_key"
+          class="text-xs font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200"
+          title="المفتاح موجود ولكن الحساب غير متوفر بشجرة الحسابات"
         >
-          {{ item.account_mapping_key || 'غير مرتبط' }}
+          {{ item.account_mapping_key }} (حساب مفقود)
         </span>
+
+        <span v-else class="text-xs text-text-muted italic"> غير مرتبط </span>
       </template>
 
       <template #cell-status="{ item }">
