@@ -15,6 +15,9 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
     per_page: 15,
   }) // لتخزين بيانات الترقيم القادمة من لارافيل
 
+  const financialStatement = ref(null) // بيانات كشف الحساب
+  const isStatementLoading = ref(false) // حالة التحميل
+
   const loading = ref(false)
   const error = ref(null)
 
@@ -108,6 +111,24 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
       loading.value = false
     }
   }
+  async function fetchFinancialStatement(employeeId) {
+    isStatementLoading.value = true
+    error.value = null
+    financialStatement.value = null
+    try {
+      const response = await employeeService.getFinancialStatement(employeeId)
+      financialStatement.value = response.data.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل جلب كشف حساب الموظف'
+      console.error(err)
+    } finally {
+      isStatementLoading.value = false
+    }
+  }
+
+  function clearFinancialStatement() {
+    financialStatement.value = null
+  }
 
   return {
     // State
@@ -116,8 +137,10 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
     pagination,
     loading,
     error,
-
-    // Actions
+    financialStatement,
+    isStatementLoading,
+    fetchFinancialStatement,
+    clearFinancialStatement,
     fetchEmployees,
     fetchEmployeeById,
     createEmployee,

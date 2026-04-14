@@ -1,7 +1,6 @@
-//src\modules\hr\stores\attendanceLogStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import attendanceLogService from '../services/attendanceLog.service'
+import attendanceLogService from '../services/attendanceLog.service' // تأكد من مسار الملف لديك
 
 export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
   // ==========================
@@ -97,6 +96,21 @@ export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
     }
   }
 
+  // 🌟 الجديد: دالة إرسال رقم الباركود للباك إند
+  async function scanBarcode(employeeNumber) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await attendanceLogService.scanBarcode(employeeNumber)
+      return response.data // نرجع البيانات لكي تستخدمها الشاشة في عرض رسالة الترحيب
+    } catch (err) {
+      error.value = err.response?.data?.message || 'حدث خطأ أثناء قراءة الباركود'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     logs,
     singleLog,
@@ -109,5 +123,6 @@ export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
     createLog,
     updateLog,
     deleteLog,
+    scanBarcode, // 🌟 لا تنسَ تصدير الدالة
   }
 })

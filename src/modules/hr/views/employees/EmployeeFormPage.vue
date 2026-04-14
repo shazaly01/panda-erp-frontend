@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\employees\EmployeeFormPage.vue-->
 <template>
   <div class="space-y-6 max-w-5xl mx-auto pb-12">
     <div class="flex items-center justify-between">
@@ -125,11 +126,23 @@
           <div>
             <AppInput
               id="employee_number"
-              label="رقم الموظف (الكود) *"
+              label="الرقم الوظيفي النظامي"
               v-model="form.employee_number"
-              class="font-mono text-left font-bold"
+              class="font-mono text-left font-bold placeholder-slate-400 focus:border-blue-500"
               dir="ltr"
-              required
+              placeholder="سيتم التوليد تلقائياً عند الحفظ"
+              disabled
+            />
+          </div>
+
+          <div>
+            <AppInput
+              id="barcode"
+              label="رقم الباركود (اختياري)"
+              v-model="form.barcode"
+              class="font-mono text-left text-blue-600 focus:border-blue-500"
+              dir="ltr"
+              placeholder="أدخل رقم البطاقة هنا..."
             />
           </div>
           <div>
@@ -278,6 +291,7 @@ const defaultForm = () => ({
   email: '',
   phone: '',
   employee_number: '',
+  barcode: '',
   join_date: new Date().toISOString().split('T')[0], // تاريخ اليوم افتراضياً
   gender: null,
   marital_status: null,
@@ -304,6 +318,7 @@ onMounted(async () => {
     // إذا كنا في وضع التعديل، نجلب بيانات الموظف المحددة
     if (isEditMode.value) {
       const employeeData = await employeeStore.fetchEmployeeById(employeeId.value)
+      console.log('API Response for Employee:', employeeData)
 
       form.value = {
         full_name: employeeData.full_name,
@@ -311,6 +326,7 @@ onMounted(async () => {
         email: employeeData.email || '',
         phone: employeeData.phone || '',
         employee_number: employeeData.employee_number,
+        barcode: employeeData.barcode || '',
         join_date: employeeData.join_date,
         gender: employeeData.gender || null,
         marital_status: employeeData.marital_status || null,
@@ -338,7 +354,6 @@ const goBack = () => {
 const submit = async () => {
   // تحقق أساسي (Validation)
   if (!form.value.full_name.trim()) return toast.error('الاسم الرباعي مطلوب.')
-  if (!form.value.employee_number.trim()) return toast.error('رقم الموظف مطلوب.')
   if (!form.value.join_date) return toast.error('تاريخ الالتحاق مطلوب.')
   if (!form.value.employment_type) return toast.error('نوع التوظيف مطلوب.')
 

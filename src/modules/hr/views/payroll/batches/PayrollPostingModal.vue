@@ -9,7 +9,7 @@
   >
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click.self="close"
     >
       <Transition
@@ -22,35 +22,31 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-lg transform flex flex-col"
+          class="bg-surface-section rounded-xl shadow-2xl p-6 w-full max-w-lg transform flex flex-col border border-surface-border"
           role="dialog"
-          aria-modal="true"
         >
           <div
-            class="flex justify-between items-center border-b border-surface-border pb-3 mb-5 shrink-0"
+            class="flex justify-between items-center border-b border-surface-border pb-4 mb-5 shrink-0"
           >
-            <h3 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-              <svg
-                class="w-6 h-6 text-emerald-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+            <h3 class="text-lg font-bold text-text-primary flex items-center gap-2">
+              <span class="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </span>
               اعتماد وترحيل الرواتب
             </h3>
             <button
               @click="close"
               :disabled="payrollStore.isPosting"
-              class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-border transition-colors"
+              class="text-text-muted hover:text-rose-500 p-1.5 rounded-full hover:bg-surface-border transition-colors"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -62,10 +58,10 @@
           </div>
 
           <div
-            class="bg-amber-50/50 border border-amber-200 p-4 rounded-lg mb-5 flex items-start gap-3"
+            class="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-lg mb-5 flex items-start gap-3"
           >
             <svg
-              class="w-6 h-6 text-amber-600 shrink-0 mt-0.5"
+              class="w-6 h-6 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -78,12 +74,40 @@
               />
             </svg>
             <div>
-              <p class="text-sm font-bold text-amber-800">تأكيد عملية الترحيل</p>
-              <p class="text-xs text-amber-700 mt-1">
-                سيتم ترحيل رواتب عدد (<strong>{{ employeeIds.length }}</strong
-                >) موظف/موظفة. هذه العملية ستقوم بإنشاء القيود المحاسبية، وإغلاق السلف، ولن يمكن
-                التراجع عنها إلا عبر الإدارة المالية.
+              <p class="text-sm font-bold text-amber-800 dark:text-amber-400">
+                تأكيد عملية الترحيل المالي
               </p>
+              <p class="text-xs text-amber-700 dark:text-amber-500/80 mt-1">
+                سيتم ترحيل رواتب عدد (<strong>{{ employeeIds.length }}</strong
+                >) موظف. هذه العملية ستقوم بتوليد قيد محاسبي في دفتر الأستاذ ولن يمكن التراجع عنها
+                إلا بقيد عكسي.
+              </p>
+            </div>
+          </div>
+
+          <div class="mb-5 bg-surface-ground p-4 rounded-lg border border-surface-border">
+            <h4 class="text-xs font-bold text-text-muted mb-3 uppercase tracking-wider">
+              ملخص القيد المحاسبي المتوقع
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <span class="block text-xs text-text-muted mb-1">إجمالي الاستحقاقات (مدين)</span>
+                <span class="font-mono font-bold text-sm text-text-primary">
+                  {{ formatCurrency(payrollStore.batchSummary.total_allowances) }}
+                </span>
+              </div>
+              <div>
+                <span class="block text-xs text-text-muted mb-1">إجمالي الاستقطاعات (دائن)</span>
+                <span class="font-mono font-bold text-sm text-rose-500">
+                  {{ formatCurrency(payrollStore.batchSummary.total_deductions) }}
+                </span>
+              </div>
+              <div class="col-span-2 pt-3 border-t border-surface-border mt-1">
+                <span class="block text-xs text-text-muted mb-1">صافي المستحق للموظفين (دائن)</span>
+                <span class="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-500">
+                  {{ formatCurrency(payrollStore.batchSummary.total_net) }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -91,16 +115,16 @@
             <AppInput
               id="posting-date"
               type="date"
-              label="تاريخ القيد المحاسبي (تاريخ الاستحقاق) *"
+              label="تاريخ الترحيل (تاريخ القيد) *"
               v-model="form.date"
               required
             />
 
             <AppTextarea
               id="posting-desc"
-              label="شرح القيد المحاسبي (سيظهر في دفتر الأستاذ) *"
+              label="البيان (يظهر في الدفتر المحاسبي) *"
               v-model="form.description"
-              rows="3"
+              rows="2"
               required
             />
           </div>
@@ -112,9 +136,12 @@
             <AppButton
               @click="submit"
               :disabled="payrollStore.isPosting"
-              class="bg-emerald-600 hover:bg-emerald-700 border-none text-white"
+              class="bg-emerald-600 hover:bg-emerald-700 border-none text-white min-w-[140px]"
             >
-              <span v-if="payrollStore.isPosting" class="flex items-center gap-2">
+              <span
+                v-if="payrollStore.isPosting"
+                class="flex items-center justify-center gap-2 w-full"
+              >
                 <svg
                   class="animate-spin h-4 w-4"
                   xmlns="http://www.w3.org/2000/svg"
@@ -137,7 +164,7 @@
                 </svg>
                 جاري الترحيل...
               </span>
-              <span v-else>تأكيد واعتماد الرواتب</span>
+              <span v-else>اعتماد وترحيل</span>
             </AppButton>
           </div>
         </div>
@@ -165,13 +192,11 @@ const emit = defineEmits(['update:modelValue', 'posted'])
 const toast = useToast()
 const payrollStore = usePayrollStore()
 
-// القيم الافتراضية
 const form = ref({
   date: new Date().toISOString().split('T')[0],
   description: '',
 })
 
-// تعيين الوصف الافتراضي عند فتح النافذة بناءً على الشهر المختار
 watch(
   () => props.modelValue,
   (isOpen) => {
@@ -182,14 +207,21 @@ watch(
   },
 )
 
+const formatCurrency = (value) => {
+  return Number(value || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
 const close = () => {
   if (payrollStore.isPosting) return
   emit('update:modelValue', false)
 }
 
 const submit = async () => {
-  if (!form.value.date) return toast.error('تاريخ القيد مطلوب.')
-  if (!form.value.description.trim()) return toast.error('شرح القيد مطلوب.')
+  if (!form.value.date) return toast.error('تاريخ الترحيل مطلوب.')
+  if (!form.value.description.trim()) return toast.error('شرح القيد المحاسبي مطلوب.')
 
   try {
     await payrollStore.postPayrollBatch({
@@ -198,11 +230,11 @@ const submit = async () => {
       description: form.value.description,
     })
 
-    toast.success('تم اعتماد وترحيل الرواتب بنجاح.')
+    toast.success('تم الترحيل بنجاح وتم إنشاء القيد المحاسبي.')
     emit('posted')
     close()
   } catch (error) {
-    // تم التعامل مع إظهار الخطأ داخل الـ Store
+    // الأخطاء تتم معالجتها في الـ Store وإظهارها هناك أو يمكن تركها للـ Interceptor
   }
 }
 </script>

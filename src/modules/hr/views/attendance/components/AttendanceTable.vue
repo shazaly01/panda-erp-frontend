@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\attendance\components\AttendanceTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="logs" :is-loading="loading">

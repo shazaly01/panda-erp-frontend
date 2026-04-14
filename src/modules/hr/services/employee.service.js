@@ -27,4 +27,9 @@ export default {
   delete(id) {
     return apiClient.delete(`${resource}/${id}`)
   },
+
+  // جلب كشف الحساب المالي للموظف (Sub-Ledger Statement)
+  getFinancialStatement(id) {
+    return apiClient.get(`/hr/employees/${id}/financial-statement`)
+  },
 }

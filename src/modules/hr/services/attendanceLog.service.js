@@ -27,4 +27,9 @@ export default {
   delete(id) {
     return apiClient.delete(`${resource}/${id}`)
   },
+
+  // 🌟 الجديد: دالة تسجيل الحضور والانصراف السريع عبر الباركود
+  scanBarcode(employeeNumber) {
+    return apiClient.post(`${resource}/scan`, { employee_number: employeeNumber })
+  },
 }

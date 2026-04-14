@@ -7,9 +7,27 @@
           متابعة حركات البصمة اليومية للموظفين، ومراجعة التأخير والغياب والعمل الإضافي.
         </p>
       </div>
-      <AppButton v-if="authStore.can('attendance.create')" @click="openCreateModal" icon="plus">
-        تسجيل حركة يدوية
-      </AppButton>
+      <div class="flex items-center gap-3">
+        <AppButton
+          variant="secondary"
+          @click="goToKiosk"
+          class="border-primary/20 text-primary hover:bg-primary/10"
+        >
+          <svg class="w-5 h-5 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+            />
+          </svg>
+          شاشة الباركود (Kiosk)
+        </AppButton>
+
+        <AppButton v-if="authStore.can('attendance.create')" @click="openCreateModal" icon="plus">
+          تسجيل حركة يدوية
+        </AppButton>
+      </div>
     </div>
 
     <AttendanceFilter
@@ -50,6 +68,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router' // 🌟 استيراد موجه المسارات
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
@@ -61,6 +80,7 @@ import AttendanceFilter from './components/AttendanceFilter.vue'
 import AttendanceTable from './components/AttendanceTable.vue'
 import AttendanceLogModal from './components/AttendanceLogModal.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const attendanceStore = useAttendanceLogStore()
 const toast = useToast()
@@ -99,6 +119,12 @@ const handlePageChange = async (page = 1) => {
 onMounted(() => {
   handlePageChange(1)
 })
+
+// -- 🌟 فتح شاشة الاستقبال في تبويب جديد --
+const goToKiosk = () => {
+  const routeData = router.resolve({ name: 'attendance.kiosk' })
+  window.open(routeData.href, '_blank')
+}
 
 // -- إدارة النافذة المنبثقة (إضافة / تعديل) --
 const isModalOpen = ref(false)

@@ -92,6 +92,15 @@ export default [
         meta: { permission: 'hr.attendance.view' },
       },
       {
+        path: '/hr/attendance/kiosk',
+        name: 'attendance.kiosk',
+        component: () => import('@/modules/hr/views/attendance/AttendanceKiosk.vue'),
+        meta: {
+          title: 'شاشة الاستقبال - الباركود',
+          // layout: 'blank' // قم بتفعيلها إذا كان نظامك يدعم تخطيطاً فارغاً للشاشات الكاملة
+        },
+      },
+      {
         path: 'leaves',
         name: 'LeavesList',
         component: LeavesList,

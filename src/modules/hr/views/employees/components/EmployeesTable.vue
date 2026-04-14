@@ -32,6 +32,19 @@
         </div>
       </template>
 
+      <template #cell-shift="{ item }">
+        <div v-if="item.latest_shift?.shift" class="flex flex-col">
+          <span class="text-sm font-bold text-blue-600">
+            {{ item.latest_shift.shift.name }}
+          </span>
+          <span class="text-[10px] text-amber-600 font-mono">
+            {{ item.latest_shift.shift.start_time?.substring(0, 5) }} -
+            {{ item.latest_shift.shift.end_time?.substring(0, 5) }}
+          </span>
+        </div>
+        <span v-else class="text-xs text-text-muted italic">لا توجد وردية</span>
+      </template>
+
       <template #cell-contact="{ item }">
         <div class="flex flex-col gap-2 text-xs text-text-secondary">
           <div v-if="item.phone" class="flex items-center justify-start gap-1.5">
@@ -84,6 +97,50 @@
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
+            @click.stop="$emit('view-statement', item)"
+            class="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="كشف الحساب المالي (Sub-Ledger)"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </button>
+          <button
+            @click.stop="$emit('manage-shift', item)"
+            class="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+            title="إدارة وردية الموظف"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </button>
+
+          <button
+            @click.stop="$emit('print-card', item)"
+            class="p-1.5 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+            title="طباعة بطاقة الهوية"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+              />
+            </svg>
+          </button>
+
+          <button
             v-if="authStore.can('hr.employees.update')"
             @click.stop="$emit('edit', item)"
             class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -135,19 +192,19 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
-defineEmits(['page-change', 'edit', 'delete'])
+defineEmits(['page-change', 'edit', 'delete', 'view-statement', 'print-card', 'manage-shift'])
 
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'employee_info', label: 'الموظف', class: 'min-w-[220px]' },
   { key: 'job_info', label: 'المنصب والإدارة', class: 'min-w-[180px]' },
+  { key: 'shift', label: 'الوردية', class: 'min-w-[150px]' }, // 🌟 أضفنا الهيدر هنا
   { key: 'contact', label: 'معلومات الاتصال', class: 'min-w-[150px]' },
   { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[185px]' },
 ])
 
-// دالة تلوين الحالات
 const getStatusClasses = (status) => {
   const map = {
     active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
