@@ -64,11 +64,16 @@ export default [
         routeName: 'SalaryRulesList',
         permission: 'hr.settings.manage',
       },
-
       {
         name: 'هياكل الرواتب المجمعة',
         routeName: 'SalaryStructuresList',
         permission: 'hr.settings.manage',
+      },
+      // 🚀 الإضافة الجديدة: سياسات العمل الإضافي
+      {
+        name: 'سياسات العمل الإضافي',
+        routeName: 'OvertimePoliciesList',
+        permission: 'hr.overtime_policies.view', // تأكد أن هذا التصريح متطابق مع جدول الصلاحيات لديك
       },
     ],
   },

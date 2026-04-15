@@ -49,7 +49,7 @@
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          {{ formatDateMonth(item.date) }}
+          {{ formatFullDate(item.date) }}
         </div>
       </template>
 
@@ -153,13 +153,14 @@ const payrollStore = usePayrollStore()
 const toast = useToast()
 
 const tableHeaders = computed(() => [
-  { key: 'date', label: 'شهر الاستحقاق', class: 'min-w-[120px]' },
+  // 🚀 التعديل: تغيير اسم العمود ليكون معبراً عن التاريخ بدلاً من الشهر فقط
+  { key: 'date', label: 'تاريخ القيد / الترحيل', class: 'min-w-[150px]' },
   { key: 'description', label: 'البيان', class: 'min-w-[180px]' },
   { key: 'total_amount', label: 'إجمالي المسير', class: 'text-left min-w-[120px]' },
   { key: 'status', label: 'الحالة', class: 'text-center min-w-[100px]' },
   { key: 'journal_entry', label: 'رقم القيد', class: 'min-w-[100px]' },
   { key: 'creator', label: 'بواسطة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[120px]' }, // 🌟 العمود الجديد
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[120px]' },
 ])
 
 const fetchData = () => {
@@ -172,26 +173,21 @@ onMounted(() => {
   }
 })
 
-// 🌟 الجديد: دالة تحميل ملف البنك
 const downloadingBatchId = ref(null)
 
 const downloadBankFile = async (batch) => {
   try {
     downloadingBatchId.value = batch.id
 
-    // استدعاء الخدمة لتحميل الملف كـ Blob
     const response = await payrollService.exportBankFile(batch.id)
 
-    // إنشاء رابط وهمي في المتصفح لتحميل الملف
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
     link.href = url
-    // تسمية الملف المحمل
     link.setAttribute('download', `Bank_Transfer_Batch_${batch.id}.csv`)
     document.body.appendChild(link)
     link.click()
 
-    // تنظيف الرابط بعد التحميل
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
 
@@ -211,9 +207,10 @@ const formatCurrency = (value) => {
   })
 }
 
-const formatDateMonth = (dateString) => {
+// 🚀 التعديل: إظهار اليوم والشهر والسنة
+const formatFullDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' })
+  return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 </script>

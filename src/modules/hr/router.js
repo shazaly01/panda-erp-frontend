@@ -31,6 +31,10 @@ const SalaryRulesList = () => import('./views/payroll/SalaryRulesList.vue')
 const SalaryStructuresList = () => import('./views/payroll/SalaryStructuresList.vue')
 // 💡 استيراد شاشة الفورم الجديدة للهياكل
 const SalaryStructureForm = () => import('./views/payroll/SalaryStructureFormPage.vue')
+
+const OvertimePoliciesList = () => import('./views/overtime-policies/OvertimePoliciesList.vue')
+const OvertimePolicyFormPage = () => import('./views/overtime-policies/OvertimePolicyFormPage.vue')
+
 const PayrollInputsList = () => import('./views/payroll/PayrollInputsList.vue')
 const PayrollBatchesList = () => import('./views/payroll/batches/PayrollBatchesList.vue')
 
@@ -139,6 +143,25 @@ export default [
         component: SalaryStructureForm,
         meta: { permission: 'hr.settings.manage' },
       },
+      {
+        path: 'overtime-policies',
+        name: 'OvertimePoliciesList',
+        component: OvertimePoliciesList,
+        meta: { permission: 'hr.overtime_policies.view' },
+      },
+      {
+        path: 'overtime-policies/create',
+        name: 'overtime-policies.create',
+        component: OvertimePolicyFormPage,
+        meta: { permission: 'hr.overtime_policies.manage' },
+      },
+      {
+        path: 'overtime-policies/:id/edit',
+        name: 'overtime-policies.edit',
+        component: OvertimePolicyFormPage,
+        meta: { permission: 'hr.overtime_policies.manage' },
+      },
+
       {
         path: 'payroll-inputs',
         name: 'PayrollInputsList',

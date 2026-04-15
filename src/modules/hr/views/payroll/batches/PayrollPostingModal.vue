@@ -79,8 +79,8 @@
               </p>
               <p class="text-xs text-amber-700 dark:text-amber-500/80 mt-1">
                 سيتم ترحيل رواتب عدد (<strong>{{ employeeIds.length }}</strong
-                >) موظف. هذه العملية ستقوم بتوليد قيد محاسبي في دفتر الأستاذ ولن يمكن التراجع عنها
-                إلا بقيد عكسي.
+                >) موظف. هذه العملية ستقوم بتوليد قيد محاسبي في دفتر الأستاذ بتاريخ نهاية الفترة ولن
+                يمكن التراجع عنها إلا بقيد عكسي.
               </p>
             </div>
           </div>
@@ -112,14 +112,6 @@
           </div>
 
           <div class="space-y-4">
-            <AppInput
-              id="posting-date"
-              type="date"
-              label="تاريخ الترحيل (تاريخ القيد) *"
-              v-model="form.date"
-              required
-            />
-
             <AppTextarea
               id="posting-desc"
               label="البيان (يظهر في الدفتر المحاسبي) *"
@@ -177,14 +169,15 @@
 import { ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { usePayrollStore } from '@/modules/hr/stores/payrollStore'
-import AppInput from '@/components/ui/AppInput.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   employeeIds: { type: Array, required: true },
-  month: { type: String, required: true },
+  // 🚀 التعديل هنا: استقبال التواريخ بدلاً من month
+  startDate: { type: String, required: true },
+  endDate: { type: String, required: true },
 })
 
 const emit = defineEmits(['update:modelValue', 'posted'])
@@ -193,7 +186,6 @@ const toast = useToast()
 const payrollStore = usePayrollStore()
 
 const form = ref({
-  date: new Date().toISOString().split('T')[0],
   description: '',
 })
 
@@ -201,8 +193,8 @@ watch(
   () => props.modelValue,
   (isOpen) => {
     if (isOpen) {
-      form.value.date = new Date().toISOString().split('T')[0]
-      form.value.description = `إثبات مسير رواتب الموظفين لشهر ${props.month}`
+      // 🚀 التعديل هنا: تحديث الوصف التلقائي ليعكس الفترة
+      form.value.description = `إثبات مسير رواتب الموظفين للفترة من ${props.startDate} إلى ${props.endDate}`
     }
   },
 )
@@ -220,13 +212,14 @@ const close = () => {
 }
 
 const submit = async () => {
-  if (!form.value.date) return toast.error('تاريخ الترحيل مطلوب.')
   if (!form.value.description.trim()) return toast.error('شرح القيد المحاسبي مطلوب.')
 
   try {
+    // 🚀 التعديل هنا: إرسال start_date و end_date كما يطلب الباك إند
     await payrollStore.postPayrollBatch({
       employee_ids: props.employeeIds,
-      date: form.value.date,
+      start_date: props.startDate,
+      end_date: props.endDate,
       description: form.value.description,
     })
 
@@ -234,7 +227,7 @@ const submit = async () => {
     emit('posted')
     close()
   } catch (error) {
-    // الأخطاء تتم معالجتها في الـ Store وإظهارها هناك أو يمكن تركها للـ Interceptor
+    // الأخطاء تتم معالجتها في الـ Store
   }
 }
 </script>

@@ -70,6 +70,30 @@
           </div>
 
           <div>
+            <AppDropdown
+              id="overtime_policy_id"
+              label="سياسة العمل الإضافي"
+              v-model="form.overtime_policy_id"
+              :options="overtimePolicies"
+              option-label="name"
+              option-value="id"
+              placeholder="-- اختر سياسة الإضافي --"
+            />
+          </div>
+          <div>
+            <AppDropdown
+              id="salary_frequency"
+              label="دورة صرف الراتب *"
+              v-model="form.salary_frequency"
+              :options="salaryFrequencyOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="-- اختر دورة الصرف --"
+              required
+            />
+          </div>
+
+          <div>
             <AppInput
               id="basic_salary"
               type="number"
@@ -161,7 +185,11 @@ import AppButton from '@/components/ui/AppButton.vue'
 import { useContractStore } from '@/modules/hr/stores/contractStore'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { useSalaryStructureStore } from '@/modules/hr/stores/salaryStructureStore'
+import { useOvertimePolicyStore } from '@/modules/hr/stores/overtimePolicyStore'
 
+const policyStore = useOvertimePolicyStore()
+const overtimePolicies = ref([])
+// تهيئة الأدوات والمتاجر
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
@@ -170,49 +198,76 @@ const contractStore = useContractStore()
 const employeeStore = useEmployeeStore()
 const salaryStructureStore = useSalaryStructureStore()
 
+// الحالات المحسوبة (Computed)
 const isEditMode = computed(() => route.name === 'contracts.edit')
 const contractId = computed(() => route.params.id)
 
+// حالات التحميل والحفظ
 const isLoadingData = ref(false)
 const isSaving = ref(false)
 
-// القوائم المنسدلة
+// مصفوفات البيانات للقوائم المنسدلة
 const employees = ref([])
 const salaryStructures = ref([])
 const currentAttachmentUrl = ref(null)
 
+// خيارات دورة صرف الراتب (لتطابق الـ Enum في الباك اند)
+const salaryFrequencyOptions = [
+  { label: 'شهري', value: 'monthly' },
+  { label: 'كل أسبوعين', value: 'bi_weekly' },
+  { label: 'أسبوعي', value: 'weekly' },
+  { label: 'يومي', value: 'daily' },
+]
+
+// دالة تهيئة النموذج الافتراضي
 const defaultForm = () => ({
   employee_id: null,
   salary_structure_id: null,
+  overtime_policy_id: null,
+  salary_frequency: 'monthly', // القيمة الافتراضية عالمياً
   basic_salary: '',
   start_date: new Date().toISOString().split('T')[0],
   end_date: '',
 })
 
+// تهيئة النموذج والمرفقات
 const form = ref(defaultForm())
 const attachmentFile = ref(null)
 
+/**
+ * جلب كافة البيانات عند تحميل الصفحة
+ */
 onMounted(async () => {
   isLoadingData.value = true
 
   try {
-    // 1. جلب الموظفين (للقائمة المنسدلة)
+    // 1. جلب قائمة الموظفين
     if (employeeStore.employees.length === 0) {
       await employeeStore.fetchEmployees({ per_page: 500 })
     }
     employees.value = employeeStore.employees
 
-    // 2. جلب هياكل الرواتب النشطة فقط
+    // 2. جلب هياكل الرواتب النشطة
     await salaryStructureStore.fetchStructures({ per_page: 500, is_active: 1 })
     salaryStructures.value = salaryStructureStore.structures
 
-    // 3. تعبئة البيانات في حالة التعديل
+    // 3. جلب سياسات العمل الإضافي المتاحة (الإضافة الجديدة)
+    await policyStore.fetchPolicies({ per_page: 100 })
+    overtimePolicies.value = policyStore.policies
+
+    // 4. في حالة التعديل: جلب بيانات العقد الحالي وتعبئة النموذج
     if (isEditMode.value) {
       const contractData = await contractStore.fetchContractById(contractId.value)
 
       form.value = {
         employee_id: contractData.employee?.id || contractData.employee_id,
         salary_structure_id: contractData.salary_structure?.id || contractData.salary_structure_id,
+
+        // ربط السياسة المحفوظة مسبقاً (الإضافة الجديدة)
+        overtime_policy_id:
+          contractData.overtime_policy?.id || contractData.overtime_policy_id || null,
+
+        salary_frequency: contractData.salary_frequency || 'monthly',
         basic_salary: contractData.basic_salary,
         start_date: contractData.start_date,
         end_date: contractData.end_date || '',
@@ -226,49 +281,62 @@ onMounted(async () => {
     isLoadingData.value = false
   }
 })
-
+/**
+ * معالجة رفع الملفات
+ */
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
-  if (file) {
-    attachmentFile.value = file
-  } else {
-    attachmentFile.value = null
-  }
+  attachmentFile.value = file || null
 }
 
+/**
+ * العودة للقائمة
+ */
 const goBack = () => {
   router.push({ name: 'ContractsList' })
 }
 
+/**
+ * إرسال البيانات (حفظ أو تعديل)
+ */
 const submit = async () => {
+  // التحقق من صحة المدخلات الأساسية
   if (!form.value.employee_id) return toast.error('يجب اختيار الموظف.')
   if (!form.value.salary_structure_id) return toast.error('يجب اختيار هيكل الراتب.')
+  if (!form.value.salary_frequency) return toast.error('يجب تحديد دورة صرف الراتب.')
   if (!form.value.basic_salary || form.value.basic_salary < 0)
     return toast.error('الراتب الأساسي غير صالح.')
   if (!form.value.start_date) return toast.error('تاريخ البداية مطلوب.')
 
   isSaving.value = true
 
-  // استخدام FormData لدعم رفع الملفات
+  // استخدام FormData لدعم رفع الملفات وتوافق الـ API
   const formData = new FormData()
-  formData.append('employee_id', form.value.employee_id)
-  formData.append('salary_structure_id', form.value.salary_structure_id)
-  formData.append('basic_salary', form.value.basic_salary)
+  formData.append('employee_id', String(form.value.employee_id))
+  formData.append('salary_structure_id', String(form.value.salary_structure_id))
+  formData.append('salary_frequency', form.value.salary_frequency)
+  formData.append('basic_salary', String(form.value.basic_salary))
   formData.append('start_date', form.value.start_date)
 
+  // 🚀 الإضافة الجديدة: إضافة سياسة العمل الإضافي إذا تم اختيارها
+  if (form.value.overtime_policy_id) {
+    formData.append('overtime_policy_id', String(form.value.overtime_policy_id))
+  }
+
+  // إضافة تاريخ النهاية إذا وُجد
   if (form.value.end_date) {
     formData.append('end_date', form.value.end_date)
   }
 
+  // إضافة المرفق إذا تم رفعه
   if (attachmentFile.value) {
     formData.append('attachment', attachmentFile.value)
   }
 
   try {
     if (isEditMode.value) {
-      // تنبيه لارافيل: عند استخدام FormData لتحديث مورد، يجب إرسالها كـ POST مع تمرير _method=PUT
+      // إرسال POST مع تزييف PUT ليتوافق مع لارافيل عند إرسال ملفات (FormData)
       formData.append('_method', 'PUT')
-
       await contractStore.updateContract(contractId.value, formData)
       toast.success('تم تحديث العقد بنجاح.')
     } else {

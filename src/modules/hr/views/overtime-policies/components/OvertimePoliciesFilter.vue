@@ -1,11 +1,10 @@
-<!--src\modules\hr\views\contracts\components\ContractsFilter.vue-->
 <template>
   <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="md:col-span-2">
         <AppInput
           :model-value="searchQuery"
-          placeholder="ابحث باسم الموظف أو رقم العقد..."
+          placeholder="ابحث باسم السياسة..."
           @update:model-value="$emit('update:searchQuery', $event)"
           clearable
         />
@@ -14,7 +13,7 @@
       <div>
         <AppDropdown
           :model-value="status"
-          :options="statusOptions"
+          :options="calcTypeOptions"
           option-label="name"
           option-value="id"
           @update:model-value="$emit('update:status', $event)"
@@ -35,9 +34,10 @@ defineProps({
 
 defineEmits(['update:searchQuery', 'update:status'])
 
-const statusOptions = [
-  { id: '', name: 'كل العقود' },
-  { id: 'active', name: 'عقود سارية (نشطة)' },
-  { id: 'expired', name: 'عقود منتهية' },
+// حولنا الخيارات لتناسب طبيعة سياسات الأوفرتايم (بدلاً من نشط/منتهي)
+const calcTypeOptions = [
+  { id: '', name: 'كل السياسات' },
+  { id: 'daily', name: 'بنظام الأيام' },
+  { id: 'hourly', name: 'بنظام الساعات' },
 ]
 </script>

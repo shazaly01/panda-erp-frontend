@@ -1,3 +1,4 @@
+//src\modules\hr\stores\contractStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import contractService from '../services/contract.service'

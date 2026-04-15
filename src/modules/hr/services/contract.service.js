@@ -1,3 +1,4 @@
+//src\modules\hr\services\department.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/hr/contracts'

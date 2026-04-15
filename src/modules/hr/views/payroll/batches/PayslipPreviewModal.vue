@@ -110,9 +110,10 @@
                 <div class="text-left">
                   <h2 class="text-xl font-bold text-primary uppercase">PAYSLIP</h2>
                   <p
-                    class="text-sm font-bold text-gray-600 mt-1 border border-gray-300 px-3 py-1 rounded inline-block bg-gray-50"
+                    class="text-xs font-bold text-gray-600 mt-1 border border-gray-300 px-3 py-1 rounded inline-block bg-gray-50"
                   >
-                    شهر الاستحقاق: <span dir="ltr">{{ month }}</span>
+                    فترة الاستحقاق: <span dir="ltr">{{ startDate }}</span> إلى
+                    <span dir="ltr">{{ endDate }}</span>
                   </p>
                 </div>
               </div>
@@ -157,7 +158,7 @@
                   <table class="w-full text-sm">
                     <tbody>
                       <tr class="border-b border-gray-100">
-                        <td class="py-2 text-gray-600">الراتب الأساسي</td>
+                        <td class="py-2 text-gray-600">الراتب الأساسي للفترة</td>
                         <td class="py-2 text-left font-mono font-bold">
                           {{ formatCurrency(payrollStore.payslipPreview.contract_basic || 0) }}
                         </td>
@@ -238,7 +239,9 @@
               >
                 <div class="flex flex-col">
                   <span class="text-sm text-gray-300">صافي الراتب المستحق (Net Pay)</span>
-                  <span class="text-xs text-gray-400 mt-1">يُصرف للموظف بنهاية شهر الاستحقاق.</span>
+                  <span class="text-xs text-gray-400 mt-1"
+                    >يُصرف للموظف بنهاية فترة الاستحقاق.</span
+                  >
                 </div>
                 <span class="text-2xl md:text-3xl font-bold font-mono tracking-wider">
                   {{
@@ -280,7 +283,9 @@ import AppButton from '@/components/ui/AppButton.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   employee: { type: Object, default: null },
-  month: { type: String, required: true },
+  // 🚀 التعديل هنا: استقبال تاريخ البداية والنهاية
+  startDate: { type: String, required: true },
+  endDate: { type: String, required: true },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -291,7 +296,8 @@ watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen && props.employee) {
-      await payrollStore.previewPayroll(props.employee.id, props.month)
+      // 🚀 التعديل هنا: تمرير التواريخ الجديدة للـ Store
+      await payrollStore.previewPayroll(props.employee.id, props.startDate, props.endDate)
     } else {
       payrollStore.clearPreview()
     }
@@ -299,7 +305,6 @@ watch(
   { immediate: true },
 )
 
-// استخراج الاستحقاقات والاستقطاعات (دعم لهيكل البيانات المختلف)
 const allowances = computed(() => {
   if (!payrollStore.payslipPreview) return []
   const lines = payrollStore.payslipPreview.lines || payrollStore.payslipPreview.allowances || []
@@ -317,7 +322,6 @@ const close = () => {
   payrollStore.clearPreview()
 }
 
-// دالة الطباعة باستخدام نافذة المتصفح
 const printDocument = () => {
   window.print()
 }

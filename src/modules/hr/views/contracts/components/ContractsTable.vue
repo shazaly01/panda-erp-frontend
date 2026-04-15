@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\contracts\components\ContractsTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="contracts" :is-loading="loading">
@@ -16,10 +17,17 @@
 
       <template #cell-salary_details="{ item }">
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-            {{ formatCurrency(item.basic_salary) }}
-          </span>
-          <span class="text-xs text-text-muted">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+              {{ formatCurrency(item.basic_salary) }}
+            </span>
+            <span
+              class="px-1.5 py-0.5 text-[10px] rounded bg-surface-border text-text-secondary border border-surface-border"
+            >
+              {{ getFrequencyLabel(item.salary_frequency) }}
+            </span>
+          </div>
+          <span class="text-xs text-text-muted italic">
             {{ item.salary_structure?.name || 'هيكل غير محدد' }}
           </span>
         </div>
@@ -73,7 +81,7 @@
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
-            v-if="authStore.can('contract.update')"
+            v-if="authStore.can('hr.contracts.manage')"
             @click.stop="$emit('edit', item)"
             class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
             title="تعديل العقد"
@@ -89,7 +97,7 @@
           </button>
 
           <button
-            v-if="authStore.can('contract.delete')"
+            v-if="authStore.can('hr.contracts.manage')"
             @click.stop="$emit('delete', item)"
             class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
             title="حذف العقد"
@@ -128,20 +136,36 @@ defineEmits(['page-change', 'edit', 'delete'])
 
 const authStore = useAuthStore()
 
+// العناوين
 const tableHeaders = computed(() => [
   { key: 'employee', label: 'الموظف', class: 'min-w-[200px]' },
-  { key: 'salary_details', label: 'الراتب الأساسي والهيكل', class: 'min-w-[180px]' },
+  { key: 'salary_details', label: 'الراتب والدورة', class: 'min-w-[220px]' }, // تم زيادة العرض قليلاً
   { key: 'duration', label: 'مدة العقد', class: 'min-w-[160px]' },
   { key: 'status_attachment', label: 'الحالة والمرفقات', class: 'min-w-[140px]' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 
-// دالة تنسيق العملة (يمكن نقلها إلى ملف Helpers عام)
+/**
+ * تحويل الـ Enum القادم من الباك أند إلى نص عربي مفهوم
+ */
+const getFrequencyLabel = (value) => {
+  const frequencies = {
+    monthly: 'شهري',
+    bi_weekly: 'كل أسبوعين',
+    weekly: 'أسبوعي',
+    daily: 'يومي',
+  }
+  return frequencies[value] || value || 'شهري'
+}
+
+/**
+ * تنسيق العملة
+ */
 const formatCurrency = (value) => {
   if (!value) return '0.00'
   return new Intl.NumberFormat('ar-SD', {
     style: 'currency',
-    currency: 'SDG', // الجنيه السوداني أو حسب العملة المعتمدة لديك
+    currency: 'SDG',
     minimumFractionDigits: 2,
   }).format(value)
 }

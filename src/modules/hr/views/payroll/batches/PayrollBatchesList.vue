@@ -39,20 +39,31 @@
       <div
         class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-surface-section p-4 rounded-xl border border-surface-border"
       >
-        <div class="flex items-center gap-3">
-          <label class="text-sm font-bold text-text-primary">شهر الاستحقاق:</label>
-          <input
-            type="month"
-            v-model="selectedMonth"
-            class="px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:outline-none focus:border-primary transition-colors font-mono"
-          />
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-bold text-text-primary">من تاريخ:</label>
+            <input
+              type="date"
+              v-model="selectedStartDate"
+              class="px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:outline-none focus:border-primary transition-colors font-mono text-sm"
+            />
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-bold text-text-primary">إلى تاريخ:</label>
+            <input
+              type="date"
+              v-model="selectedEndDate"
+              class="px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:outline-none focus:border-primary transition-colors font-mono text-sm"
+            />
+          </div>
         </div>
+
         <AppButton
           v-if="selectedEmployees.length > 0 && authStore.can('payroll.post')"
           @click="openPostingModal"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-md shadow-emerald-500/20"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-md shadow-emerald-500/20 w-full sm:w-auto"
         >
-          <span class="flex items-center gap-2">
+          <span class="flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
@@ -129,7 +140,7 @@
               <div
                 v-if="payrollStore.processedEmployeeIds.includes(item.id)"
                 class="text-emerald-500"
-                title="تم ترحيل الراتب لهذا الشهر"
+                title="تم ترحيل الراتب في هذه الفترة"
               >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -203,13 +214,16 @@
       v-if="isPreviewModalOpen"
       v-model="isPreviewModalOpen"
       :employee="selectedEmployeeForPreview"
-      :month="selectedMonth"
+      :start-date="selectedStartDate"
+      :end-date="selectedEndDate"
     />
+
     <PayrollPostingModal
       v-if="isPostingModalOpen"
       v-model="isPostingModalOpen"
       :employee-ids="selectedEmployees"
-      :month="selectedMonth"
+      :start-date="selectedStartDate"
+      :end-date="selectedEndDate"
       @posted="onPayrollPosted"
     />
   </div>
@@ -233,9 +247,17 @@ const employeeStore = useEmployeeStore()
 const payrollStore = usePayrollStore()
 
 const activeTab = ref('new')
+
+// 🚀 تهيئة التواريخ الافتراضية (من بداية الشهر الحالي إلى نهايته لضمان تجربة مستخدم سلسة)
 const currentDate = new Date()
-const defaultMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
-const selectedMonth = ref(defaultMonth)
+const y = currentDate.getFullYear()
+const m = String(currentDate.getMonth() + 1).padStart(2, '0')
+const firstDayOfMonth = `${y}-${m}-01`
+const lastDayOfMonth = new Date(y, currentDate.getMonth() + 1, 0).toISOString().split('T')[0]
+
+const selectedStartDate = ref(firstDayOfMonth)
+const selectedEndDate = ref(lastDayOfMonth)
+
 const selectedEmployees = ref([])
 
 // متغيرات الفلترة
@@ -264,7 +286,7 @@ const filteredEmployees = computed(() => {
   })
 })
 
-// استخراج الموظفين الذين يمكن تحديدهم (لم يتم ترحيلهم)
+// استخراج الموظفين الذين يمكن تحديدهم (لم يتم ترحيلهم للفترة المحددة)
 const selectableEmployees = computed(() => {
   return filteredEmployees.value.filter(
     (emp) => !payrollStore.processedEmployeeIds.includes(emp.id),
@@ -282,20 +304,28 @@ onMounted(async () => {
   if (employeeStore.employees.length === 0) {
     await employeeStore.fetchEmployees({ per_page: 500, is_active: 1 })
   }
-  // جلب قائمة المرحلين للشهر الحالي عند فتح الشاشة
-  await payrollStore.fetchProcessedEmployees(selectedMonth.value)
+  // جلب قائمة المرحلين للفترة الافتراضية عند فتح الشاشة
+  await payrollStore.fetchProcessedEmployees(selectedStartDate.value, selectedEndDate.value)
 })
 
-// تحديث الأقفال إذا قام المستخدم بتغيير الشهر
-watch(selectedMonth, async (newMonth) => {
+// 🚀 تحديث الأقفال إذا قام المستخدم بتغيير التواريخ
+watch([selectedStartDate, selectedEndDate], async ([newStart, newEnd]) => {
   selectedEmployees.value = []
-  await payrollStore.fetchProcessedEmployees(newMonth)
+  if (newStart && newEnd) {
+    await payrollStore.fetchProcessedEmployees(newStart, newEnd)
+  }
 })
 
+// 🚀 تحديث ملخص المسير المالي بناءً على الموظفين والتواريخ
 watch(
-  [selectedEmployees, selectedMonth],
-  async ([newEmployees, newMonth]) => {
-    await payrollStore.fetchBatchSummary(newEmployees, newMonth)
+  [selectedEmployees, selectedStartDate, selectedEndDate],
+  async ([newEmployees, newStart, newEnd]) => {
+    if (newEmployees.length > 0 && newStart && newEnd) {
+      await payrollStore.fetchBatchSummary(newEmployees, newStart, newEnd)
+    } else {
+      // تفريغ الملخص إذا تم إلغاء تحديد الجميع
+      payrollStore.fetchBatchSummary([], null, null)
+    }
   },
   { deep: true },
 )
@@ -332,7 +362,7 @@ const openPostingModal = () => {
 const onPayrollPosted = async () => {
   selectedEmployees.value = []
   // تحديث الأقفال فوراً بعد الترحيل ليظهر الصح الأخضر
-  await payrollStore.fetchProcessedEmployees(selectedMonth.value)
+  await payrollStore.fetchProcessedEmployees(selectedStartDate.value, selectedEndDate.value)
   activeTab.value = 'history'
   payrollStore.fetchBatchesHistory()
 }
