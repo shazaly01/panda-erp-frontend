@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\contracts\ContractFormPage.vue-->
 <template>
   <div class="space-y-6 max-w-4xl mx-auto pb-12">
     <div class="flex items-center justify-between">
@@ -71,6 +70,19 @@
 
           <div>
             <AppDropdown
+              id="pay_group_id"
+              label="مجموعة الدفع *"
+              v-model="form.pay_group_id"
+              :options="payGroups"
+              option-label="name"
+              option-value="id"
+              placeholder="-- اختر مجموعة الدفع --"
+              required
+            />
+          </div>
+
+          <div>
+            <AppDropdown
               id="overtime_policy_id"
               label="سياسة العمل الإضافي"
               v-model="form.overtime_policy_id"
@@ -78,18 +90,6 @@
               option-label="name"
               option-value="id"
               placeholder="-- اختر سياسة الإضافي --"
-            />
-          </div>
-          <div>
-            <AppDropdown
-              id="salary_frequency"
-              label="دورة صرف الراتب *"
-              v-model="form.salary_frequency"
-              :options="salaryFrequencyOptions"
-              option-label="label"
-              option-value="value"
-              placeholder="-- اختر دورة الصرف --"
-              required
             />
           </div>
 
@@ -129,9 +129,9 @@
           </div>
 
           <div class="md:col-span-2 pt-4 border-t border-surface-border">
-            <label class="block text-sm font-medium text-text-primary mb-2">
-              نسخة العقد الموقعة (اختياري)
-            </label>
+            <label class="block text-sm font-medium text-text-primary mb-2"
+              >نسخة العقد الموقعة (اختياري)</label
+            >
             <div class="flex items-center gap-4">
               <input
                 type="file"
@@ -175,21 +175,18 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 
-// استيراد مكونات الواجهة الأساسية
 import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
-// استيراد المتاجر (Stores)
 import { useContractStore } from '@/modules/hr/stores/contractStore'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { useSalaryStructureStore } from '@/modules/hr/stores/salaryStructureStore'
 import { useOvertimePolicyStore } from '@/modules/hr/stores/overtimePolicyStore'
+// 🚀 التعديل 2: استيراد متجر مجموعات الدفع
+import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
 
-const policyStore = useOvertimePolicyStore()
-const overtimePolicies = ref([])
-// تهيئة الأدوات والمتاجر
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
@@ -197,77 +194,62 @@ const toast = useToast()
 const contractStore = useContractStore()
 const employeeStore = useEmployeeStore()
 const salaryStructureStore = useSalaryStructureStore()
+const policyStore = useOvertimePolicyStore()
+const payGroupStore = usePayGroupStore() // متجر مجموعات الدفع الجديد
 
-// الحالات المحسوبة (Computed)
 const isEditMode = computed(() => route.name === 'contracts.edit')
 const contractId = computed(() => route.params.id)
 
-// حالات التحميل والحفظ
 const isLoadingData = ref(false)
 const isSaving = ref(false)
 
-// مصفوفات البيانات للقوائم المنسدلة
 const employees = ref([])
 const salaryStructures = ref([])
+const overtimePolicies = ref([])
+const payGroups = ref([]) // 🚀 قائمة مجموعات الدفع
 const currentAttachmentUrl = ref(null)
 
-// خيارات دورة صرف الراتب (لتطابق الـ Enum في الباك اند)
-const salaryFrequencyOptions = [
-  { label: 'شهري', value: 'monthly' },
-  { label: 'كل أسبوعين', value: 'bi_weekly' },
-  { label: 'أسبوعي', value: 'weekly' },
-  { label: 'يومي', value: 'daily' },
-]
-
-// دالة تهيئة النموذج الافتراضي
 const defaultForm = () => ({
   employee_id: null,
   salary_structure_id: null,
+  pay_group_id: null, // 🚀 استبدال salary_frequency
   overtime_policy_id: null,
-  salary_frequency: 'monthly', // القيمة الافتراضية عالمياً
   basic_salary: '',
   start_date: new Date().toISOString().split('T')[0],
   end_date: '',
 })
 
-// تهيئة النموذج والمرفقات
 const form = ref(defaultForm())
 const attachmentFile = ref(null)
 
-/**
- * جلب كافة البيانات عند تحميل الصفحة
- */
 onMounted(async () => {
   isLoadingData.value = true
 
   try {
-    // 1. جلب قائمة الموظفين
     if (employeeStore.employees.length === 0) {
       await employeeStore.fetchEmployees({ per_page: 500 })
     }
     employees.value = employeeStore.employees
 
-    // 2. جلب هياكل الرواتب النشطة
     await salaryStructureStore.fetchStructures({ per_page: 500, is_active: 1 })
     salaryStructures.value = salaryStructureStore.structures
 
-    // 3. جلب سياسات العمل الإضافي المتاحة (الإضافة الجديدة)
     await policyStore.fetchPolicies({ per_page: 100 })
     overtimePolicies.value = policyStore.policies
 
-    // 4. في حالة التعديل: جلب بيانات العقد الحالي وتعبئة النموذج
+    // 🚀 جلب مجموعات الدفع المتاحة
+    await payGroupStore.fetchPayGroups({ is_active: 1 })
+    payGroups.value = payGroupStore.groups
+
     if (isEditMode.value) {
       const contractData = await contractStore.fetchContractById(contractId.value)
 
       form.value = {
         employee_id: contractData.employee?.id || contractData.employee_id,
         salary_structure_id: contractData.salary_structure?.id || contractData.salary_structure_id,
-
-        // ربط السياسة المحفوظة مسبقاً (الإضافة الجديدة)
+        pay_group_id: contractData.pay_group?.id || contractData.pay_group_id || null, // 🚀 ربط مجموعة الدفع
         overtime_policy_id:
           contractData.overtime_policy?.id || contractData.overtime_policy_id || null,
-
-        salary_frequency: contractData.salary_frequency || 'monthly',
         basic_salary: contractData.basic_salary,
         start_date: contractData.start_date,
         end_date: contractData.end_date || '',
@@ -281,61 +263,47 @@ onMounted(async () => {
     isLoadingData.value = false
   }
 })
-/**
- * معالجة رفع الملفات
- */
+
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
   attachmentFile.value = file || null
 }
 
-/**
- * العودة للقائمة
- */
 const goBack = () => {
   router.push({ name: 'ContractsList' })
 }
 
-/**
- * إرسال البيانات (حفظ أو تعديل)
- */
 const submit = async () => {
-  // التحقق من صحة المدخلات الأساسية
   if (!form.value.employee_id) return toast.error('يجب اختيار الموظف.')
   if (!form.value.salary_structure_id) return toast.error('يجب اختيار هيكل الراتب.')
-  if (!form.value.salary_frequency) return toast.error('يجب تحديد دورة صرف الراتب.')
+  if (!form.value.pay_group_id) return toast.error('يجب تحديد مجموعة الدفع.') // 🚀 تحقق جديد
   if (!form.value.basic_salary || form.value.basic_salary < 0)
     return toast.error('الراتب الأساسي غير صالح.')
   if (!form.value.start_date) return toast.error('تاريخ البداية مطلوب.')
 
   isSaving.value = true
 
-  // استخدام FormData لدعم رفع الملفات وتوافق الـ API
   const formData = new FormData()
   formData.append('employee_id', String(form.value.employee_id))
   formData.append('salary_structure_id', String(form.value.salary_structure_id))
-  formData.append('salary_frequency', form.value.salary_frequency)
+  formData.append('pay_group_id', String(form.value.pay_group_id)) // 🚀 إرسال الـ ID للباك اند
   formData.append('basic_salary', String(form.value.basic_salary))
   formData.append('start_date', form.value.start_date)
 
-  // 🚀 الإضافة الجديدة: إضافة سياسة العمل الإضافي إذا تم اختيارها
   if (form.value.overtime_policy_id) {
     formData.append('overtime_policy_id', String(form.value.overtime_policy_id))
   }
 
-  // إضافة تاريخ النهاية إذا وُجد
   if (form.value.end_date) {
     formData.append('end_date', form.value.end_date)
   }
 
-  // إضافة المرفق إذا تم رفعه
   if (attachmentFile.value) {
     formData.append('attachment', attachmentFile.value)
   }
 
   try {
     if (isEditMode.value) {
-      // إرسال POST مع تزييف PUT ليتوافق مع لارافيل عند إرسال ملفات (FormData)
       formData.append('_method', 'PUT')
       await contractStore.updateContract(contractId.value, formData)
       toast.success('تم تحديث العقد بنجاح.')

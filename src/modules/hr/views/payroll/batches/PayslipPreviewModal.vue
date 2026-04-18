@@ -112,8 +112,14 @@
                   <p
                     class="text-xs font-bold text-gray-600 mt-1 border border-gray-300 px-3 py-1 rounded inline-block bg-gray-50"
                   >
-                    فترة الاستحقاق: <span dir="ltr">{{ startDate }}</span> إلى
-                    <span dir="ltr">{{ endDate }}</span>
+                    {{ payPeriod?.name }} | <span dir="ltr">{{ payPeriod?.start_date }}</span> إلى
+                    <span dir="ltr">{{ payPeriod?.end_date }}</span>
+                  </p>
+                  <p
+                    v-if="runType === 'overtime_only'"
+                    class="text-xs font-bold text-amber-600 mt-1 border border-amber-200 px-3 py-1 rounded inline-block bg-amber-50"
+                  >
+                    نوع المسير: إضافي فقط (Overtime)
                   </p>
                 </div>
               </div>
@@ -283,9 +289,9 @@ import AppButton from '@/components/ui/AppButton.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   employee: { type: Object, default: null },
-  // 🚀 التعديل هنا: استقبال تاريخ البداية والنهاية
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
+  // 🚀 التعديل: استقبال كائن الفترة بالكامل ونوع المسير
+  payPeriod: { type: Object, required: true },
+  runType: { type: String, required: true },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -295,9 +301,9 @@ const payrollStore = usePayrollStore()
 watch(
   () => props.modelValue,
   async (isOpen) => {
-    if (isOpen && props.employee) {
-      // 🚀 التعديل هنا: تمرير التواريخ الجديدة للـ Store
-      await payrollStore.previewPayroll(props.employee.id, props.startDate, props.endDate)
+    if (isOpen && props.employee && props.payPeriod) {
+      // 🚀 التعديل: تمرير المعرفات بدلاً من التواريخ
+      await payrollStore.previewPayroll(props.employee.id, props.payPeriod.id, props.runType)
     } else {
       payrollStore.clearPreview()
     }
@@ -335,35 +341,27 @@ const formatCurrency = (value) => {
 </script>
 
 <style scoped>
-/* إجبار الألوان في الطباعة للحفاظ على الشكل الرسمي (Print Exact Colors) */
+/* نفس التنسيقات السابقة دون تغيير */
 .print-exact-colors {
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
 
-/* تنسيقات الطباعة */
 @media print {
   @page {
     size: A4 portrait;
     margin: 10mm;
   }
-
-  /* إخفاء كل شيء في المتصفح ما عدا المستند */
   body * {
     visibility: hidden;
   }
-
-  /* إخفاء العناصر غير المرغوبة في النافذة */
   .hide-on-print {
     display: none !important;
   }
-
-  /* جعل المستند مرئياً ويأخذ مساحة الورقة بالكامل */
   .printable-payslip,
   .printable-payslip * {
     visibility: visible;
   }
-
   .printable-payslip {
     position: absolute;
     left: 0;

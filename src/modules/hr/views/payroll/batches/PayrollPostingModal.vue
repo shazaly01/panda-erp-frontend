@@ -79,8 +79,9 @@
               </p>
               <p class="text-xs text-amber-700 dark:text-amber-500/80 mt-1">
                 سيتم ترحيل رواتب عدد (<strong>{{ employeeIds.length }}</strong
-                >) موظف. هذه العملية ستقوم بتوليد قيد محاسبي في دفتر الأستاذ بتاريخ نهاية الفترة ولن
-                يمكن التراجع عنها إلا بقيد عكسي.
+                >) موظف. هذه العملية ستقوم بتوليد قيد محاسبي في دفتر الأستاذ بتاريخ نهاية الفترة
+                <span v-if="runType === 'regular'">وسيتم إغلاق الفترة المالية.</span>
+                ولن يمكن التراجع عنها إلا بقيد عكسي.
               </p>
             </div>
           </div>
@@ -175,9 +176,9 @@ import AppButton from '@/components/ui/AppButton.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   employeeIds: { type: Array, required: true },
-  // 🚀 التعديل هنا: استقبال التواريخ بدلاً من month
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
+  // 🚀 التعديل: استقبال كائن الفترة بالكامل ونوع المسير
+  payPeriod: { type: Object, required: true },
+  runType: { type: String, required: true },
 })
 
 const emit = defineEmits(['update:modelValue', 'posted'])
@@ -192,9 +193,10 @@ const form = ref({
 watch(
   () => props.modelValue,
   (isOpen) => {
-    if (isOpen) {
-      // 🚀 التعديل هنا: تحديث الوصف التلقائي ليعكس الفترة
-      form.value.description = `إثبات مسير رواتب الموظفين للفترة من ${props.startDate} إلى ${props.endDate}`
+    if (isOpen && props.payPeriod) {
+      // 🚀 التعديل: وصف ذكي يعتمد على نوع التنفيذ واسم الفترة
+      const typeLabel = props.runType === 'overtime_only' ? 'الإضافية (Overtime)' : 'الأساسية'
+      form.value.description = `إثبات مسير الرواتب ${typeLabel} للموظفين لفترة: ${props.payPeriod.name}`
     }
   },
 )
@@ -215,11 +217,11 @@ const submit = async () => {
   if (!form.value.description.trim()) return toast.error('شرح القيد المحاسبي مطلوب.')
 
   try {
-    // 🚀 التعديل هنا: إرسال start_date و end_date كما يطلب الباك إند
+    // 🚀 التعديل: إرسال الـ IDs الجديدة بدلاً من التواريخ
     await payrollStore.postPayrollBatch({
       employee_ids: props.employeeIds,
-      start_date: props.startDate,
-      end_date: props.endDate,
+      pay_period_id: props.payPeriod.id,
+      run_type: props.runType,
       description: form.value.description,
     })
 

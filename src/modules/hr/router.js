@@ -32,6 +32,9 @@ const SalaryStructuresList = () => import('./views/payroll/SalaryStructuresList.
 // 💡 استيراد شاشة الفورم الجديدة للهياكل
 const SalaryStructureForm = () => import('./views/payroll/SalaryStructureFormPage.vue')
 
+const PayGroupsList = () => import('./views/pay-groups/PayGroupsList.vue')
+const PayPeriodsList = () => import('./views/pay-periods/PayPeriodsList.vue')
+
 const OvertimePoliciesList = () => import('./views/overtime-policies/OvertimePoliciesList.vue')
 const OvertimePolicyFormPage = () => import('./views/overtime-policies/OvertimePolicyFormPage.vue')
 
@@ -142,6 +145,19 @@ export default [
         name: 'salary-structures.edit',
         component: SalaryStructureForm,
         meta: { permission: 'hr.settings.manage' },
+      },
+
+      {
+        path: 'pay-groups',
+        name: 'PayGroupsList',
+        component: PayGroupsList,
+        meta: { permission: 'hr.pay_groups.view' },
+      },
+      {
+        path: 'pay-periods',
+        name: 'PayPeriodsList',
+        component: PayPeriodsList,
+        meta: { permission: 'hr.pay_periods.view' },
       },
       {
         path: 'overtime-policies',

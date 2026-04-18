@@ -37,31 +37,59 @@
 
     <div v-show="activeTab === 'new'" class="space-y-6">
       <div
-        class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-surface-section p-4 rounded-xl border border-surface-border"
+        class="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-section p-4 rounded-xl border border-surface-border"
       >
-        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <div class="flex items-center gap-2">
-            <label class="text-sm font-bold text-text-primary">من تاريخ:</label>
-            <input
-              type="date"
-              v-model="selectedStartDate"
-              class="px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:outline-none focus:border-primary transition-colors font-mono text-sm"
-            />
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto flex-1">
+          <div class="w-full sm:w-auto min-w-[200px]">
+            <label class="block text-xs font-bold text-text-muted mb-1">مجموعة الدفع</label>
+            <select
+              v-model="selectedPayGroupId"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none text-sm"
+            >
+              <option value="">-- اختر المجموعة --</option>
+              <option v-for="group in payGroupStore.groups" :key="group.id" :value="group.id">
+                {{ group.name }} ({{ formatFrequency(group.frequency) }})
+              </option>
+            </select>
           </div>
-          <div class="flex items-center gap-2">
-            <label class="text-sm font-bold text-text-primary">إلى تاريخ:</label>
-            <input
-              type="date"
-              v-model="selectedEndDate"
-              class="px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:outline-none focus:border-primary transition-colors font-mono text-sm"
-            />
+
+          <div class="w-full sm:w-auto min-w-[200px]" v-if="selectedPayGroupId">
+            <label class="block text-xs font-bold text-text-muted mb-1">الفترة المالية</label>
+            <select
+              v-model="selectedPayPeriodId"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none text-sm"
+              :disabled="payPeriodStore.loading"
+            >
+              <option value="">-- اختر الفترة --</option>
+              <option v-for="period in payPeriodStore.periods" :key="period.id" :value="period.id">
+                {{ period.name }} ({{ period.start_date }} إلى {{ period.end_date }})
+              </option>
+            </select>
+            <span
+              v-if="payPeriodStore.periods.length === 0 && !payPeriodStore.loading"
+              class="text-xs text-rose-500 block mt-1"
+              >لا توجد فترات مفتوحة لهذه المجموعة.</span
+            >
+          </div>
+
+          <div class="w-full sm:w-auto min-w-[200px]" v-if="selectedPayPeriodId">
+            <label class="block text-xs font-bold text-text-muted mb-1"
+              >نوع المسير (Run Type)</label
+            >
+            <select
+              v-model="selectedRunType"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none text-sm"
+            >
+              <option value="regular">راتب اعتيادي (شامل)</option>
+              <option value="overtime_only">مسير إضافي فقط (Overtime)</option>
+            </select>
           </div>
         </div>
 
         <AppButton
-          v-if="selectedEmployees.length > 0 && authStore.can('payroll.post')"
+          v-if="selectedEmployees.length > 0 && authStore.can('payroll.post') && isReadyToProcess"
           @click="openPostingModal"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-md shadow-emerald-500/20 w-full sm:w-auto"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-md shadow-emerald-500/20 w-full sm:w-auto mt-4 md:mt-0"
         >
           <span class="flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,133 +105,162 @@
         </AppButton>
       </div>
 
-      <PayrollSummaryCards />
+      <template v-if="isReadyToProcess">
+        <PayrollSummaryCards />
+
+        <div
+          class="flex flex-col md:flex-row gap-4 bg-surface-section p-4 rounded-xl border border-surface-border"
+        >
+          <div class="flex-1 relative">
+            <svg
+              class="w-5 h-5 absolute right-3 top-2.5 text-text-muted"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="بحث باسم الموظف أو رقمه الوظيفي..."
+              class="w-full pl-3 pr-10 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none"
+            />
+          </div>
+          <div class="w-full md:w-64">
+            <select
+              v-model="filterDepartment"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none"
+            >
+              <option value="">جميع الإدارات والأقسام</option>
+              <option v-for="dept in availableDepartments" :key="dept.id" :value="dept.id">
+                {{ dept.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <AppCard class="overflow-hidden">
+          <AppTable
+            :headers="tableHeaders"
+            :items="filteredEmployees"
+            :is-loading="employeeStore.loading"
+          >
+            <template #header-selection>
+              <div class="flex items-center justify-center w-full">
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  :disabled="selectableEmployees.length === 0"
+                  @change="toggleSelectAll"
+                  class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer disabled:opacity-50"
+                  title="تحديد الكل"
+                />
+              </div>
+            </template>
+
+            <template #cell-selection="{ item }">
+              <div class="flex items-center justify-center">
+                <div
+                  v-if="payrollStore.processedEmployeeIds.includes(item.id)"
+                  class="text-emerald-500"
+                  title="تم ترحيل الراتب في هذه الفترة"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  v-else
+                  type="checkbox"
+                  :value="item.id"
+                  v-model="selectedEmployees"
+                  class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer"
+                />
+              </div>
+            </template>
+
+            <template #cell-employee_info="{ item }">
+              <div class="flex flex-col gap-1 py-1">
+                <span
+                  class="font-bold text-sm text-text-primary"
+                  :class="{ 'opacity-50': payrollStore.processedEmployeeIds.includes(item.id) }"
+                >
+                  {{ item.full_name }}
+                </span>
+                <span class="text-xs font-mono text-text-muted">{{ item.employee_number }}</span>
+              </div>
+            </template>
+
+            <template #cell-job_details="{ item }">
+              <div
+                class="flex flex-col"
+                :class="{ 'opacity-50': payrollStore.processedEmployeeIds.includes(item.id) }"
+              >
+                <span class="text-xs text-text-primary">{{ item.position?.name || '---' }}</span>
+                <span class="text-[10px] text-text-muted">{{
+                  item.department?.name || '---'
+                }}</span>
+              </div>
+            </template>
+
+            <template #cell-actions="{ item }">
+              <div class="flex items-center justify-end">
+                <AppButton
+                  size="sm"
+                  variant="secondary"
+                  @click="openPreviewModal(item)"
+                  class="flex items-center gap-1 text-xs"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  معاينة
+                </AppButton>
+              </div>
+            </template>
+          </AppTable>
+        </AppCard>
+      </template>
 
       <div
-        class="flex flex-col md:flex-row gap-4 bg-surface-section p-4 rounded-xl border border-surface-border"
+        v-else
+        class="bg-surface-ground border border-surface-border p-12 rounded-xl text-center flex flex-col items-center justify-center"
       >
-        <div class="flex-1 relative">
-          <svg
-            class="w-5 h-5 absolute right-3 top-2.5 text-text-muted"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            v-model="searchQuery"
-            placeholder="بحث باسم الموظف أو رقمه الوظيفي..."
-            class="w-full pl-3 pr-10 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none"
-          />
-        </div>
-        <div class="w-full md:w-64">
-          <select
-            v-model="filterDepartment"
-            class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-lg text-text-primary focus:border-primary outline-none"
-          >
-            <option value="">جميع الإدارات والأقسام</option>
-            <option v-for="dept in availableDepartments" :key="dept.id" :value="dept.id">
-              {{ dept.name }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <AppCard class="overflow-hidden">
-        <AppTable
-          :headers="tableHeaders"
-          :items="filteredEmployees"
-          :is-loading="employeeStore.loading"
+        <svg
+          class="w-16 h-16 text-text-muted/50 mb-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          <template #header-selection>
-            <div class="flex items-center justify-center w-full">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                :disabled="selectableEmployees.length === 0"
-                @change="toggleSelectAll"
-                class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer disabled:opacity-50"
-                title="تحديد الكل"
-              />
-            </div>
-          </template>
-
-          <template #cell-selection="{ item }">
-            <div class="flex items-center justify-center">
-              <div
-                v-if="payrollStore.processedEmployeeIds.includes(item.id)"
-                class="text-emerald-500"
-                title="تم ترحيل الراتب في هذه الفترة"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                v-else
-                type="checkbox"
-                :value="item.id"
-                v-model="selectedEmployees"
-                class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer"
-              />
-            </div>
-          </template>
-
-          <template #cell-employee_info="{ item }">
-            <div class="flex flex-col gap-1 py-1">
-              <span
-                class="font-bold text-sm text-text-primary"
-                :class="{ 'opacity-50': payrollStore.processedEmployeeIds.includes(item.id) }"
-                >{{ item.full_name }}</span
-              >
-              <span class="text-xs font-mono text-text-muted">{{ item.employee_number }}</span>
-            </div>
-          </template>
-
-          <template #cell-job_details="{ item }">
-            <div
-              class="flex flex-col"
-              :class="{ 'opacity-50': payrollStore.processedEmployeeIds.includes(item.id) }"
-            >
-              <span class="text-xs text-text-primary">{{ item.position?.name || '---' }}</span>
-              <span class="text-[10px] text-text-muted">{{ item.department?.name || '---' }}</span>
-            </div>
-          </template>
-
-          <template #cell-actions="{ item }">
-            <div class="flex items-center justify-end">
-              <AppButton
-                size="sm"
-                variant="secondary"
-                @click="openPreviewModal(item)"
-                class="flex items-center gap-1 text-xs"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                معاينة
-              </AppButton>
-            </div>
-          </template>
-        </AppTable>
-      </AppCard>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <h3 class="text-lg font-bold text-text-primary mb-2">لبدء مسير الرواتب</h3>
+        <p class="text-text-muted max-w-md mx-auto">
+          الرجاء اختيار مجموعة الدفع ثم تحديد الفترة المالية ونوع المسير لعرض الموظفين المستحقين
+          والبدء في الإجراءات.
+        </p>
+      </div>
     </div>
 
     <div v-if="activeTab === 'history'">
@@ -211,19 +268,19 @@
     </div>
 
     <PayslipPreviewModal
-      v-if="isPreviewModalOpen"
+      v-if="isPreviewModalOpen && selectedPeriodObject"
       v-model="isPreviewModalOpen"
       :employee="selectedEmployeeForPreview"
-      :start-date="selectedStartDate"
-      :end-date="selectedEndDate"
+      :pay-period="selectedPeriodObject"
+      :run-type="selectedRunType"
     />
 
     <PayrollPostingModal
-      v-if="isPostingModalOpen"
+      v-if="isPostingModalOpen && selectedPeriodObject"
       v-model="isPostingModalOpen"
       :employee-ids="selectedEmployees"
-      :start-date="selectedStartDate"
-      :end-date="selectedEndDate"
+      :pay-period="selectedPeriodObject"
+      :run-type="selectedRunType"
       @posted="onPayrollPosted"
     />
   </div>
@@ -234,6 +291,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { usePayrollStore } from '@/modules/hr/stores/payrollStore'
+// 🚀 استيراد المتاجر الجديدة
+import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
+import { usePayPeriodStore } from '@/modules/hr/stores/payPeriodStore'
+
 import PayrollSummaryCards from './PayrollSummaryCards.vue'
 import PayrollHistoryTable from './PayrollHistoryTable.vue'
 import PayslipPreviewModal from './PayslipPreviewModal.vue'
@@ -245,48 +306,66 @@ import AppButton from '@/components/ui/AppButton.vue'
 const authStore = useAuthStore()
 const employeeStore = useEmployeeStore()
 const payrollStore = usePayrollStore()
+const payGroupStore = usePayGroupStore()
+const payPeriodStore = usePayPeriodStore()
 
 const activeTab = ref('new')
 
-// 🚀 تهيئة التواريخ الافتراضية (من بداية الشهر الحالي إلى نهايته لضمان تجربة مستخدم سلسة)
-const currentDate = new Date()
-const y = currentDate.getFullYear()
-const m = String(currentDate.getMonth() + 1).padStart(2, '0')
-const firstDayOfMonth = `${y}-${m}-01`
-const lastDayOfMonth = new Date(y, currentDate.getMonth() + 1, 0).toISOString().split('T')[0]
-
-const selectedStartDate = ref(firstDayOfMonth)
-const selectedEndDate = ref(lastDayOfMonth)
+// 🚀 الحالات الجديدة للمعمارية
+const selectedPayGroupId = ref('')
+const selectedPayPeriodId = ref('')
+const selectedRunType = ref('regular')
 
 const selectedEmployees = ref([])
-
-// متغيرات الفلترة
 const searchQuery = ref('')
 const filterDepartment = ref('')
 
-// جلب الإدارات المتاحة للفلتر تلقائياً
-const availableDepartments = computed(() => {
-  const deps = new Map()
-  employeeStore.employees.forEach((emp) => {
-    if (emp.department) deps.set(emp.department.id, emp.department.name)
-  })
-  return Array.from(deps, ([id, name]) => ({ id, name }))
+// دالة مساعدة لترجمة دورة المجموعة
+const formatFrequency = (freq) => {
+  const map = { monthly: 'شهري', weekly: 'أسبوعي', bi_weekly: 'نصف شهري', daily: 'يومي' }
+  return map[freq] || freq
+}
+
+// 🚀 جلب كائن الفترة المحدد كاملاً (لتمريره للنوافذ المنبثقة)
+const selectedPeriodObject = computed(() => {
+  return payPeriodStore.periods.find((p) => p.id === selectedPayPeriodId.value) || null
 })
 
-// فلترة الموظفين حسب البحث والإدارة
+// 🚀 التحقق من اكتمال الإعدادات لظهور القائمة
+const isReadyToProcess = computed(() => {
+  return selectedPayGroupId.value && selectedPayPeriodId.value && selectedRunType.value
+})
+
+// 🚀 فلترة الموظفين ذكياً: نجلب فقط الموظفين التابعين لمجموعة الدفع المحددة
 const filteredEmployees = computed(() => {
   return employeeStore.employees.filter((emp) => {
+    // التحقق 1: هل الموظف ينتمي للمجموعة المختارة؟ (يجب أن يكون العقد مرتبطاً بالمجموعة)
+    // نفترض هنا أن الباك إند يرسل بيانات العقد النشط مع الموظف أو أنك ستجلبهم مفلترين من الباك إند.
+    // مؤقتاً، سنتحقق إذا كان هناك ربط في البيانات المتاحة.
+    const empPayGroupId = emp.current_contract?.pay_group_id || emp.pay_group_id
+    const matchesGroup =
+      !selectedPayGroupId.value || String(empPayGroupId) === String(selectedPayGroupId.value)
+
+    // التحقق 2: البحث والإدارة
     const matchesSearch =
       emp.full_name.includes(searchQuery.value) ||
       (emp.employee_number && emp.employee_number.toString().includes(searchQuery.value))
     const matchesDept = filterDepartment.value
       ? emp.department?.id === filterDepartment.value
       : true
-    return matchesSearch && matchesDept
+
+    return matchesGroup && matchesSearch && matchesDept
   })
 })
 
-// استخراج الموظفين الذين يمكن تحديدهم (لم يتم ترحيلهم للفترة المحددة)
+const availableDepartments = computed(() => {
+  const deps = new Map()
+  filteredEmployees.value.forEach((emp) => {
+    if (emp.department) deps.set(emp.department.id, emp.department.name)
+  })
+  return Array.from(deps, ([id, name]) => ({ id, name }))
+})
+
 const selectableEmployees = computed(() => {
   return filteredEmployees.value.filter(
     (emp) => !payrollStore.processedEmployeeIds.includes(emp.id),
@@ -301,36 +380,46 @@ const tableHeaders = computed(() => [
 ])
 
 onMounted(async () => {
+  // جلب البيانات الأساسية
   if (employeeStore.employees.length === 0) {
-    await employeeStore.fetchEmployees({ per_page: 500, is_active: 1 })
+    await employeeStore.fetchEmployees({ per_page: 500, is_active: 1 }) // يفضل تعديل الـ API ليجلب العقد الحالي معه
   }
-  // جلب قائمة المرحلين للفترة الافتراضية عند فتح الشاشة
-  await payrollStore.fetchProcessedEmployees(selectedStartDate.value, selectedEndDate.value)
+  // جلب مجموعات الدفع
+  await payGroupStore.fetchPayGroups({ is_active: 1 })
 })
 
-// 🚀 تحديث الأقفال إذا قام المستخدم بتغيير التواريخ
-watch([selectedStartDate, selectedEndDate], async ([newStart, newEnd]) => {
+// 🚀 مراقب 1: عند تغيير المجموعة -> نجلب فتراتها المفتوحة ونُفرّغ الفترات السابقة
+watch(selectedPayGroupId, async (newGroupId) => {
+  selectedPayPeriodId.value = ''
   selectedEmployees.value = []
-  if (newStart && newEnd) {
-    await payrollStore.fetchProcessedEmployees(newStart, newEnd)
+  if (newGroupId) {
+    await payPeriodStore.fetchOpenPeriods(newGroupId)
+  } else {
+    payPeriodStore.periods = []
   }
 })
 
-// 🚀 تحديث ملخص المسير المالي بناءً على الموظفين والتواريخ
+// 🚀 مراقب 2: عند اكتمال الإعدادات -> نجلب الأقفال (من صُرف له) لتحديث الصح الأخضر
+watch([selectedPayPeriodId, selectedRunType], async ([newPeriodId, newRunType]) => {
+  selectedEmployees.value = []
+  if (newPeriodId && newRunType) {
+    await payrollStore.fetchProcessedEmployees(newPeriodId, newRunType)
+  }
+})
+
+// 🚀 مراقب 3: تحديث الملخص عند تحديد الموظفين
 watch(
-  [selectedEmployees, selectedStartDate, selectedEndDate],
-  async ([newEmployees, newStart, newEnd]) => {
-    if (newEmployees.length > 0 && newStart && newEnd) {
-      await payrollStore.fetchBatchSummary(newEmployees, newStart, newEnd)
+  [selectedEmployees, selectedPayPeriodId, selectedRunType],
+  async ([newEmployees, newPeriod, newRunType]) => {
+    if (newEmployees.length > 0 && newPeriod && newRunType) {
+      await payrollStore.fetchBatchSummary(newEmployees, newPeriod, newRunType)
     } else {
-      // تفريغ الملخص إذا تم إلغاء تحديد الجميع
       payrollStore.fetchBatchSummary([], null, null)
     }
   },
   { deep: true },
 )
 
-// تحديد الكل الذكي
 const isAllSelected = computed(() => {
   return (
     selectableEmployees.value.length > 0 &&
@@ -361,8 +450,14 @@ const openPostingModal = () => {
 
 const onPayrollPosted = async () => {
   selectedEmployees.value = []
-  // تحديث الأقفال فوراً بعد الترحيل ليظهر الصح الأخضر
-  await payrollStore.fetchProcessedEmployees(selectedStartDate.value, selectedEndDate.value)
+  // تحديث الأقفال
+  await payrollStore.fetchProcessedEmployees(selectedPayPeriodId.value, selectedRunType.value)
+  // إذا تم إغلاق الفترة (لأنها Regular)، قد نحتاج لتحديث قائمة الفترات
+  if (selectedRunType.value === 'regular') {
+    await payPeriodStore.fetchOpenPeriods(selectedPayGroupId.value)
+    selectedPayPeriodId.value = '' // إجبار المستخدم على اختيار فترة جديدة
+  }
+
   activeTab.value = 'history'
   payrollStore.fetchBatchesHistory()
 }

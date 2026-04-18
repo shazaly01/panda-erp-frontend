@@ -1,23 +1,17 @@
-// src/modules/hr/stores/payrollStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import payrollService from '../services/payroll.service'
 
 export const usePayrollStore = defineStore('hrPayroll', () => {
-  // ==========================
-  // 1. State (البيانات والحالة)
-  // ==========================
   const payslipPreview = ref(null)
   const isPosting = ref(false)
   const loading = ref(false)
   const error = ref(null)
   const processedEmployeeIds = ref([])
 
-  // بيانات سجل المسيرات (History)
   const batchesHistory = ref([])
   const batchesPagination = ref(null)
 
-  // بيانات الملخص الإحصائي
   const batchSummary = ref({
     total_basic: 0,
     total_allowances: 0,
@@ -27,20 +21,16 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
   })
   const isSummaryLoading = ref(false)
 
-  // ==========================
-  // 2. Actions (الإجراءات والدوال)
-  // ==========================
-
-  // 🚀 تم التعديل: استقبال startDate و endDate
-  async function previewPayroll(employeeId, startDate, endDate) {
+  // 🚀 التعديل: استقبال payPeriodId و runType
+  async function previewPayroll(employeeId, payPeriodId, runType) {
     loading.value = true
     error.value = null
     payslipPreview.value = null
     try {
       const response = await payrollService.preview({
         employee_id: employeeId,
-        start_date: startDate,
-        end_date: endDate,
+        pay_period_id: payPeriodId,
+        run_type: runType,
       })
       payslipPreview.value = response.data.data
       return payslipPreview.value
@@ -56,7 +46,7 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     isPosting.value = true
     error.value = null
     try {
-      // payload القادم من الشاشة يجب أن يحتوي الآن على start_date و end_date
+      // payload يحتوي الآن على pay_period_id و run_type
       const response = await payrollService.postBatch(payload)
       return response.data
     } catch (err) {
@@ -86,10 +76,9 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     }
   }
 
-  // 🚀 تم التعديل: استقبال startDate و endDate بدلاً من month
-  async function fetchBatchSummary(employeeIds, startDate, endDate) {
-    if (!employeeIds || employeeIds.length === 0 || !startDate || !endDate) {
-      // تصفير الملخص إذا قام المستخدم بإلغاء التحديد أو لم يحدد التواريخ
+  // 🚀 التعديل: استقبال payPeriodId و runType
+  async function fetchBatchSummary(employeeIds, payPeriodId, runType) {
+    if (!employeeIds || employeeIds.length === 0 || !payPeriodId || !runType) {
       batchSummary.value = {
         total_basic: 0,
         total_allowances: 0,
@@ -105,8 +94,8 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     try {
       const response = await payrollService.getSummary({
         employee_ids: employeeIds,
-        start_date: startDate,
-        end_date: endDate,
+        pay_period_id: payPeriodId,
+        run_type: runType,
       })
       batchSummary.value = response.data.data
     } catch (err) {
@@ -116,14 +105,14 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     }
   }
 
-  // 🚀 تم التعديل: لمنع الموظفين من الصرف المزدوج في نفس الفترة
-  async function fetchProcessedEmployees(startDate, endDate) {
-    if (!startDate || !endDate) return
+  // 🚀 التعديل: جلب المرحلين بناءً على الفترة ونوع المسير
+  async function fetchProcessedEmployees(payPeriodId, runType) {
+    if (!payPeriodId || !runType) return
 
     try {
       const response = await payrollService.getProcessedEmployees({
-        start_date: startDate,
-        end_date: endDate,
+        pay_period_id: payPeriodId,
+        run_type: runType,
       })
       processedEmployeeIds.value = response.data.data
     } catch (err) {

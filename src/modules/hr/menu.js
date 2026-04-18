@@ -19,7 +19,7 @@ export default [
     ],
   },
 
-  // 2. الحضور والطلبات
+  // 2. الحضور والعمليات
   {
     name: 'الحضور والعمليات',
     icon: ClockIcon,
@@ -59,6 +59,19 @@ export default [
       },
       { name: 'المسميات الوظيفية', routeName: 'PositionsList', permission: 'hr.positions.view' },
       { name: 'إعدادات الورديات', routeName: 'ShiftsList', permission: 'hr.shifts.view' },
+
+      // 🚀 إضافات المعمارية الجديدة لضبط الرواتب
+      {
+        name: 'مجموعات الدفع',
+        routeName: 'PayGroupsList',
+        permission: 'hr.pay_groups.view',
+      },
+      {
+        name: 'الفترات المالية',
+        routeName: 'PayPeriodsList',
+        permission: 'hr.pay_periods.view',
+      },
+
       {
         name: 'تعريف قواعد الرواتب',
         routeName: 'SalaryRulesList',
@@ -69,11 +82,10 @@ export default [
         routeName: 'SalaryStructuresList',
         permission: 'hr.settings.manage',
       },
-      // 🚀 الإضافة الجديدة: سياسات العمل الإضافي
       {
         name: 'سياسات العمل الإضافي',
         routeName: 'OvertimePoliciesList',
-        permission: 'hr.overtime_policies.view', // تأكد أن هذا التصريح متطابق مع جدول الصلاحيات لديك
+        permission: 'hr.overtime_policies.view',
       },
     ],
   },

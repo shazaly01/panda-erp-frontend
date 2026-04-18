@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\leaves\components\LeavesTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="leaves" :is-loading="loading">

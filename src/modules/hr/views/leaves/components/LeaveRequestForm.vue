@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\leaves\components\LeaveRequestForm.vue-->
 <template>
   <div class="space-y-5">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

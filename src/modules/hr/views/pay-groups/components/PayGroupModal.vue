@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\leaves\components\LeaveRequestModal.vue-->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"
@@ -23,7 +22,7 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-2xl transform flex flex-col max-h-[90vh]"
+          class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-lg transform flex flex-col max-h-[90vh]"
           role="dialog"
           aria-modal="true"
         >
@@ -51,14 +50,14 @@
           </div>
 
           <div class="overflow-y-auto flex-1 pb-2 px-1">
-            <LeaveRequestForm v-model="form" :is-edit-mode="isEditMode" />
+            <PayGroupForm v-model="form" :is-edit-mode="isEditMode" />
           </div>
 
           <div class="pt-4 mt-2 border-t border-surface-border flex justify-end gap-3 shrink-0">
             <AppButton variant="secondary" @click="close" :disabled="isSaving"> إلغاء </AppButton>
             <AppButton @click="submit" :disabled="isSaving">
               <span v-if="isSaving">جاري الحفظ...</span>
-              <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'تقديم الطلب' }}</span>
+              <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة المجموعة' }}</span>
             </AppButton>
           </div>
         </div>
@@ -70,34 +69,29 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { useLeaveStore } from '@/modules/hr/stores/leaveStore' // سنقوم بإنشائه لاحقاً
+import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
 import AppButton from '@/components/ui/AppButton.vue'
-import LeaveRequestForm from './LeaveRequestForm.vue'
+import PayGroupForm from './PayGroupForm.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  requestToEdit: { type: Object, default: null },
+  groupToEdit: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'saved'])
 
 const toast = useToast()
-const leaveStore = useLeaveStore()
+const payGroupStore = usePayGroupStore()
 
 const isSaving = ref(false)
-const isEditMode = computed(() => !!props.requestToEdit)
+const isEditMode = computed(() => !!props.groupToEdit)
 
-const title = computed(() => (isEditMode.value ? 'تعديل طلب الإجازة' : 'تقديم طلب إجازة جديد'))
-
-// دالة مساعدة للحصول على تاريخ اليوم بصيغة YYYY-MM-DD
-const getTodayDate = () => new Date().toISOString().split('T')[0]
+const title = computed(() => (isEditMode.value ? 'تعديل مجموعة الدفع' : 'إضافة مجموعة دفع جديدة'))
 
 const defaultForm = () => ({
-  employee_id: null,
-  leave_type_id: null,
-  start_date: getTodayDate(),
-  end_date: getTodayDate(),
-  reason: '',
+  name: '',
+  frequency: '',
+  is_active: true,
 })
 
 const form = ref(defaultForm())
@@ -108,12 +102,9 @@ watch(
     if (isOpen) {
       if (isEditMode.value) {
         form.value = {
-          employee_id: props.requestToEdit.employee_id,
-          // قد يكون leave_type_id موجوداً ككائن أو كـ ID مباشر حسب الـ Resource المستقبلي
-          leave_type_id: props.requestToEdit.leave_type_id || props.requestToEdit.leave_type?.id,
-          start_date: props.requestToEdit.start_date,
-          end_date: props.requestToEdit.end_date,
-          reason: props.requestToEdit.reason || '',
+          name: props.groupToEdit.name,
+          frequency: props.groupToEdit.frequency,
+          is_active: Boolean(props.groupToEdit.is_active),
         }
       } else {
         form.value = defaultForm()
@@ -129,30 +120,23 @@ const close = () => {
 }
 
 const submit = async () => {
-  // التحقق المبدئي (Frontend Validation)
-  if (!form.value.employee_id) return toast.error('يرجى اختيار الموظف.')
-  if (!form.value.leave_type_id) return toast.error('يرجى تحديد نوع الإجازة.')
-  if (!form.value.start_date) return toast.error('تاريخ بداية الإجازة مطلوب.')
-  if (!form.value.end_date) return toast.error('تاريخ نهاية الإجازة مطلوب.')
-
-  if (new Date(form.value.end_date) < new Date(form.value.start_date)) {
-    return toast.error('تاريخ النهاية يجب أن يكون مساوياً أو بعد تاريخ البداية.')
-  }
+  if (!form.value.name.trim()) return toast.error('يرجى إدخال اسم المجموعة.')
+  if (!form.value.frequency) return toast.error('يرجى تحديد دورة الراتب.')
 
   isSaving.value = true
   try {
     if (isEditMode.value) {
-      await leaveStore.updateLeaveRequest(props.requestToEdit.id, form.value)
-      toast.success('تم تحديث طلب الإجازة بنجاح.')
+      await payGroupStore.updatePayGroup(props.groupToEdit.id, form.value)
+      toast.success('تم تحديث بيانات المجموعة بنجاح.')
     } else {
-      await leaveStore.createLeaveRequest(form.value)
-      toast.success('تم تقديم طلب الإجازة بنجاح.')
+      await payGroupStore.createPayGroup(form.value)
+      toast.success('تم إنشاء مجموعة الدفع بنجاح.')
     }
 
     emit('update:modelValue', false)
     emit('saved')
   } catch (error) {
-    toast.error(error.response?.data?.message || 'حدث خطأ أثناء حفظ الطلب.')
+    toast.error(error.response?.data?.message || 'حدث خطأ أثناء حفظ البيانات.')
   } finally {
     isSaving.value = false
   }
