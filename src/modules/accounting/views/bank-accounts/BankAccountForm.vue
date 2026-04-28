@@ -37,62 +37,28 @@
         />
       </div>
 
-      <div class="p-4 rounded-xl border border-surface-border bg-surface-section/30 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h4 class="text-sm font-bold text-primary">الربط مع دليل الحسابات</h4>
-            <p class="text-xs text-text-muted mt-1">كيف تود ربط هذا البنك محاسبياً؟</p>
-          </div>
-
-          <div v-if="!form.id" class="flex items-center">
-            <input
-              id="auto-create-account"
-              type="checkbox"
-              v-model="autoCreateAccount"
-              class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-            />
-            <label
-              for="auto-create-account"
-              class="mr-2 text-xs font-bold text-text-secondary cursor-pointer select-none"
-            >
-              إنشاء حساب تلقائي
-            </label>
-          </div>
-        </div>
-
-        <div v-if="!autoCreateAccount || form.id" class="animate-fade-in">
-          <AppDropdown
-            :key="transactionalAccounts.length"
-            id="account-id"
-            label="الحساب المالي المرتبط"
-            v-model="form.account_id"
-            :options="transactionalAccounts"
-            option-label="name"
-            option-value="id"
-            :filter="true"
-            placeholder="ابحث عن حساب (مثلاً: 1002001...)"
-            :required="!autoCreateAccount || form.id"
-            :disabled="form.id && !!form.account_id"
+      <div
+        class="p-4 rounded-xl border border-blue-100 bg-blue-50/50 flex items-start space-x-3 space-x-reverse"
+      >
+        <svg
+          class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
-          <p v-if="form.id" class="text-[10px] text-orange-500 mt-1">
-            * لا يمكن تغيير الحساب المرتبط بعد الإنشاء لضمان سلامة القيود.
+        </svg>
+        <div>
+          <h4 class="text-sm font-bold text-blue-800">توليد مالي تلقائي</h4>
+          <p class="text-xs text-blue-600 mt-1">
+            سيقوم النظام بإنشاء حساب مالي فرعي لهذا البنك وربطه بدليل الحسابات (تحت حساب النقدية
+            بالبنوك) بشكل آلي فور الحفظ.
           </p>
-        </div>
-        <div v-else class="text-xs text-emerald-600 font-medium py-2">
-          <svg
-            class="w-4 h-4 inline-block ml-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          سيقوم النظام بإنشاء حساب فرعي جديد تحت حساب "البنوك" الرئيسي تلقائياً.
         </div>
       </div>
 
@@ -156,14 +122,10 @@ const props = defineProps({
   isSaving: { type: Boolean, default: false },
   currencies: { type: Array, default: () => [] },
   branches: { type: Array, default: () => [] },
-  // التعديل 1: استقبال قائمة الحسابات المسموح بها من المكون الأب
-  transactionalAccounts: { type: Array, default: () => [] },
+  // 🚫 تمت إزالة transactionalAccounts لأننا لم نعد نحتاجها
 })
 
 const emit = defineEmits(['submit', 'cancel'])
-
-// التعديل 2: متغير التحكم في إنشاء الحساب التلقائي
-const autoCreateAccount = ref(true)
 
 const createFreshForm = () => ({
   id: null,
@@ -172,9 +134,9 @@ const createFreshForm = () => ({
   account_number: '',
   iban: '',
   currency_id: '',
-  account_id: '', // التعديل 3: إضافة معرف الحساب للنموذج
   branch_id: '',
   is_active: true,
+  // 🚫 تمت إزالة account_id
 })
 
 const form = ref(createFreshForm())
@@ -190,29 +152,19 @@ watch(
         account_number: newData.account_number,
         iban: newData.iban || '',
         currency_id: newData.currency_id || newData.currency?.id || '',
-        account_id: newData.account_id || '',
         branch_id: newData.branch_id || newData.branch?.id || '',
         is_active: Boolean(newData.is_active),
       }
-      // إغلاق الإنشاء التلقائي في وضع التعديل
-      autoCreateAccount.value = false
     } else {
       form.value = createFreshForm()
-      autoCreateAccount.value = true
     }
   },
   { immediate: true, deep: true },
 )
 
 const handleSubmit = () => {
-  const payload = { ...form.value }
-
-  // التعديل 4: تصفير معرف الحساب إذا كان المستخدم يريد إنشاء حساب تلقائي ليفهم الباك-إند ذلك
-  if (autoCreateAccount.value && !form.value.id) {
-    payload.account_id = null
-  }
-
-  emit('submit', payload)
+  // إرسال البيانات التشغيلية الصافية للـ Backend
+  emit('submit', { ...form.value })
 }
 
 const handleCancel = () => {

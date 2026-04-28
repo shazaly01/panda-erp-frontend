@@ -1,27 +1,26 @@
-<!--src\modules\accounting\views\bank-accounts\BankAccountsFilter.vue-->
 <template>
   <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6">
     <div class="flex flex-col md:flex-row gap-4">
       <div class="flex-1">
         <AppInput
           :model-value="searchQuery"
-          placeholder="بحث باسم البنك، اسم الحساب، أو رقم الحساب..."
+          placeholder="بحث باسم المستند أو صيغة الترقيم..."
           @update:model-value="$emit('update:searchQuery', $event)"
           clearable
         />
       </div>
 
-      <!-- <div class="w-full md:w-64">
+      <div class="w-full md:w-64">
         <AppDropdown
-          :model-value="statusFilter"
+          :model-value="moduleFilter"
           :options="[
-            { id: '', name: 'حالة الحساب (الكل)' },
-            { id: '1', name: 'نشط' },
-            { id: '0', name: 'غير نشط' },
+            { id: '', name: 'كل الوحدات (الكل)' },
+            { id: 'accounting', name: 'الوحدة المالية' },
+            { id: 'hr', name: 'الموارد البشرية' },
           ]"
-          @update:model-value="$emit('update:statusFilter', $event)"
+          @update:model-value="$emit('update:moduleFilter', $event)"
         />
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
@@ -32,8 +31,8 @@ import AppDropdown from '@/components/ui/AppDropdown.vue'
 
 defineProps({
   searchQuery: { type: String, default: '' },
-  statusFilter: { type: [String, Number], default: '' },
+  moduleFilter: { type: String, default: '' },
 })
 
-defineEmits(['update:searchQuery', 'update:statusFilter'])
+defineEmits(['update:searchQuery', 'update:moduleFilter'])
 </script>

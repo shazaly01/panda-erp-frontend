@@ -1,3 +1,4 @@
+<!--src/modules/accounting/views/bank-accounts/BankAccountsTable.vue-->
 <template>
   <AppCard>
     <AppTable

@@ -1,15 +1,41 @@
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="space-y-5">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <AppInput
-          id="cost-center-code"
-          label="كود مركز التكلفة (التاق)"
-          v-model="form.code"
-          placeholder="مثال: 101001"
-          required
-        />
+      <div
+        v-if="form.id"
+        class="flex items-center justify-between p-3 rounded-lg bg-surface-section border border-surface-border mb-2"
+      >
+        <span class="text-sm font-bold text-text-secondary">كود مركز التكلفة:</span>
+        <span class="text-sm font-mono font-bold text-primary">{{ form.code }}</span>
+      </div>
 
+      <div
+        v-else
+        class="p-4 rounded-xl border border-blue-100 bg-blue-50/50 flex items-start space-x-3 space-x-reverse mb-2"
+      >
+        <svg
+          class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <div>
+          <h4 class="text-sm font-bold text-blue-800">ترقيم هرمي تلقائي</h4>
+          <p class="text-xs text-blue-600 mt-1">
+            سيقوم النظام بتوليد كود المركز آلياً (1, 1.1, 1.1.1...) بناءً على ترتيبه في الشجرة فور
+            الحفظ.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <AppInput
           id="cost-center-name"
           label="اسم مركز التكلفة"
@@ -17,17 +43,16 @@
           placeholder="مثال: فرع الرياض / مشروع البرج"
           required
         />
-      </div>
 
-      <div class="grid grid-cols-1 gap-5">
         <AppDropdown
           id="parent-id"
           label="المركز الرئيسي (الأب)"
           v-model="form.parent_id"
           :options="parentCostCenters"
-          placeholder="بدون مركز رئيسي (اختياري - يجعله تاق رئيسي)"
-          option-label="dropdownName"
+          placeholder="بدون مركز رئيسي (اختياري - يجعله مركزاً رئيسياً)"
+          option-label="name"
           option-value="id"
+          :filter="true"
         />
       </div>
 
@@ -45,7 +70,7 @@
             for="is-branch"
             class="mr-2 text-sm font-medium text-text-primary select-none cursor-pointer"
           >
-            هذا المركز يمثل فرعاً مستقلاً (له فواتير خاصة)
+            هذا المركز يمثل فرعاً مستقلاً
           </label>
         </div>
 
@@ -60,7 +85,7 @@
             for="is-active"
             class="mr-2 text-sm font-medium text-text-primary select-none cursor-pointer"
           >
-            مركز تكلفة نشط (يظهر في السندات والعمليات)
+            مركز تكلفة نشط (يظهر في العمليات)
           </label>
         </div>
       </div>
@@ -71,7 +96,6 @@
           label="بادئة الأكواد (Prefix)"
           v-model="form.code_prefix"
           placeholder="مثال: RY, KRT..."
-          required
         />
       </div>
 
@@ -96,7 +120,6 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
@@ -110,13 +133,10 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// تم حذف typeOptions لأننا لم نعد بحاجة لها
-
 const createFreshForm = () => ({
   id: null,
-  code: '',
+  code: '', // يُستخدم للعرض فقط في وضع التعديل
   name: '',
-  // تم حذف حقل type
   parent_id: '',
   is_active: true,
   is_branch: false,
@@ -132,9 +152,8 @@ watch(
     if (newData) {
       form.value = {
         id: newData.id,
-        code: newData.code,
+        code: newData.code, // نحفظ الكود هنا فقط لعرضه في الـ template
         name: newData.name,
-        // تم حذف حقل type
         parent_id: newData.parent_id || '',
         is_active: Boolean(newData.is_active),
         is_branch: Boolean(newData.is_branch),
@@ -149,7 +168,9 @@ watch(
 )
 
 const handleSubmit = () => {
-  emit('submit', { ...form.value })
+  // تصفية البيانات قبل الإرسال (نزع الكود لأن الـ Request سيمنعه)
+  const { code, ...payload } = form.value
+  emit('submit', payload)
 }
 
 const handleCancel = () => {

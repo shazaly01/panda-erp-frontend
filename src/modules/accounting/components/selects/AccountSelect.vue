@@ -1,3 +1,4 @@
+<!--src\modules\accounting\components\selects\AccountSelect.vue-->
 <template>
   <AppSearchableSelect
     :id="id"

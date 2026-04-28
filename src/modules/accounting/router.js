@@ -1,4 +1,3 @@
-//src\modules\accounting\router.js
 // --- استيراد شاشات المحاسبة (Lazy Loading) ---
 // تأكد أن المسارات هنا تطابق تماماً أسماء المجلدات التي أنشأتها على جهازك
 const AccountsList = () => import('./views/accounts/AccountsList.vue')
@@ -7,6 +6,11 @@ const BoxesList = () => import('./views/boxes/BoxesList.vue')
 const BankAccountsList = () => import('./views/bank-accounts/BankAccountsList.vue')
 const CurrenciesList = () => import('./views/currencies/CurrenciesList.vue')
 const FiscalYearsList = () => import('./views/fiscal-years/FiscalYearsList.vue')
+
+// === الإضافات الجديدة الخاصة بالربط والترقيم ===
+const AccountMappingsList = () => import('./views/account-mappings/AccountMappingsList.vue')
+// قمنا باستيرادها هنا لأننا وضعنا رابطها في قائمة المحاسبة حسب طلبك
+const SequencesList = () => import('@/modules/core/views/sequences/SequencesList.vue')
 
 // --- استيراد شاشات السندات ---
 const VouchersList = () => import('./views/vouchers/VouchersList.vue')
@@ -64,6 +68,22 @@ export default [
       },
 
       // ==========================================
+      // مسارات إعدادات النظام (الجديدة)
+      // ==========================================
+      {
+        path: 'account-mappings',
+        name: 'AccountMappingsList',
+        component: AccountMappingsList,
+        meta: { permission: 'account_mapping.view' },
+      },
+      {
+        path: 'sequences',
+        name: 'SequencesList',
+        component: SequencesList,
+        meta: { permission: 'view_sequences' },
+      },
+
+      // ==========================================
       // مسارات التقارير (Reports)
       // ==========================================
       {
@@ -93,6 +113,7 @@ export default [
         component: BalanceSheet,
         meta: { permission: 'report.balance_sheet.view' },
       },
+
       // ==========================================
       // مسارات سندات القبض (Receipts)
       // ==========================================

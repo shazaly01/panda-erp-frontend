@@ -1,4 +1,3 @@
-//src\modules\accounting\services\accountMapping.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/accounting/account-mappings'
@@ -15,5 +14,10 @@ export default {
     return apiClient.put(`${resource}/${id}`, {
       account_id: accountId,
     })
+  },
+
+  // 🌟 إضافة جديدة: جلب الحسابات المرشحة للربط
+  getCandidates() {
+    return apiClient.get(`${resource}/candidates`)
   },
 }

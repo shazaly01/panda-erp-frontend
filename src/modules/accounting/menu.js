@@ -1,4 +1,3 @@
-//src\modules\accounting\menu.js
 import {
   ClipboardDocumentListIcon,
   ChartPieIcon,
@@ -109,6 +108,17 @@ export default [
         name: 'السنوات المالية',
         routeName: 'FiscalYearsList',
         permission: 'fiscal_year.view',
+      },
+      // === الإضافات الجديدة الخاصة بالربط والترقيم ===
+      {
+        name: 'الربط المحاسبي',
+        routeName: 'AccountMappingsList',
+        permission: 'account_mapping.view',
+      },
+      {
+        name: 'إعدادات الترقيم',
+        routeName: 'SequencesList',
+        permission: 'view_sequences',
       },
     ],
   },
