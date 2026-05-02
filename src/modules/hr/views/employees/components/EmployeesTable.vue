@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\employees\components\EmployeesTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="employees" :is-loading="loading">

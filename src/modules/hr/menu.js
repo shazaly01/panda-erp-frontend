@@ -1,14 +1,14 @@
-// src/modules/hr/menu.js
 import {
   UserGroupIcon,
   Cog8ToothIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  CalendarDaysIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
-  // 1. شؤون الموظفين
+  // =========================================================
+  // 1. شؤون الموظفين (استخدام يومي / أسبوعي)
+  // =========================================================
   {
     name: 'شؤون الموظفين',
     icon: UserGroupIcon,
@@ -19,7 +19,9 @@ export default [
     ],
   },
 
-  // 2. الحضور والعمليات
+  // =========================================================
+  // 2. الحضور والعمليات (استخدام يومي)
+  // =========================================================
   {
     name: 'الحضور والعمليات',
     icon: ClockIcon,
@@ -27,11 +29,22 @@ export default [
     children: [
       { name: 'سجلات الحضور', routeName: 'AttendanceList', permission: 'hr.attendance.view' },
       { name: 'طلبات الإجازات', routeName: 'LeavesList', permission: 'hr.leaves.view' },
-      { name: 'السلف والعهد', routeName: 'LoansList', permission: 'hr.loans.view' },
+      {
+        name: 'تبديل الورديات (تجاوزات)',
+        routeName: 'ShiftOverridesList',
+        permission: 'hr.shift_overrides.view',
+      },
+      {
+        name: 'العطلات والطوارئ',
+        routeName: 'CalendarExceptionsList',
+        permission: 'hr.calendar_exceptions.view',
+      },
     ],
   },
 
-  // 3. الرواتب والأجور
+  // =========================================================
+  // 3. الرواتب والأجور (استخدام شهري)
+  // =========================================================
   {
     name: 'الرواتب والأجور',
     icon: CurrencyDollarIcon,
@@ -42,36 +55,43 @@ export default [
         routeName: 'PayrollInputsList',
         permission: 'hr.payroll_inputs.view',
       },
+      { name: 'السلف والعهد', routeName: 'LoansList', permission: 'hr.loans.view' }, // نُقلت هنا لارتباطها بالرواتب
       { name: 'مسيرات الرواتب', routeName: 'PayrollBatchesList', permission: 'hr.payroll.view' },
     ],
   },
 
-  // 4. إعدادات الموارد البشرية
+  // =========================================================
+  // 4. إعدادات النظام (تُضبط لمرة واحدة - مرتبة منطقياً)
+  // =========================================================
   {
-    name: 'إعدادات الموارد',
+    name: 'إعدادات النظام',
     icon: Cog8ToothIcon,
     permission: 'hr.settings.manage',
     children: [
+      // -- التنظيم الإداري --
       {
         name: 'الهيكل التنظيمي (أقسام)',
         routeName: 'DepartmentsList',
         permission: 'hr.departments.view',
       },
       { name: 'المسميات الوظيفية', routeName: 'PositionsList', permission: 'hr.positions.view' },
-      { name: 'إعدادات الورديات', routeName: 'ShiftsList', permission: 'hr.shifts.view' },
 
-      // 🚀 إضافات المعمارية الجديدة لضبط الرواتب
+      // -- إعدادات الجدولة والوقت --
+      { name: 'الورديات الأساسية', routeName: 'ShiftsList', permission: 'hr.shifts.view' },
       {
-        name: 'مجموعات الدفع',
-        routeName: 'PayGroupsList',
-        permission: 'hr.pay_groups.view',
-      },
-      {
-        name: 'الفترات المالية',
-        routeName: 'PayPeriodsList',
-        permission: 'hr.pay_periods.view',
+        name: 'قوالب الجدولة (دورة العمل)',
+        routeName: 'WorkingSchedulesList',
+        permission: 'hr.working_schedules.view',
       },
 
+      // -- إعدادات السياسات والرواتب --
+      { name: 'مجموعات الدفع', routeName: 'PayGroupsList', permission: 'hr.pay_groups.view' },
+      { name: 'الفترات المالية', routeName: 'PayPeriodsList', permission: 'hr.pay_periods.view' },
+      {
+        name: 'سياسات العمل الإضافي',
+        routeName: 'OvertimePoliciesList',
+        permission: 'hr.overtime_policies.view',
+      },
       {
         name: 'تعريف قواعد الرواتب',
         routeName: 'SalaryRulesList',
@@ -81,11 +101,6 @@ export default [
         name: 'هياكل الرواتب المجمعة',
         routeName: 'SalaryStructuresList',
         permission: 'hr.settings.manage',
-      },
-      {
-        name: 'سياسات العمل الإضافي',
-        routeName: 'OvertimePoliciesList',
-        permission: 'hr.overtime_policies.view',
       },
     ],
   },

@@ -1,7 +1,7 @@
-<!--src\modules\hr\views\contracts\components\ContractsTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="contracts" :is-loading="loading">
+      <!-- الموظف -->
       <template #cell-employee="{ item }">
         <div class="flex items-center gap-3 py-1">
           <div class="flex flex-col">
@@ -15,24 +15,41 @@
         </div>
       </template>
 
+      <!-- تفاصيل الراتب وقالب الجدولة 🌟 -->
       <template #cell-salary_details="{ item }">
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           <div class="flex items-center gap-2">
             <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">
               {{ formatCurrency(item.basic_salary) }}
             </span>
+            <!-- عرض مجموعة الدفع بدلاً من frequency -->
             <span
-              class="px-1.5 py-0.5 text-[10px] rounded bg-surface-border text-text-secondary border border-surface-border"
+              class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-600 border border-blue-200"
             >
-              {{ getFrequencyLabel(item.salary_frequency) }}
+              {{ item.pay_group?.name || 'مجموعة غير محددة' }}
             </span>
           </div>
-          <span class="text-xs text-text-muted italic">
-            {{ item.salary_structure?.name || 'هيكل غير محدد' }}
-          </span>
+          <div class="flex flex-col">
+            <span class="text-xs text-text-secondary font-medium">
+              هيكل: {{ item.salary_structure?.name || 'غير محدد' }}
+            </span>
+            <!-- 🌟 عرض قالب الجدولة (دورة العمل) -->
+            <span class="text-[11px] text-purple-600 font-bold mt-0.5 flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              جدولة: {{ item.working_schedule?.name || 'بدون جدولة' }}
+            </span>
+          </div>
         </div>
       </template>
 
+      <!-- مدة العقد -->
       <template #cell-duration="{ item }">
         <div class="flex flex-col gap-1 text-xs">
           <div class="flex items-center gap-1.5 text-text-secondary">
@@ -46,6 +63,7 @@
         </div>
       </template>
 
+      <!-- الحالة والمرفقات -->
       <template #cell-status_attachment="{ item }">
         <div class="flex items-center gap-3">
           <span
@@ -78,6 +96,7 @@
         </div>
       </template>
 
+      <!-- الإجراءات -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
@@ -136,27 +155,14 @@ defineEmits(['page-change', 'edit', 'delete'])
 
 const authStore = useAuthStore()
 
-// العناوين
+// العناوين (تم توسيع عمود الراتب والدورة ليحتوي البيانات الجديدة)
 const tableHeaders = computed(() => [
   { key: 'employee', label: 'الموظف', class: 'min-w-[200px]' },
-  { key: 'salary_details', label: 'الراتب والدورة', class: 'min-w-[220px]' }, // تم زيادة العرض قليلاً
+  { key: 'salary_details', label: 'الراتب والجدولة', class: 'min-w-[250px]' }, // 🌟 تم زيادة العرض
   { key: 'duration', label: 'مدة العقد', class: 'min-w-[160px]' },
   { key: 'status_attachment', label: 'الحالة والمرفقات', class: 'min-w-[140px]' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
-
-/**
- * تحويل الـ Enum القادم من الباك أند إلى نص عربي مفهوم
- */
-const getFrequencyLabel = (value) => {
-  const frequencies = {
-    monthly: 'شهري',
-    bi_weekly: 'كل أسبوعين',
-    weekly: 'أسبوعي',
-    daily: 'يومي',
-  }
-  return frequencies[value] || value || 'شهري'
-}
 
 /**
  * تنسيق العملة
@@ -169,4 +175,6 @@ const formatCurrency = (value) => {
     minimumFractionDigits: 2,
   }).format(value)
 }
+
+// 🚫 تم حذف دالة getFrequencyLabel لأنه لم يعد هناك salary_frequency
 </script>

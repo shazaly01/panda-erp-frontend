@@ -1,4 +1,3 @@
-<!---src\modules\accounting\views\boxes\BoxModal.vue-->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"
@@ -48,12 +47,11 @@
             </button>
           </div>
 
-          <BoxForm
-            :initial-data="box"
+          <ShiftOverrideForm
+            :initial-data="override"
             :is-saving="isSaving"
-            :currencies="currencies"
-            :branches="branches"
-            :transactional-accounts="transactionalAccounts"
+            :employees="employees"
+            :shifts="shifts"
             @submit="handleFormSubmit"
             @cancel="close"
           />
@@ -65,22 +63,20 @@
 
 <script setup>
 import { computed } from 'vue'
-import BoxForm from './BoxForm.vue'
+import ShiftOverrideForm from './ShiftOverrideForm.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  box: { type: Object, default: null },
+  override: { type: Object, default: null },
   isSaving: { type: Boolean, default: false },
-  currencies: { type: Array, default: () => [] },
-  branches: { type: Array, default: () => [] },
-  // التعديل هنا: استقبال الحسابات الحركية من BoxesList
-  transactionalAccounts: { type: Array, default: () => [] },
+  employees: { type: Array, default: () => [] },
+  shifts: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const title = computed(() =>
-  props.box && props.box.id ? 'تعديل بيانات الخزينة' : 'إضافة خزينة جديدة',
+  props.override && props.override.id ? 'تعديل تجاوز الوردية' : 'إضافة تجاوز وردية جديد',
 )
 
 const close = () => {

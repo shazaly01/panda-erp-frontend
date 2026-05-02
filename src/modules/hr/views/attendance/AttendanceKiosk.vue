@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\attendance\AttendanceKiosk.vue--->
 <template>
   <div
     class="fixed inset-0 z-[100] w-full h-full bg-slate-950 flex flex-col items-center justify-center p-6 overflow-hidden font-sans"

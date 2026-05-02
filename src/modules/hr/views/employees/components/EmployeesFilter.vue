@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\employees\components\EmployeesFilter.vue-->
 <template>
   <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6 shadow-sm">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

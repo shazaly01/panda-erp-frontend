@@ -1,3 +1,4 @@
+<!--src\modules\accounting\views\boxes\BoxForm.vue-->
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="space-y-5">

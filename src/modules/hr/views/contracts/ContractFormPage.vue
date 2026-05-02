@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\contracts\ContractFormPage.vue--->
 <template>
   <div class="space-y-6 max-w-4xl mx-auto pb-12">
     <div class="flex items-center justify-between">
@@ -24,7 +25,7 @@
             {{
               isEditMode
                 ? 'تحديث تفاصيل العقد المالي والتواريخ.'
-                : 'ربط الموظف بهيكل راتب وتحديد فترة سريان العقد.'
+                : 'ربط الموظف بهيكل راتب، قالب جدولة، وتحديد فترة السريان.'
             }}
           </p>
         </div>
@@ -81,6 +82,20 @@
             />
           </div>
 
+          <!-- 🌟 إضافة حقل قالب الجدولة (Working Schedule) -->
+          <div>
+            <AppDropdown
+              id="working_schedule_id"
+              label="قالب الجدولة (دورة العمل) *"
+              v-model="form.working_schedule_id"
+              :options="workingSchedules"
+              option-label="name"
+              option-value="id"
+              placeholder="-- اختر قالب الجدولة --"
+              required
+            />
+          </div>
+
           <div>
             <AppDropdown
               id="overtime_policy_id"
@@ -129,9 +144,9 @@
           </div>
 
           <div class="md:col-span-2 pt-4 border-t border-surface-border">
-            <label class="block text-sm font-medium text-text-primary mb-2"
-              >نسخة العقد الموقعة (اختياري)</label
-            >
+            <label class="block text-sm font-medium text-text-primary mb-2">
+              نسخة العقد الموقعة (اختياري)
+            </label>
             <div class="flex items-center gap-4">
               <input
                 type="file"
@@ -184,8 +199,9 @@ import { useContractStore } from '@/modules/hr/stores/contractStore'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { useSalaryStructureStore } from '@/modules/hr/stores/salaryStructureStore'
 import { useOvertimePolicyStore } from '@/modules/hr/stores/overtimePolicyStore'
-// 🚀 التعديل 2: استيراد متجر مجموعات الدفع
 import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
+// 🌟 استيراد متجر قوالب الجدولة
+import { useWorkingScheduleStore } from '@/modules/hr/stores/workingScheduleStore'
 
 const router = useRouter()
 const route = useRoute()
@@ -195,7 +211,8 @@ const contractStore = useContractStore()
 const employeeStore = useEmployeeStore()
 const salaryStructureStore = useSalaryStructureStore()
 const policyStore = useOvertimePolicyStore()
-const payGroupStore = usePayGroupStore() // متجر مجموعات الدفع الجديد
+const payGroupStore = usePayGroupStore()
+const scheduleStore = useWorkingScheduleStore() // تهيئة المتجر
 
 const isEditMode = computed(() => route.name === 'contracts.edit')
 const contractId = computed(() => route.params.id)
@@ -206,13 +223,15 @@ const isSaving = ref(false)
 const employees = ref([])
 const salaryStructures = ref([])
 const overtimePolicies = ref([])
-const payGroups = ref([]) // 🚀 قائمة مجموعات الدفع
+const payGroups = ref([])
+const workingSchedules = ref([]) // 🌟 قائمة قوالب الجدولة
 const currentAttachmentUrl = ref(null)
 
 const defaultForm = () => ({
   employee_id: null,
   salary_structure_id: null,
-  pay_group_id: null, // 🚀 استبدال salary_frequency
+  pay_group_id: null,
+  working_schedule_id: null, // 🌟 تهيئة المتغير الجديد
   overtime_policy_id: null,
   basic_salary: '',
   start_date: new Date().toISOString().split('T')[0],
@@ -237,9 +256,12 @@ onMounted(async () => {
     await policyStore.fetchPolicies({ per_page: 100 })
     overtimePolicies.value = policyStore.policies
 
-    // 🚀 جلب مجموعات الدفع المتاحة
     await payGroupStore.fetchPayGroups({ is_active: 1 })
     payGroups.value = payGroupStore.groups
+
+    // 🌟 جلب قوالب الجدولة المتاحة
+    await scheduleStore.fetchSchedules({ per_page: 100 })
+    workingSchedules.value = scheduleStore.schedules
 
     if (isEditMode.value) {
       const contractData = await contractStore.fetchContractById(contractId.value)
@@ -247,7 +269,9 @@ onMounted(async () => {
       form.value = {
         employee_id: contractData.employee?.id || contractData.employee_id,
         salary_structure_id: contractData.salary_structure?.id || contractData.salary_structure_id,
-        pay_group_id: contractData.pay_group?.id || contractData.pay_group_id || null, // 🚀 ربط مجموعة الدفع
+        pay_group_id: contractData.pay_group?.id || contractData.pay_group_id || null,
+        working_schedule_id:
+          contractData.working_schedule?.id || contractData.working_schedule_id || null, // 🌟 استرجاع قيمة القالب
         overtime_policy_id:
           contractData.overtime_policy?.id || contractData.overtime_policy_id || null,
         basic_salary: contractData.basic_salary,
@@ -276,7 +300,8 @@ const goBack = () => {
 const submit = async () => {
   if (!form.value.employee_id) return toast.error('يجب اختيار الموظف.')
   if (!form.value.salary_structure_id) return toast.error('يجب اختيار هيكل الراتب.')
-  if (!form.value.pay_group_id) return toast.error('يجب تحديد مجموعة الدفع.') // 🚀 تحقق جديد
+  if (!form.value.pay_group_id) return toast.error('يجب تحديد مجموعة الدفع.')
+  if (!form.value.working_schedule_id) return toast.error('يجب تحديد قالب الجدولة (دورة العمل).') // 🌟 تحقق إلزامي
   if (!form.value.basic_salary || form.value.basic_salary < 0)
     return toast.error('الراتب الأساسي غير صالح.')
   if (!form.value.start_date) return toast.error('تاريخ البداية مطلوب.')
@@ -286,7 +311,8 @@ const submit = async () => {
   const formData = new FormData()
   formData.append('employee_id', String(form.value.employee_id))
   formData.append('salary_structure_id', String(form.value.salary_structure_id))
-  formData.append('pay_group_id', String(form.value.pay_group_id)) // 🚀 إرسال الـ ID للباك اند
+  formData.append('pay_group_id', String(form.value.pay_group_id))
+  formData.append('working_schedule_id', String(form.value.working_schedule_id)) // 🌟 إرسال قالب الجدولة
   formData.append('basic_salary', String(form.value.basic_salary))
   formData.append('start_date', form.value.start_date)
 

@@ -7,6 +7,11 @@ const DepartmentsList = () => import('./views/departments/DepartmentsList.vue')
 const PositionsList = () => import('./views/positions/PositionsList.vue')
 const ShiftsList = () => import('./views/shifts/ShiftsList.vue')
 
+// 🌟 إضافات الجدولة الذكية (قوالب دورات العمل)
+const WorkingSchedulesList = () => import('./views/working-schedules/WorkingSchedulesList.vue')
+const WorkingScheduleFormPage = () =>
+  import('./views/working-schedules/WorkingScheduleFormPage.vue')
+
 // ==========================================
 // 2. شؤون الموظفين والعقود
 // ==========================================
@@ -18,18 +23,21 @@ const ContractsList = () => import('./views/contracts/ContractsList.vue')
 const ContractFormPage = () => import('./views/contracts/ContractFormPage.vue')
 
 // ==========================================
-// 3. الحضور والطلبات
+// 3. الحضور والطلبات والعمليات
 // ==========================================
 const AttendanceList = () => import('./views/attendance/AttendanceLogList.vue')
 const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
+
+// 🌟 إضافات الجدولة الذكية (التجاوزات الفردية والطوارئ)
+const ShiftOverridesList = () => import('./views/schedules/ShiftOverridesList.vue')
+const CalendarExceptionsList = () => import('./views/schedules/CalendarExceptionsList.vue')
 
 // ==========================================
 // 4. الرواتب والأجور
 // ==========================================
 const SalaryRulesList = () => import('./views/payroll/SalaryRulesList.vue')
 const SalaryStructuresList = () => import('./views/payroll/SalaryStructuresList.vue')
-// 💡 استيراد شاشة الفورم الجديدة للهياكل
 const SalaryStructureForm = () => import('./views/payroll/SalaryStructureFormPage.vue')
 
 const PayGroupsList = () => import('./views/pay-groups/PayGroupsList.vue')
@@ -91,7 +99,7 @@ export default [
         meta: { permission: 'hr.contracts.manage' },
       },
 
-      // --- الحضور والطلبات ---
+      // --- الحضور والعمليات والجدولة الذكية ---
       {
         path: 'attendance',
         name: 'AttendanceList',
@@ -120,7 +128,75 @@ export default [
         meta: { permission: 'hr.loans.view' },
       },
 
-      // --- الرواتب والأجور ---
+      {
+        path: 'shift-overrides',
+        name: 'ShiftOverridesList',
+        component: ShiftOverridesList,
+        meta: { permission: 'hr.shift_overrides.view' },
+      },
+      {
+        path: 'calendar-exceptions',
+        name: 'CalendarExceptionsList',
+        component: CalendarExceptionsList,
+        meta: { permission: 'hr.calendar_exceptions.view' },
+      },
+
+      // --- الرواتب والمدخلات ---
+      {
+        path: 'payroll-inputs',
+        name: 'PayrollInputsList',
+        component: PayrollInputsList,
+        meta: { permission: 'hr.payroll_inputs.view' },
+      },
+      {
+        path: 'payroll-batches',
+        name: 'PayrollBatchesList',
+        component: PayrollBatchesList,
+        meta: { permission: 'hr.payroll.view' },
+      },
+
+      // --- الإعدادات (الهيكل التنظيمي) ---
+      {
+        path: 'departments',
+        name: 'DepartmentsList',
+        component: DepartmentsList,
+        meta: { permission: 'hr.departments.view' },
+      },
+      {
+        path: 'positions',
+        name: 'PositionsList',
+        component: PositionsList,
+        meta: { permission: 'hr.positions.view' },
+      },
+
+      // --- الإعدادات (الجدولة والورديات) ---
+      {
+        path: 'shifts',
+        name: 'ShiftsList',
+        component: ShiftsList,
+        meta: { permission: 'hr.shifts.view' },
+      },
+      // 🚀 مسارات قوالب الجدولة (Working Schedules)
+      {
+        path: 'working-schedules',
+        name: 'WorkingSchedulesList',
+        component: WorkingSchedulesList,
+        meta: { permission: 'hr.working_schedules.view' },
+      },
+      {
+        path: 'working-schedules/create',
+        name: 'working-schedules.create',
+        component: WorkingScheduleFormPage,
+        meta: { permission: 'hr.working_schedules.create' },
+      },
+      {
+        path: 'working-schedules/:id/edit',
+        name: 'working-schedules.edit',
+        component: WorkingScheduleFormPage,
+        meta: { permission: 'hr.working_schedules.update' },
+      },
+
+      // --- الإعدادات (هياكل وقواعد الرواتب) ---
       {
         path: 'salary-rules',
         name: 'SalaryRulesList',
@@ -133,7 +209,6 @@ export default [
         component: SalaryStructuresList,
         meta: { permission: 'hr.settings.manage' },
       },
-      // 🚀 إضافة مسارات إنشاء وتعديل هياكل الرواتب المفقودة
       {
         path: 'salary-structures/create',
         name: 'salary-structures.create',
@@ -146,7 +221,6 @@ export default [
         component: SalaryStructureForm,
         meta: { permission: 'hr.settings.manage' },
       },
-
       {
         path: 'pay-groups',
         name: 'PayGroupsList',
@@ -176,39 +250,6 @@ export default [
         name: 'overtime-policies.edit',
         component: OvertimePolicyFormPage,
         meta: { permission: 'hr.overtime_policies.manage' },
-      },
-
-      {
-        path: 'payroll-inputs',
-        name: 'PayrollInputsList',
-        component: PayrollInputsList,
-        meta: { permission: 'hr.payroll_inputs.view' },
-      },
-      {
-        path: 'payroll-batches',
-        name: 'PayrollBatchesList',
-        component: PayrollBatchesList,
-        meta: { permission: 'hr.payroll.view' },
-      },
-
-      // --- الإعدادات والهيكل التنظيمي ---
-      {
-        path: 'departments',
-        name: 'DepartmentsList',
-        component: DepartmentsList,
-        meta: { permission: 'hr.departments.view' },
-      },
-      {
-        path: 'positions',
-        name: 'PositionsList',
-        component: PositionsList,
-        meta: { permission: 'hr.positions.view' },
-      },
-      {
-        path: 'shifts',
-        name: 'ShiftsList',
-        component: ShiftsList,
-        meta: { permission: 'hr.shifts.view' },
       },
     ],
   },
