@@ -3,6 +3,7 @@ import {
   Cog8ToothIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  WifiIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
@@ -38,6 +39,12 @@ export default [
         name: 'العطلات والطوارئ',
         routeName: 'CalendarExceptionsList',
         permission: 'hr.calendar_exceptions.view',
+      },
+      {
+        name: 'أكواد الإنترنت',
+        routeName: 'InternetVouchersList',
+        icon: WifiIcon, // استخدمنا الأيقونة هنا إذا كان نظامك يدعم أيقونات فرعية، وإلا تجاهل هذا السطر
+        permission: 'internet_vouchers.view',
       },
     ],
   },

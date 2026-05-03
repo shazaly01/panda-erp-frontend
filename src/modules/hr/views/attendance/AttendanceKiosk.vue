@@ -108,9 +108,28 @@
                 <h3 class="text-2xl font-black mb-1 text-white drop-shadow-sm">
                   {{ scanResult.employee_name || 'تنبيه النظام' }}
                 </h3>
-                <p class="text-lg font-medium opacity-90 text-slate-200">
+                <p
+                  :class="[
+                    'text-lg font-medium opacity-90 text-slate-200',
+                    scanResult.voucher ? 'mb-3' : '',
+                  ]"
+                >
                   {{ scanResult.message }}
                 </p>
+
+                <!-- 🌟 عرض كود الإنترنت بتصميم مضيء وجذاب -->
+                <div
+                  v-if="scanResult.voucher"
+                  class="inline-block bg-slate-950/80 border border-sky-500/50 rounded-xl px-5 py-2 shadow-[0_0_15px_rgba(14,165,233,0.2)] backdrop-blur-sm"
+                >
+                  <span
+                    class="text-[10px] text-sky-400 font-bold uppercase tracking-widest block mb-0.5"
+                    >كود الإنترنت اليومي (1GB)</span
+                  >
+                  <span class="text-2xl font-mono font-black text-white tracking-[0.2em]">{{
+                    scanResult.voucher
+                  }}</span>
+                </div>
               </div>
 
               <div
@@ -233,6 +252,7 @@ const handleScan = async () => {
         employee_name: data.employee_name,
         message: data.message,
         time: data.time,
+        voucher: data.voucher,
       }
     }, 50)
   } catch (error) {
@@ -247,7 +267,7 @@ const handleScan = async () => {
     keepFocus()
     resultTimeout = setTimeout(() => {
       scanResult.value = null
-    }, 4500)
+    }, 8000)
   }
 }
 

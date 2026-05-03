@@ -30,8 +30,15 @@ const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
 
 // 🌟 إضافات الجدولة الذكية (التجاوزات الفردية والطوارئ)
+// 🌟 إضافات الجدولة الذكية (التجاوزات الفردية والطوارئ)
 const ShiftOverridesList = () => import('./views/schedules/ShiftOverridesList.vue')
 const CalendarExceptionsList = () => import('./views/schedules/CalendarExceptionsList.vue')
+
+// 🌟 إضافة شاشة أكواد الإنترنت
+const InternetVouchersList = () => import('./views/internet_vouchers/InternetVouchersList.vue')
+
+// ==========================================
+// 4. الرواتب والأجور
 
 // ==========================================
 // 4. الرواتب والأجور
@@ -141,6 +148,12 @@ export default [
         meta: { permission: 'hr.calendar_exceptions.view' },
       },
 
+      {
+        path: 'internet-vouchers',
+        name: 'InternetVouchersList',
+        component: InternetVouchersList,
+        meta: { permission: 'internet_vouchers.view' },
+      },
       // --- الرواتب والمدخلات ---
       {
         path: 'payroll-inputs',
