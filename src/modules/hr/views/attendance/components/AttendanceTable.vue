@@ -29,13 +29,28 @@
               >{{ item.check_in || '--:--' }}</span
             >
           </span>
-          <span class="text-xs text-text-primary">
+          <span class="text-xs text-text-primary flex items-center gap-1">
             خروج:
+            <!-- 1. إذا كان هناك بصمة خروج فعلية -->
+            <span v-if="item.check_out" class="font-mono font-bold text-primary">
+              {{ item.check_out }}
+            </span>
+
+            <!-- 2. إذا كان النظام يعتمد بصمة واحدة (لا نطلب انصراف) -->
             <span
-              class="font-mono font-bold"
-              :class="item.check_out ? 'text-primary' : 'text-text-muted'"
-              >{{ item.check_out || '--:--' }}</span
+              v-else-if="item.attendance_mode === 'single_punch'"
+              class="text-[10px] text-text-muted bg-surface-ground border border-surface-border px-1.5 py-0.5 rounded"
             >
+              غير مطلوب
+            </span>
+
+            <!-- 3. إذا كان النظام صارماً والموظف نسي بصمة الخروج -->
+            <span
+              v-else
+              class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded"
+            >
+              مفقودة!
+            </span>
           </span>
         </div>
       </template>
