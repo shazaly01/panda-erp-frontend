@@ -245,8 +245,12 @@ onMounted(async () => {
   isLoadingData.value = true
 
   try {
-    if (employeeStore.employees.length === 0) {
+    if (isEditMode.value) {
+      // في حالة التعديل: نجلب كل الموظفين لكي يظهر الموظف الحالي في القائمة المنسدلة
       await employeeStore.fetchEmployees({ per_page: 500 })
+    } else {
+      // في حالة عقد جديد: نرسل الفلتر لاستبعاد الموظفين الذين لديهم عقود نشطة
+      await employeeStore.fetchEmployees({ per_page: 500, without_active_contract: 1 })
     }
     employees.value = employeeStore.employees
 
