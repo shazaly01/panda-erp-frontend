@@ -269,12 +269,16 @@ const employmentTypeOptions = [
   { id: 'intern', name: 'تدريب' },
 ]
 
+// 🌟 التعديل الأساسي هنا: مطابقة مفاتيح id مع EmployeeStatus Enum من الباك إند
 const statusOptions = [
-  { id: 'active', name: 'نشط' },
-  { id: 'on_leave', name: 'في إجازة' },
-  { id: 'resigned', name: 'مستقيل' },
-  { id: 'terminated', name: 'منهى خدماته' },
-  { id: 'probation', name: 'فترة تجربة' },
+  { id: 'in_service', name: 'في الخدمة' },
+  { id: 'leave', name: 'إجازة' },
+  { id: 'dismissed', name: 'مفصول' },
+  { id: 'end_of_service', name: 'انتهاء خدمة' },
+  { id: 'temporarily_dismissed', name: 'مفصول مؤقتا' },
+  { id: 'training', name: 'تحت التدريب' },
+  { id: 'temporary_transfer', name: 'تحويل لفتره موقته' },
+  { id: 'monthly_temporary_transfer', name: 'تحويل لفتره موقته شهري' },
 ]
 
 // تصفية المدراء (استبعاد الموظف نفسه في حالة التعديل حتى لا يكون مديراً لنفسه)
@@ -296,7 +300,7 @@ const defaultForm = () => ({
   gender: null,
   marital_status: null,
   employment_type: 'full_time',
-  status: 'active',
+  status: 'in_service', // 🌟 تعديل القيمة الافتراضية لتصبح in_service
   department_id: null,
   position_id: null,
   manager_id: null,
@@ -331,7 +335,7 @@ onMounted(async () => {
         gender: employeeData.gender || null,
         marital_status: employeeData.marital_status || null,
         employment_type: employeeData.employment_type || 'full_time',
-        status: employeeData.status || 'active',
+        status: employeeData.status || 'in_service', // 🌟 تعديل Fallback
         department_id: employeeData.department?.id || null,
         position_id: employeeData.position?.id || null,
         manager_id: employeeData.manager?.id || null,
