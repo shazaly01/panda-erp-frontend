@@ -1,4 +1,3 @@
-<!--src\components\ui\AppDropdown.vue-->
 <template>
   <div class="relative w-full">
     <label
@@ -47,11 +46,11 @@
         },
         panel: {
           class: [
-            'bg-white dark:bg-[#1f2937]', // الخلفية الأساسية
+            'bg-white dark:bg-[#1f2937]',
             'border border-gray-300 dark:border-gray-600',
             'rounded-md shadow-2xl',
             'mt-1',
-            'overflow-hidden', // [هام] لقص أي محتوى يخرج عن الحواف المستديرة
+            'overflow-hidden',
           ],
         },
         header: {
@@ -63,9 +62,9 @@
         },
         list: {
           class: [
-            'p-1 max-h-60 overflow-y-auto custom-scrollbar',
-            'bg-white dark:bg-[#1f2937]', // [هام جداً] إضافة لون الخلفية للقائمة نفسها لمنع الشفافية
-            'relative z-10', // ضمان أن القائمة فوق أي حدود
+            'p-1 pb-6 max-h-60 overflow-y-auto custom-scrollbar', // 🌟 [التعديل هنا] إضافة pb-6 لضمان ظهور العنصر الأخير
+            'bg-white dark:bg-[#1f2937]',
+            'relative z-10',
           ],
         },
         item: {
@@ -73,7 +72,7 @@
             'p-2 rounded-md cursor-pointer overflow-hidden whitespace-nowrap',
             'text-gray-700 dark:text-gray-200',
             'hover:bg-gray-100 dark:hover:bg-gray-700',
-            'transition-colors duration-150', // تنعيم حركة الهوفر
+            'transition-colors duration-150',
           ],
         },
         itemGroup: {
