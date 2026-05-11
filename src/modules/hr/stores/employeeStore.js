@@ -7,6 +7,7 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
   // 1. State
   // ==========================
   const employees = ref([]) // مصفوفة الموظفين
+  const allEmployees = ref([])
   const singleEmployee = ref(null) // بيانات موظف محدد (لعرض التفاصيل أو التعديل)
   const pagination = ref({
     current_page: 1,
@@ -43,6 +44,19 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
     } catch (err) {
       error.value = 'فشل تحميل قائمة الموظفين'
       console.error(err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchAllEmployees() {
+    loading.value = true
+    try {
+      const response = await employeeService.get({ per_page: 1000 }) // جلب عدد كبير لضمان شمول الجميع
+      const incomingData = response.data?.data || response.data || []
+      allEmployees.value = Array.isArray(incomingData) ? incomingData : []
+    } catch (err) {
+      console.error('فشل جلب قائمة الموظفين الكاملة', err)
     } finally {
       loading.value = false
     }
@@ -139,6 +153,8 @@ export const useEmployeeStore = defineStore('hrEmployee', () => {
     error,
     financialStatement,
     isStatementLoading,
+    allEmployees,
+    fetchAllEmployees,
     fetchFinancialStatement,
     clearFinancialStatement,
     fetchEmployees,

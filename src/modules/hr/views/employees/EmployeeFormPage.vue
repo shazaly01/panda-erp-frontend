@@ -283,7 +283,7 @@ const statusOptions = [
 
 // تصفية المدراء (استبعاد الموظف نفسه في حالة التعديل حتى لا يكون مديراً لنفسه)
 const availableManagers = computed(() => {
-  const allEmployees = employeeStore.employees || []
+  const allEmployees = employeeStore.allEmployees || []
   if (!isEditMode.value) return allEmployees
   return allEmployees.filter((emp) => emp.id !== Number(employeeId.value))
 })
@@ -317,7 +317,7 @@ onMounted(async () => {
     // جلب القوائم المنسدلة من الإعدادات إذا لم تكن موجودة
     if (departmentStore.flatDepartments.length === 0) await departmentStore.fetchDepartments()
     if (positionStore.flatPositions.length === 0) await positionStore.fetchPositions()
-    if (employeeStore.employees.length === 0) await employeeStore.fetchEmployees({ per_page: 100 }) // جلب المدراء
+    await employeeStore.fetchAllEmployees() // جلب المدراء
 
     // إذا كنا في وضع التعديل، نجلب بيانات الموظف المحددة
     if (isEditMode.value) {
