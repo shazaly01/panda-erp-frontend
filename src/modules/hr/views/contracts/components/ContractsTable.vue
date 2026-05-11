@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\contracts\components\ContractsTable.vue--->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="contracts" :is-loading="loading">
@@ -75,6 +76,41 @@
             "
           >
             {{ item.is_active ? 'ساري' : 'منتهي' }}
+
+            <!-- 🌟 شارة نمط تسجيل الحضور -->
+            <span
+              class="px-2 py-0.5 text-[10px] font-bold rounded flex items-center gap-1"
+              :class="
+                item.attendance_mode === 'auto'
+                  ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                  : 'bg-slate-50 text-slate-600 border border-slate-200'
+              "
+              :title="item.attendance_mode === 'auto' ? 'تسجيل حضور تلقائي' : 'يتطلب بصمة يدوية'"
+            >
+              <svg
+                v-if="item.attendance_mode === 'auto'"
+                class="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+              <svg v-else class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {{ item.attendance_mode === 'auto' ? 'تلقائي' : 'يدوي' }}
+            </span>
           </span>
 
           <a
@@ -160,7 +196,7 @@ const tableHeaders = computed(() => [
   { key: 'employee', label: 'الموظف', class: 'min-w-[200px]' },
   { key: 'salary_details', label: 'الراتب والجدولة', class: 'min-w-[250px]' }, // 🌟 تم زيادة العرض
   { key: 'duration', label: 'مدة العقد', class: 'min-w-[160px]' },
-  { key: 'status_attachment', label: 'الحالة والمرفقات', class: 'min-w-[140px]' },
+  { key: 'status_attachment', label: 'الحالة والمرفقات', class: 'min-w-[190px]' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 

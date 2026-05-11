@@ -98,6 +98,18 @@
 
           <div>
             <AppDropdown
+              id="attendance_mode"
+              label="نمط تسجيل الحضور *"
+              v-model="form.attendance_mode"
+              :options="attendanceModes"
+              option-label="label"
+              option-value="value"
+              required
+            />
+          </div>
+
+          <div>
+            <AppDropdown
               id="overtime_policy_id"
               label="سياسة العمل الإضافي"
               v-model="form.overtime_policy_id"
@@ -227,11 +239,17 @@ const payGroups = ref([])
 const workingSchedules = ref([]) // 🌟 قائمة قوالب الجدولة
 const currentAttachmentUrl = ref(null)
 
+const attendanceModes = ref([
+  { value: 'manual', label: 'يدوي' },
+  { value: 'auto', label: 'تلقائي' },
+])
+
 const defaultForm = () => ({
   employee_id: null,
   salary_structure_id: null,
   pay_group_id: null,
   working_schedule_id: null, // 🌟 تهيئة المتغير الجديد
+  attendance_mode: 'manual',
   overtime_policy_id: null,
   basic_salary: '',
   start_date: new Date().toISOString().split('T')[0],
@@ -276,6 +294,7 @@ onMounted(async () => {
         pay_group_id: contractData.pay_group?.id || contractData.pay_group_id || null,
         working_schedule_id:
           contractData.working_schedule?.id || contractData.working_schedule_id || null, // 🌟 استرجاع قيمة القالب
+        attendance_mode: contractData.attendance_mode || 'manual',
         overtime_policy_id:
           contractData.overtime_policy?.id || contractData.overtime_policy_id || null,
         basic_salary: contractData.basic_salary,
@@ -317,6 +336,7 @@ const submit = async () => {
   formData.append('salary_structure_id', String(form.value.salary_structure_id))
   formData.append('pay_group_id', String(form.value.pay_group_id))
   formData.append('working_schedule_id', String(form.value.working_schedule_id)) // 🌟 إرسال قالب الجدولة
+  formData.append('attendance_mode', form.value.attendance_mode)
   formData.append('basic_salary', String(form.value.basic_salary))
   formData.append('start_date', form.value.start_date)
 
