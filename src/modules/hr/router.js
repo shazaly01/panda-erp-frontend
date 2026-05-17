@@ -26,6 +26,7 @@ const ContractFormPage = () => import('./views/contracts/ContractFormPage.vue')
 // 3. الحضور والطلبات والعمليات
 // ==========================================
 const AttendanceList = () => import('./views/attendance/AttendanceLogList.vue')
+const TeamAttendancePage = () => import('./views/attendance/TeamAttendancePage.vue')
 const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
 
@@ -122,6 +123,14 @@ export default [
           // layout: 'blank' // قم بتفعيلها إذا كان نظامك يدعم تخطيطاً فارغاً للشاشات الكاملة
         },
       },
+
+      {
+        path: 'team-attendance',
+        name: 'TeamAttendance',
+        component: TeamAttendancePage,
+        meta: { permission: 'hr.team_attendance.manage' },
+      },
+
       {
         path: 'leaves',
         name: 'LeavesList',

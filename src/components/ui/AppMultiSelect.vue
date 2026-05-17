@@ -1,4 +1,3 @@
-<!--src\components\ui\AppDropdown.vue-->
 <template>
   <div class="relative w-full">
     <label
@@ -9,7 +8,7 @@
       {{ label }}
     </label>
 
-    <Dropdown
+    <MultiSelect
       :id="id"
       :model-value="modelValue"
       @update:model-value="$emit('update:modelValue', $event)"
@@ -21,6 +20,7 @@
       :required="required"
       :placeholder="placeholder"
       :show-clear="showClear"
+      display="chip"
       appendTo="body"
       class="w-full"
       :pt="{
@@ -34,9 +34,16 @@
             'dark:focus:ring-primary dark:focus:border-primary',
           ],
         },
-        input: {
+        labelContainer: {
+          class: 'overflow-hidden flex flex-auto cursor-pointer p-1 items-center',
+        },
+        label: {
           class:
-            'w-full p-2 text-gray-900 dark:text-text-primary bg-transparent border-0 focus:outline-none',
+            'block w-full text-gray-900 dark:text-text-primary bg-transparent border-0 focus:outline-none p-1 flex flex-wrap gap-1',
+        },
+        token: {
+          class:
+            'inline-flex items-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded px-2 py-0.5 text-xs font-medium',
         },
         trigger: {
           class:
@@ -55,29 +62,38 @@
           ],
         },
         header: {
-          class: 'p-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800',
+          class:
+            'p-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-between gap-2',
         },
         filterInput: {
           class:
             'w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white dark:border-gray-500',
         },
+        closeButton: {
+          class: 'hidden', // إخفاء زر الإغلاق الافتراضي لـ PrimeVue للاعتماد على النقر الخارجي
+        },
         list: {
           class: [
-            'p-1 pb-6 max-h-60 overflow-y-auto custom-scrollbar', // 🌟 [التعديل هنا] إضافة pb-6 لضمان ظهور العنصر الأخير
+            'p-1 pb-6 max-h-60 overflow-y-auto custom-scrollbar',
             'bg-white dark:bg-[#1f2937]',
             'relative z-10',
           ],
         },
         item: {
           class: [
-            'p-2 rounded-md cursor-pointer overflow-hidden whitespace-nowrap',
+            'p-2 rounded-md cursor-pointer overflow-hidden whitespace-nowrap flex items-center gap-2',
             'text-gray-700 dark:text-gray-200',
             'hover:bg-gray-100 dark:hover:bg-gray-700',
             'transition-colors duration-150',
           ],
         },
-        itemGroup: {
-          class: 'p-2 font-bold text-gray-500 dark:text-gray-400',
+        checkboxContainer: {
+          class:
+            'flex items-center justify-center shrink-0 w-4 h-4 rounded border border-gray-300 dark:border-gray-600',
+        },
+        checkbox: {
+          class:
+            'flex items-center justify-center w-full h-full rounded text-white bg-transparent peer-checked:bg-primary',
         },
       }"
     />
@@ -85,16 +101,16 @@
 </template>
 
 <script setup>
-import Dropdown from 'primevue/dropdown'
+import MultiSelect from 'primevue/multiselect'
 
 defineProps({
   id: { type: String, required: true },
   label: { type: String, default: '' },
-  modelValue: { type: [String, Number], default: '' },
+  modelValue: { type: Array, default: () => [] }, // هنا يستقبل مصفوفة إجبارياً
   options: { type: Array, default: () => [] },
   optionLabel: { type: String, default: 'name' },
   optionValue: { type: String, default: 'id' },
-  placeholder: { type: String, default: 'اختر...' },
+  placeholder: { type: String, default: 'اختر المجموعات...' },
   loading: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
   showClear: { type: Boolean, default: true },
@@ -104,7 +120,6 @@ defineEmits(['update:modelValue'])
 </script>
 
 <style scoped>
-/* تحسين شكل شريط التمرير */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }

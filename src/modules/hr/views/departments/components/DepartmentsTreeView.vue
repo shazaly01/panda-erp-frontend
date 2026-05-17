@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\departments\components\DepartmentsTreeView.vue--->
 <template>
   <AppCard class="overflow-hidden">
     <div v-if="loading" class="flex justify-center items-center p-12">

@@ -5,9 +5,10 @@
     @click.self="close"
   >
     <div
-      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-3xl transform transition-all duration-300 scale-95"
+      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-7xl transform transition-all duration-300 scale-95"
       :class="{ 'scale-100': modelValue }"
     >
+      >
       <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
         <h3 class="text-lg font-semibold text-text-primary">
           تعديل صلاحيات دور: <span class="font-bold text-primary">{{ role?.name }}</span>

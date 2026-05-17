@@ -70,6 +70,24 @@
           placeholder="-- بدون مركز تكلفة --"
         />
       </div>
+
+      <!-- الحقل الجديد: اختيار مشرفي القسم (متعدد) -->
+      <div class="md:col-span-2">
+        <AppMultiSelect
+          id="dept-supervisors"
+          label="مشرفو القسم (صلاحية اعتماد الحضور)"
+          :model-value="modelValue.supervisor_ids"
+          @update:model-value="updateField('supervisor_ids', $event)"
+          :options="employees"
+          option-label="full_name"
+          option-value="id"
+          placeholder="اختر المشرفين المسؤولين عن هذا القسم..."
+        />
+        <p class="text-xs text-text-secondary mt-1">
+          يمكنك اختيار مشرف واحد أو عدة مشرفين، سيتيح لهم هذا النظام رؤية واعتماد حضور جميع موظفي
+          هذا القسم.
+        </p>
+      </div>
     </div>
 
     <div>
@@ -107,11 +125,13 @@ import { computed } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
+import AppMultiSelect from '@/components/ui/AppMultiSelect.vue'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
   flatDepartments: { type: Array, required: true },
   costCenters: { type: Array, required: true },
+  employees: { type: Array, required: true }, // قائمة الموظفين لاختيار المشرفين منها
   isRootEdit: { type: Boolean, default: false }, // لمنع تغيير الأب إذا كانت العقدة جذرية ولها أبناء
 })
 

@@ -4,6 +4,7 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   WifiIcon,
+  ClipboardDocumentCheckIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
@@ -45,6 +46,23 @@ export default [
         routeName: 'InternetVouchersList',
         icon: WifiIcon, // استخدمنا الأيقونة هنا إذا كان نظامك يدعم أيقونات فرعية، وإلا تجاهل هذا السطر
         permission: 'internet_vouchers.view',
+      },
+    ],
+  },
+
+  // 👈👈👈 أضف هذه الكتلة الجديدة بالكامل هنا 👇👇👇
+  // =========================================================
+  // 4. بوابة المشرفين (الخدمة الذاتية للمدير)
+  // =========================================================
+  {
+    name: 'بوابة المشرفين',
+    icon: ClipboardDocumentCheckIcon,
+    permission: 'hr.team_attendance.manage', // تظهر فقط لمن لديه هذه الصلاحية
+    children: [
+      {
+        name: 'حضور فريقي',
+        routeName: 'TeamAttendance', // تأكد أن هذا يطابق اسم الـ Route في Vue Router
+        permission: 'hr.team_attendance.manage',
       },
     ],
   },

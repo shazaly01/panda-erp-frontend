@@ -52,10 +52,12 @@
           </div>
 
           <div class="overflow-y-auto flex-1 pb-2">
+            <!-- ✨ التعديل: تمرير :employees="employeesList" -->
             <DepartmentForm
               v-model="form"
               :flat-departments="filteredDepartments"
               :cost-centers="costCenters"
+              :employees="employeesList"
               :is-root-edit="isEditMode && hasChildren"
             />
           </div>
@@ -74,10 +76,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { useCostCenterStore } from '@/modules/accounting/stores/costCenterStore'
+import { useEmployeeStore } from '@/modules/hr/stores/employeeStore' // ✨ جلب Store الموظفين
 import AppButton from '@/components/ui/AppButton.vue'
 import DepartmentForm from './DepartmentForm.vue'
 
@@ -92,6 +95,7 @@ const emit = defineEmits(['update:modelValue', 'saved'])
 const toast = useToast()
 const departmentStore = useDepartmentStore()
 const costCenterStore = useCostCenterStore()
+const employeeStore = useEmployeeStore() // ✨ تهيئة الـ Store
 
 const isSaving = ref(false)
 
@@ -107,6 +111,10 @@ const filteredDepartments = computed(() => {
 
 const costCenters = computed(() => costCenterStore.activeCostCenters || [])
 
+// ✨ القائمة التي سيتم تمريرها لخانة اختيار المشرفين
+const employeesList = computed(() => employeeStore.employees || [])
+
+// ✨ التعديل: إضافة supervisor_ids للـ defaultForm
 const defaultForm = () => ({
   name: '',
   code: '',
@@ -115,6 +123,7 @@ const defaultForm = () => ({
   cost_center_id: null,
   description: '',
   is_active: true,
+  supervisor_ids: [],
 })
 
 const form = ref(defaultForm())
@@ -123,14 +132,21 @@ watch(
   () => props.modelValue,
   (isOpen) => {
     if (isOpen) {
-      // 1. جلب مراكز التكلفة في الخلفية بدون حظر الواجهة أو إظهار تحميل
+      // 1. جلب مراكز التكلفة والموظفين في الخلفية بدون حظر الواجهة
       if (costCenterStore.costCenters.length === 0 || costCenterStore.costCenters.length < 50) {
         costCenterStore.fetchCostCenters({ per_page: 500 }).catch(() => {
           console.error('تعذر جلب مراكز التكلفة')
         })
       }
 
-      // 2. تعبئة البيانات فوراً لكي تظهر الشاشة للمستخدم في نفس اللحظة
+      // ✨ جلب الموظفين ليكونوا متاحين في القائمة المنسدلة للمشرفين
+      if (employeeStore.employees.length === 0) {
+        employeeStore.fetchEmployees({ per_page: 500, active_only: 1 }).catch(() => {
+          console.error('تعذر جلب الموظفين')
+        })
+      }
+
+      // 2. تعبئة البيانات فوراً
       if (isEditMode.value) {
         form.value = {
           name: props.departmentToEdit.name,
@@ -140,6 +156,10 @@ watch(
           cost_center_id: props.departmentToEdit.cost_center_id,
           description: props.departmentToEdit.description || '',
           is_active: props.departmentToEdit.is_active,
+          // ✨ التعديل: استخراج أرقام المشرفين من الكائن القادم من الباك-إند
+          supervisor_ids: props.departmentToEdit.supervisors
+            ? props.departmentToEdit.supervisors.map((s) => s.id)
+            : [],
         }
       } else {
         form.value = defaultForm()

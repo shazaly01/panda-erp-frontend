@@ -3,71 +3,93 @@
     :model-value="modelValue"
     @update:modelValue="close"
     :title="dialogTitle"
-    size="max-w-5xl"
+    size="max-w-7xl"
   >
     <div v-if="isLoading" class="text-center py-8">جاري التحميل...</div>
 
-    <div v-else-if="permissionGroups.length === 0" class="text-center py-8">
+    <div v-else-if="permissionGroups.length === 0" class="text-center py-8 text-text-muted">
       لا توجد صلاحيات لعرضها.
     </div>
 
     <div v-else class="space-y-8">
       <div class="max-h-[65vh] overflow-y-auto px-1 space-y-8 custom-scrollbar">
-        <div v-for="category in organizedPermissions" :key="category.name" class="space-y-3">
+        <div v-for="category in organizedPermissions" :key="category.name" class="space-y-4">
           <div class="flex items-center gap-3 pb-2 border-b border-surface-border">
-            <div class="w-1.5 h-6 bg-primary rounded-full"></div>
+            <div class="w-2 h-6 bg-primary rounded-md shadow-sm"></div>
             <h3 class="font-bold text-text-primary text-lg">{{ category.name }}</h3>
           </div>
 
           <div
-            class="border border-surface-border rounded-xl overflow-hidden shadow-sm bg-surface-section"
+            class="border border-surface-border rounded-xl shadow-sm bg-surface-section overflow-hidden"
           >
-            <table class="min-w-full divide-y divide-surface-border">
-              <thead class="bg-surface-ground/50">
-                <tr>
-                  <th class="p-3 font-bold text-text-secondary text-right text-sm w-1/4">
-                    المجموعة
-                  </th>
-                  <th
-                    v-for="action in permissionActions"
-                    :key="action.key"
-                    class="p-3 font-bold text-text-secondary text-center text-sm"
-                  >
-                    {{ action.display_name }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-surface-border">
-                <tr
-                  v-for="group in category.groups"
-                  :key="group.key"
-                  class="hover:bg-primary/5 transition-colors"
-                >
-                  <td class="p-3 font-semibold text-text-primary text-sm">
-                    {{ group.display_name }}
-                  </td>
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="min-w-full divide-y divide-surface-border text-sm">
+                <thead class="bg-surface-ground">
+                  <tr>
+                    <th
+                      class="p-3 font-bold text-text-secondary text-right sticky right-0 bg-surface-ground shadow-[1px_0_0_0_var(--surface-border)] z-10 min-w-[180px] align-bottom"
+                    >
+                      المجموعة
+                    </th>
+                    <th
+                      v-for="action in permissionActions"
+                      :key="action.key"
+                      class="p-3 font-bold text-text-secondary text-center min-w-[100px] whitespace-nowrap"
+                    >
+                      <div class="flex flex-col items-center gap-2">
+                        <span>{{ action.display }}</span>
+                        <input
+                          type="checkbox"
+                          :checked="isColumnFullySelected(action.key, category.groups)"
+                          @change="toggleColumn(action.key, category.groups, $event)"
+                          class="h-4 w-4 rounded border-surface-border text-primary focus:ring-primary/50 cursor-pointer transition-all shadow-sm"
+                          title="تحديد/إلغاء تحديد كل صلاحيات هذا العمود لهذه المجموعة"
+                        />
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
 
-                  <td v-for="action in permissionActions" :key="action.key" class="p-3 text-center">
-                    <template v-if="getPermissionFor(group, action.key)">
-                      <input
-                        type="checkbox"
-                        :value="getPermissionFor(group, action.key).id"
-                        v-model="selectedPermissions"
-                        class="h-5 w-5 rounded border-surface-border text-primary focus:ring-primary cursor-pointer transition-all"
-                      />
-                    </template>
-                    <span v-else class="text-text-muted opacity-20">-</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                <tbody class="divide-y divide-surface-border">
+                  <tr
+                    v-for="group in category.groups"
+                    :key="group.key"
+                    class="hover:bg-primary/5 transition-colors group/row"
+                  >
+                    <td
+                      class="p-3 font-semibold text-text-primary sticky right-0 bg-surface-section group-hover/row:bg-primary/5 shadow-[1px_0_0_0_var(--surface-border)] z-10 transition-colors"
+                    >
+                      {{ group.display_name }}
+                    </td>
+
+                    <td
+                      v-for="action in permissionActions"
+                      :key="action.key"
+                      class="p-3 text-center"
+                    >
+                      <div class="flex justify-center items-center h-full">
+                        <template v-if="getPermissionFor(group, action.key)">
+                          <input
+                            type="checkbox"
+                            :value="getPermissionFor(group, action.key).id"
+                            v-model="selectedPermissions"
+                            class="h-5 w-5 rounded border-surface-border text-primary focus:ring-primary/50 cursor-pointer transition-all shadow-sm hover:border-primary"
+                          />
+                        </template>
+                        <span v-else class="text-text-muted opacity-20 select-none">-</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-surface-border">
+      <div class="mt-6 flex justify-end gap-3 pt-5 border-t border-surface-border">
         <AppButton type="button" variant="secondary" @click="close">إلغاء</AppButton>
-        <AppButton @click="handleSubmit" :disabled="isSubmitting" class="px-8">
+        <AppButton @click="handleSubmit" :disabled="isSubmitting" class="px-8 shadow-sm">
           {{ isSubmitting ? 'جاري الحفظ...' : 'حفظ الصلاحيات' }}
         </AppButton>
       </div>
@@ -89,12 +111,14 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
+
 const roleStore = useRoleStore()
 const selectedPermissions = ref([])
 
 const dialogTitle = computed(() => `تعديل صلاحيات دور: ${props.role?.name || ''}`)
 
-// --- [إعدادات الأقسام لـ ERP القابل للتوسع] ---
+const permissionGroups = computed(() => roleStore.permissions.groups || [])
+const permissionActions = computed(() => roleStore.permissions.actions || [])
 
 const categoriesDef = [
   {
@@ -102,24 +126,50 @@ const categoriesDef = [
     keys: ['dashboard', 'user', 'role', 'backup', 'setting'],
   },
   {
+    name: 'الموارد البشرية - الهيكل والتوظيف',
+    keys: ['departments', 'positions', 'employees', 'contracts'],
+  },
+  {
+    name: 'الموارد البشرية - العمليات والرواتب',
+    keys: [
+      'payroll',
+      'shifts',
+      'working_schedules',
+      'calendar_exceptions',
+      'shift_overrides',
+      'attendance',
+      'leaves',
+      'loans',
+      'payroll_inputs',
+      'team_attendance',
+      'pay_groups',
+      'pay_periods',
+      'overtime_policies',
+      'internet_vouchers',
+    ],
+  },
+  {
     name: 'المحاسبة - البيانات الأساسية',
     keys: ['account', 'cost_center', 'currency', 'fiscal_year', 'box', 'bank_account'],
   },
   {
     name: 'المحاسبة - العمليات والتقارير',
-    keys: ['payment', 'receipt', 'journal_entry', 'accounting_settings', 'report'],
+    keys: [
+      'payment',
+      'receipt',
+      'journal_entry',
+      'accounting_settings',
+      'report',
+      'account_mapping',
+      'sequences',
+    ],
   },
 ]
 
-const permissionGroups = computed(() => roleStore.permissions.groups || [])
-const permissionActions = computed(() => roleStore.permissions.actions || [])
-
-// تنظيم البيانات حسب الأقسام
 const organizedPermissions = computed(() => {
   const allGroups = [...permissionGroups.value]
   const result = []
 
-  // 1. تصنيف المجموعات المعرفة مسبقاً
   categoriesDef.forEach((cat) => {
     const groups = allGroups.filter((g) => cat.keys.includes(g.key))
     if (groups.length > 0) {
@@ -127,7 +177,6 @@ const organizedPermissions = computed(() => {
     }
   })
 
-  // 2. تجميع أي مجموعات جديدة (غير مصنفة) في قسم "أخرى" لضمان عدم ضياعها مستقبلاً
   const categorizedKeys = categoriesDef.flatMap((c) => c.keys)
   const otherGroups = allGroups.filter((g) => !categorizedKeys.includes(g.key))
 
@@ -142,24 +191,60 @@ function getPermissionFor(group, actionKey) {
   return group.permissions.find((p) => p.action === actionKey)
 }
 
-watch(
-  () => props.role,
-  (newRole) => {
-    selectedPermissions.value = newRole?.permissions?.map((p) => p.id) || []
-  },
-  { immediate: true, deep: true },
-)
+// --- [ دوال التحديد الجماعي للأعمدة ] ---
+
+/**
+ * دالة مساعدة تجلب كل معرفات (IDs) الصلاحيات الخاصة بحدث معين (مثل view) داخل قسم معين
+ */
+function getIdsForColumn(actionKey, sectionGroups) {
+  const ids = []
+  sectionGroups.forEach((group) => {
+    const p = getPermissionFor(group, actionKey)
+    if (p) ids.push(p.id)
+  })
+  return ids
+}
+
+/**
+ * فحص ما إذا كان العمود كاملاً محدد لكي نضع علامة (صح) على الصندوق العلوي
+ */
+function isColumnFullySelected(actionKey, sectionGroups) {
+  const columnIds = getIdsForColumn(actionKey, sectionGroups)
+  if (columnIds.length === 0) return false // لا توجد صلاحيات لهذا العمود هنا أصلاً
+
+  // يرجع true فقط إذا كانت جميع معرفات العمود موجودة في selectedPermissions
+  return columnIds.every((id) => selectedPermissions.value.includes(id))
+}
+
+/**
+ * تحديد أو إلغاء تحديد كل صلاحيات العمود بنقرة واحدة
+ */
+function toggleColumn(actionKey, sectionGroups, event) {
+  const isChecked = event.target.checked
+  const columnIds = getIdsForColumn(actionKey, sectionGroups)
+
+  if (isChecked) {
+    // إضافة كل الصلاحيات غير الموجودة مسبقاً إلى المصفوفة
+    const newSelections = columnIds.filter((id) => !selectedPermissions.value.includes(id))
+    selectedPermissions.value.push(...newSelections)
+  } else {
+    // إزالة كل صلاحيات هذا العمود من المصفوفة
+    selectedPermissions.value = selectedPermissions.value.filter((id) => !columnIds.includes(id))
+  }
+}
+
+// --- [ حفظ وإغلاق النافذة ] ---
 
 const close = () => emit('update:modelValue', false)
 
 const handleSubmit = () => {
   if (!props.role) return
 
-  // بناء Map للبحث عن اسم الصلاحية من الـ ID
   const allPermissionsMap = new Map()
+
   permissionGroups.value.forEach((group) => {
     group.permissions.forEach((p) => {
-      allPermissionsMap.set(p.id, `${group.key}.${p.action}`)
+      allPermissionsMap.set(p.id, p.name)
     })
   })
 
@@ -172,4 +257,33 @@ const handleSubmit = () => {
     permissions: permissionNames,
   })
 }
+
+watch(
+  () => props.role,
+  (newRole) => {
+    if (newRole && newRole.permissions) {
+      selectedPermissions.value = newRole.permissions.map((p) => p.id)
+    } else {
+      selectedPermissions.value = []
+    }
+  },
+  { immediate: true, deep: true },
+)
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--surface-border);
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--text-muted);
+}
+</style>

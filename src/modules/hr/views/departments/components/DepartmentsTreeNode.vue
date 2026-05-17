@@ -43,6 +43,20 @@
           >
             {{ node.name }}
           </span>
+
+          <!-- ✨ التحسين الجديد: عرض المشرفين تحت اسم القسم مباشرة بشكل جمالي ناعم ✨ -->
+          <div
+            v-if="node.supervisors && node.supervisors.length"
+            class="text-[11px] text-text-muted mt-0.5 flex items-center gap-1"
+          >
+            <span class="text-primary/80 font-bold">👥 المشرفون:</span>
+            <span
+              class="truncate max-w-[250px]"
+              :title="node.supervisors.map((s) => s.full_name).join('، ')"
+            >
+              {{ node.supervisors.map((s) => s.full_name).join('، ') }}
+            </span>
+          </div>
         </div>
 
         <button

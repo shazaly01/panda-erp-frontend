@@ -116,7 +116,7 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
             />
           </svg>
           البيانات الوظيفية
@@ -196,7 +196,7 @@
             />
           </div>
 
-          <div class="lg:col-span-3">
+          <div>
             <AppDropdown
               id="manager_id"
               label="المدير المباشر"
@@ -205,6 +205,20 @@
               option-label="full_name"
               option-value="id"
               placeholder="-- يتبع لمدير أعلى --"
+            />
+          </div>
+
+          <!-- 🌟 الحقل الجديد الخاص بربط حساب النظام -->
+          <div>
+            <AppDropdown
+              id="user_id"
+              label="حساب النظام المرتبط (User)"
+              v-model="form.user_id"
+              :options="userStore.users"
+              option-label="full_name"
+              option-value="id"
+              placeholder="-- اختر حساب الدخول --"
+              :loading="userStore.loading"
             />
           </div>
         </div>
@@ -229,6 +243,7 @@ import { useToast } from 'vue-toastification'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { usePositionStore } from '@/modules/hr/stores/positionStore'
+import { useUserStore } from '@/stores/userStore' // 🌟 استدعاء متجر المستخدمين
 
 import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
@@ -242,6 +257,7 @@ const toast = useToast()
 const employeeStore = useEmployeeStore()
 const departmentStore = useDepartmentStore()
 const positionStore = usePositionStore()
+const userStore = useUserStore() // 🌟 تهيئة المتجر
 
 const isEditMode = computed(() => route.name === 'employees.edit')
 const employeeId = computed(() => route.params.id)
@@ -269,7 +285,6 @@ const employmentTypeOptions = [
   { id: 'intern', name: 'تدريب' },
 ]
 
-// 🌟 التعديل الأساسي هنا: مطابقة مفاتيح id مع EmployeeStatus Enum من الباك إند
 const statusOptions = [
   { id: 'in_service', name: 'في الخدمة' },
   { id: 'leave', name: 'إجازة' },
@@ -281,7 +296,7 @@ const statusOptions = [
   { id: 'monthly_temporary_transfer', name: 'تحويل لفتره موقته شهري' },
 ]
 
-// تصفية المدراء (استبعاد الموظف نفسه في حالة التعديل حتى لا يكون مديراً لنفسه)
+// تصفية المدراء
 const availableManagers = computed(() => {
   const allEmployees = employeeStore.allEmployees || []
   if (!isEditMode.value) return allEmployees
@@ -296,15 +311,15 @@ const defaultForm = () => ({
   phone: '',
   employee_number: '',
   barcode: '',
-  join_date: new Date().toISOString().split('T')[0], // تاريخ اليوم افتراضياً
+  join_date: new Date().toISOString().split('T')[0],
   gender: null,
   marital_status: null,
   employment_type: 'full_time',
-  status: 'in_service', // 🌟 تعديل القيمة الافتراضية لتصبح in_service
+  status: 'in_service',
   department_id: null,
   position_id: null,
   manager_id: null,
-  user_id: null, // سيتم ربطه لاحقاً من متجر المستخدمين إن وجد
+  user_id: null, // 🌟 سيتم ربطه الآن عبر الـ Dropdown
 })
 
 const form = ref(defaultForm())
@@ -314,12 +329,15 @@ onMounted(async () => {
   isLoadingData.value = true
 
   try {
-    // جلب القوائم المنسدلة من الإعدادات إذا لم تكن موجودة
     if (departmentStore.flatDepartments.length === 0) await departmentStore.fetchDepartments()
     if (positionStore.flatPositions.length === 0) await positionStore.fetchPositions()
-    await employeeStore.fetchAllEmployees() // جلب المدراء
 
-    // إذا كنا في وضع التعديل، نجلب بيانات الموظف المحددة
+    // 🌟 جلب قائمة الموظفين والمستخدمين بالتوازي لتحسين الأداء
+    await Promise.all([
+      employeeStore.fetchAllEmployees(),
+      userStore.fetchUsers(), // جلب قائمة المستخدمين من الـ API
+    ])
+
     if (isEditMode.value) {
       const employeeData = await employeeStore.fetchEmployeeById(employeeId.value)
       console.log('API Response for Employee:', employeeData)
@@ -335,7 +353,7 @@ onMounted(async () => {
         gender: employeeData.gender || null,
         marital_status: employeeData.marital_status || null,
         employment_type: employeeData.employment_type || 'full_time',
-        status: employeeData.status || 'in_service', // 🌟 تعديل Fallback
+        status: employeeData.status || 'in_service',
         department_id: employeeData.department?.id || null,
         position_id: employeeData.position?.id || null,
         manager_id: employeeData.manager?.id || null,
@@ -356,7 +374,6 @@ const goBack = () => {
 }
 
 const submit = async () => {
-  // تحقق أساسي (Validation)
   if (!form.value.full_name.trim()) return toast.error('الاسم الرباعي مطلوب.')
   if (!form.value.join_date) return toast.error('تاريخ الالتحاق مطلوب.')
   if (!form.value.employment_type) return toast.error('نوع التوظيف مطلوب.')

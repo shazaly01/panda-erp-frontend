@@ -1,3 +1,4 @@
+//src\modules\hr\services\attendanceLog.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/hr/attendance-logs'
