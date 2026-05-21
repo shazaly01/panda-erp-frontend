@@ -1,6 +1,5 @@
-<!--src\modules\hr\views\employees\EmployeesList.vue-->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
+  <div class="space-y-6 max-w-7xl mx-auto pb-12 font-sans">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <h1 class="text-2xl font-bold text-text-primary">شؤون الموظفين</h1>
@@ -37,8 +36,10 @@
       @delete="openDeleteDialog"
       @view-statement="openStatementModal"
       @manage-shift="openShiftModal"
+      @manage-documents="openDocumentsModal"
     />
-    /><AppConfirmDialog
+
+    <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف سجل الموظف"
       :message="`هل أنت متأكد من رغبتك في حذف سجل الموظف (${employeeToDelete?.full_name})؟ لا يمكن التراجع عن هذا الإجراء.`"
@@ -58,21 +59,15 @@
       @click.self="isCardModalOpen = false"
     >
       <div
-        v-if="isCardModalOpen"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 hide-on-print"
-        @click.self="isCardModalOpen = false"
+        class="bg-slate-900 rounded-[3rem] p-2 max-w-4xl w-full relative shadow-[0_0_50px_rgba(0,0,0,0.3)]"
       >
-        <div
-          class="bg-slate-900 rounded-[3rem] p-2 max-w-4xl w-full relative shadow-[0_0_50px_rgba(0,0,0,0.3)]"
+        <button
+          @click="isCardModalOpen = false"
+          class="absolute -top-12 left-0 text-white hover:text-rose-400 font-bold flex items-center gap-2"
         >
-          <button
-            @click="isCardModalOpen = false"
-            class="absolute -top-12 left-0 text-white hover:text-rose-400 font-bold flex items-center gap-2"
-          >
-            إغلاق المعاينة ✕
-          </button>
-          <EmployeeIdentityCard :employee="selectedEmployeeForCard" />
-        </div>
+          إغلاق المعاينة ✕
+        </button>
+        <EmployeeIdentityCard :employee="selectedEmployeeForCard" />
       </div>
     </div>
 
@@ -80,6 +75,12 @@
       v-model="isShiftModalOpen"
       :employee="selectedEmployeeForShift"
       @updated="handlePageChange(pagination.current_page)"
+    />
+
+    <DocumentsManagerModal
+      v-model="isDocumentsModalOpen"
+      :owner="selectedEmployeeForDocuments"
+      target-type="employee"
     />
   </div>
 </template>
@@ -99,9 +100,11 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
 import EmployeesFilter from './components/EmployeesFilter.vue'
 import EmployeesTable from './components/EmployeesTable.vue'
-import EmployeeStatementModal from './components/EmployeeStatementModal.vue' // 🌟 تم الاستيراد
+import EmployeeStatementModal from './components/EmployeeStatementModal.vue'
 import EmployeeShiftModal from './components/EmployeeShiftModal.vue'
 import EmployeeIdentityCard from './components/EmployeeIdentityCard.vue'
+
+import DocumentsManagerModal from '@/modules/core/views/documents/DocumentsManagerModal.vue'
 
 // -- تهيئة --
 const router = useRouter()
@@ -187,7 +190,7 @@ const confirmDelete = async () => {
   }
 }
 
-// -- 🌟 إدارة كشف الحساب المالي --
+// -- إدارة كشف الحساب المالي والأوراق الثبوتية --
 const isStatementModalOpen = ref(false)
 const selectedEmployeeIdForStatement = ref(null)
 const isCardModalOpen = ref(false)
@@ -209,5 +212,18 @@ const selectedEmployeeForShift = ref(null)
 const openShiftModal = (employee) => {
   selectedEmployeeForShift.value = employee
   isShiftModalOpen.value = true
+}
+
+// -- إدارة نافذة الأرشيف الإلكتروني --
+const isDocumentsModalOpen = ref(false)
+const selectedEmployeeForDocuments = ref(null)
+
+const openDocumentsModal = (employee) => {
+  selectedEmployeeForDocuments.value = {
+    id: employee.id,
+    name: employee.full_name,
+    employee_number: employee.employee_number,
+  }
+  isDocumentsModalOpen.value = true
 }
 </script>

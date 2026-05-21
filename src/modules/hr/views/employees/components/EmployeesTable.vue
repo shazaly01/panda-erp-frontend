@@ -1,4 +1,4 @@
-<!--src\modules\hr\views\employees\components\EmployeesTable.vue-->
+<!--src\modules\hr\views\employees\components\EmployeesTable.vue--->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="employees" :is-loading="loading">
@@ -8,8 +8,8 @@
             class="w-10 h-10 rounded-full bg-surface-border flex-shrink-0 overflow-hidden flex items-center justify-center text-text-muted font-bold"
           >
             <img
-              v-if="item.avatar"
-              :src="item.avatar"
+              v-if="item.profile_photo?.url || item.avatar"
+              :src="item.profile_photo?.url || item.avatar"
               alt="Avatar"
               class="w-full h-full object-cover"
             />
@@ -98,6 +98,26 @@
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
+            @click.stop="$emit('manage-documents', item)"
+            class="p-1.5 text-sky-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors"
+            title="الأرشيف الإلكتروني وإدارة الوثائق ثبوتية"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"
+              />
+            </svg>
+          </button>
+
+          <button
             @click.stop="$emit('view-statement', item)"
             class="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="كشف الحساب المالي (Sub-Ledger)"
@@ -111,6 +131,7 @@
               />
             </svg>
           </button>
+
           <button
             @click.stop="$emit('manage-shift', item)"
             class="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -187,23 +208,32 @@ import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 
-const props = defineProps({
+defineProps({
   employees: { type: Array, required: true },
   pagination: { type: Object, required: true },
   loading: { type: Boolean, default: false },
 })
 
-defineEmits(['page-change', 'edit', 'delete', 'view-statement', 'print-card', 'manage-shift'])
+// تم إضافة 'manage-documents' للأحداث المنبثقة للأب
+defineEmits([
+  'page-change',
+  'edit',
+  'delete',
+  'view-statement',
+  'print-card',
+  'manage-shift',
+  'manage-documents',
+])
 
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'employee_info', label: 'الموظف', class: 'min-w-[220px]' },
   { key: 'job_info', label: 'المنصب والإدارة', class: 'min-w-[180px]' },
-  { key: 'shift', label: 'الوردية', class: 'min-w-[150px]' }, // 🌟 أضفنا الهيدر هنا
+  { key: 'shift', label: 'الوردية', class: 'min-w-[150px]' },
   { key: 'contact', label: 'معلومات الاتصال', class: 'min-w-[150px]' },
   { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[185px]' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[220px]' }, // رفع العرض ليتناسق مع الزر الجديد
 ])
 
 const getStatusClasses = (status) => {

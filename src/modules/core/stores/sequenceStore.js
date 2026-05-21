@@ -1,3 +1,4 @@
+//
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import sequenceService from '../services/sequence.service'
