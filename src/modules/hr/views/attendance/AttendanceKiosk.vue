@@ -97,11 +97,17 @@
 
               <div
                 :class="[
-                  'w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border',
+                  'w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border overflow-hidden',
                   resultTheme.iconBg,
                 ]"
               >
-                <span v-html="resultTheme.icon" class="text-white drop-shadow-md"></span>
+                <img
+                  v-if="scanResult.profile_photo"
+                  :src="scanResult.profile_photo"
+                  class="w-full h-full object-cover"
+                  alt="Employee Photo"
+                />
+                <span v-else v-html="resultTheme.icon" class="text-white drop-shadow-md"></span>
               </div>
 
               <div class="text-right flex-1 z-10">
@@ -253,6 +259,7 @@ const handleScan = async () => {
         message: data.message,
         time: data.time,
         voucher: data.voucher,
+        profile_photo: data.profile_photo,
       }
     }, 50)
   } catch (error) {
