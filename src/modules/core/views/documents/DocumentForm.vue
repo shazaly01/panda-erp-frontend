@@ -62,7 +62,6 @@
         </select>
       </div>
 
-      <!-- نظام إدارة اختيار الملف أو المسح الضوئي الفوري -->
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <label
@@ -72,7 +71,6 @@
             ملف الوثيقة الفعلي (الحد الأقصى 50 ميجابايت)
           </label>
 
-          <!-- أزرار تبديل نمط الإدخال إلى المسح الضوئي -->
           <div class="flex space-x-2 space-x-reverse">
             <button
               v-if="!isScannerActive"
@@ -111,7 +109,6 @@
           </div>
         </div>
 
-        <!-- واجهة بث الماسح الضوئي الحي والتقاط الصور -->
         <div
           v-if="isScannerActive"
           class="border border-sky-500/30 rounded-lg p-3 bg-gray-950 text-white overflow-hidden"
@@ -126,7 +123,6 @@
               class="w-full h-full object-cover transform scale-x-1"
             ></video>
 
-            <!-- إطار دليلي يوضح للموظف حدود الورقة الرسمية الممسوحة ضوئياً -->
             <div
               class="absolute inset-6 border-2 border-dashed border-sky-400/60 rounded pointer-events-none flex items-center justify-center"
             >
@@ -148,7 +144,6 @@
           </div>
         </div>
 
-        <!-- حقل رفع الملف التقليدي المطور (يختفي تكتيكياً أثناء البث الحي) -->
         <input
           v-show="!isScannerActive"
           id="document-file"
@@ -160,7 +155,6 @@
           accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx"
         />
 
-        <!-- صندوق استعراض ومطابقة مستندات السكانر بعد قشطها وتهبئتها بنجاح -->
         <div
           v-if="scannedPreviewUrl"
           class="mt-3 p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg flex items-center justify-between"
@@ -195,7 +189,6 @@
       </div>
     </div>
 
-    <!-- مؤشر تتبع عمليات الرفع والبث الرقمي -->
     <div v-if="isSaving && uploadProgress > 0" class="mt-4 mb-4">
       <div class="flex justify-between mb-1">
         <span class="text-xs font-medium text-blue-600 dark:text-sky-400"
@@ -224,7 +217,6 @@
     </div>
   </form>
 
-  <!-- عنصر الكانفاس الخفي المخصص لمعالجة مظهر الماسحات الضوئية وزيادة التباين اللوني -->
   <canvas ref="canvasRef" class="hidden"></canvas>
 </template>
 
@@ -393,7 +385,12 @@ const resetForm = () => {
  * التحقق الحذر والمطابقة الاستباقية لحجم الملف (Client-Side Protection)
  */
 const handleFileChange = (event) => {
-  clearScannedFile()
+  // إلغاء معاينة المسح الضوئي فقط وتنظيف ذاكرة الروابط المحفوظة دون تصفير عنصر الـ input الفعلي
+  if (scannedPreviewUrl.value) {
+    URL.revokeObjectURL(scannedPreviewUrl.value)
+    scannedPreviewUrl.value = null
+  }
+
   const file = event.target.files[0]
   if (!file) {
     form.value.file = null
