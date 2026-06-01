@@ -26,6 +26,7 @@ const ContractFormPage = () => import('./views/contracts/ContractFormPage.vue')
 // 3. الحضور والطلبات والعمليات
 // ==========================================
 const AttendanceList = () => import('./views/attendance/AttendanceLogList.vue')
+const AttendanceSummaryPrint = () => import('./views/attendance/AttendanceSummaryPrint.vue')
 const TeamAttendancePage = () => import('./views/attendance/TeamAttendancePage.vue')
 const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
@@ -121,6 +122,16 @@ export default [
         meta: {
           title: 'شاشة الاستقبال - الباركود',
           // layout: 'blank' // قم بتفعيلها إذا كان نظامك يدعم تخطيطاً فارغاً للشاشات الكاملة
+        },
+      },
+
+      {
+        path: 'attendance/summary-print',
+        name: 'hr.attendance.summary.print',
+        component: AttendanceSummaryPrint,
+        meta: {
+          title: 'طباعة الحضور',
+          layout: 'blank', // لضمان تحميل الصفحة بيضاء بالكامل بدون القوائم الجانبية للمشروع
         },
       },
 

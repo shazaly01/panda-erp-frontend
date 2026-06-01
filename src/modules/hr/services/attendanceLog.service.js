@@ -33,4 +33,9 @@ export default {
   scanBarcode(employeeNumber) {
     return apiClient.post(`${resource}/scan`, { employee_number: employeeNumber })
   },
+
+  // جلب تقرير الخلاصة التجميعية للساعات والأيام
+  getSummaryReport(params = {}) {
+    return apiClient.get('/hr/reports/attendance-summary', { params })
+  },
 }
