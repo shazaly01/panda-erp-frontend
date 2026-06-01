@@ -79,7 +79,11 @@
                 >
                   <img
                     v-if="scanResult.profile_photo"
-                    :src="scanResult.profile_photo"
+                    :src="
+                      typeof scanResult.profile_photo === 'object'
+                        ? scanResult.profile_photo?.url
+                        : scanResult.profile_photo
+                    "
                     class="w-full h-full object-cover scale-[1.02]"
                     alt="Employee"
                   />
@@ -249,11 +253,11 @@ const handleScan = async () => {
       scanResult.value = {
         status: data.status,
         action: data.action,
-        employee_name: data.employee_name,
+        employee_name: data.full_name || data.employee_name,
         message: data.message,
         time: data.time,
         voucher: data.voucher,
-        profile_photo: data.profile_photo,
+        profile_photo: data.profile_photo?.url || data.avatar || data.profile_photo,
       }
     }, 50)
   } catch (error) {
