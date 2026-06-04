@@ -80,7 +80,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { apiClient } from '@/services/apiClient' // أو استخدام useEmployeeStore حسب المتاح في مشروعك
+import apiClient from '@/services/apiClient' // أو استخدام useEmployeeStore حسب المتاح في مشروعك
 import AppInput from '@/components/ui/AppInput.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
 
