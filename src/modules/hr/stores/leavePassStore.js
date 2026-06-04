@@ -1,7 +1,7 @@
 // src/stores/leavePassStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { leavePassService } from '@/services/leavePassService'
+import { leavePassService } from '@/modules/hr/services/leavePassService.js'
 
 export const useLeavePassStore = defineStore('leavePass', () => {
   // الحالات الافتراضية (State)
