@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -6,12 +5,17 @@ import { useAuthStore } from '@/stores/authStore'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import AuthLayout from '@/components/layout/AuthLayout.vue'
 
-// 1. تأكد أولاً من استيراد المكونات في الأعلى (إذا لم تكن مستوردة)
+// --- استيراد المكونات بشكل كسول (Lazy Loading) للموديولات ---
 const UsersList = () => import('@/views/users/UsersList.vue')
 const RolesList = () => import('@/views/roles/RolesList.vue')
 const BackupsList = () => import('@/views/settings/BackupsList.vue')
 
-// --- استيراد الصفحات الأساسية ---
+// --- استيراد مكونات التوثيق الجديدة المنفصلة مع الحفاظ على الهيكلية العالمية ---
+const RegisterView = () => import('@/views/RegisterView.vue')
+const ForgotPasswordView = () => import('@/views/ForgotPasswordView.vue')
+const ResetPasswordView = () => import('@/views/ResetPasswordView.vue')
+
+// --- استيراد الصفحات الأساسية الثابتة ---
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
 
@@ -20,21 +24,24 @@ import DashboardView from '@/views/dashboard/DashboardView.vue'
 // ==============================================================
 import accountingRoutes from '@/modules/accounting/router'
 import hrRoutes from '@/modules/hr/router'
-// import inventoryRoutes from '@/modules/inventory/router'
 
 const routes = [
-  // --- المسارات العامة (لا تتطلب مصادقة) ---
+  // --- المسارات العامة (لا تتطلب مصادقة وشرطها أن يكون المستخدم ضيفاً لحمايتها) ---
   {
     path: '/',
     component: AuthLayout,
+    meta: { requiresGuest: true }, // حماية مركزية تمنع المسجلين من رؤية هذه الشاشات
     children: [
       { path: 'login', name: 'Login', component: LoginView },
+      { path: 'register', name: 'Register', component: RegisterView },
+      { path: 'forgot-password', name: 'ForgotPassword', component: ForgotPasswordView },
+      { path: 'reset-password', name: 'ResetPassword', component: ResetPasswordView },
       // إعادة توجيه المسار الجذري إلى صفحة تسجيل الدخول
       { path: '', redirect: '/login' },
     ],
   },
 
-  // --- المسارات المحمية (تتطلب مصادقة) ---
+  // --- المسارات المحمية (تتطلب مصادقة تسجيل الدخول) ---
   {
     path: '/app',
     component: AppLayout,
@@ -52,7 +59,6 @@ const routes = [
       // ==============================================================
       ...accountingRoutes,
       ...hrRoutes,
-      // ...inventoryRoutes,
 
       {
         path: 'users',
@@ -77,14 +83,6 @@ const routes = [
     ],
   },
 
-  // --- مسارات الطباعة المستقلة (خارج إطار AppLayout) ---
-  // {
-  //   path: '/print/voucher/:id',
-  //   name: 'PrintVoucher',
-  //   component: () => import('@/modules/accounting/views/print/PrintVoucher.vue'),
-  //   meta: { requiresAuth: true, layout: 'empty' },
-  // },
-
   // مسار للتعامل مع الصفحات غير الموجودة (404 Fallback)
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
@@ -94,31 +92,38 @@ const router = createRouter({
   routes,
 })
 
-// --- حارس التنقل العام (Global Navigation Guard) ---
+// --- حارس التنقل العام المحسن (Global Navigation Guard) ---
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
+  // 1. التحقق من المسارات المحمية التي تتطلب تسجيل الدخول
   if (to.meta.requiresAuth) {
-    // تم إلغاء التفكيك (Destructuring) هنا، ونستدعي الخصائص مباشرة من الكائن
     if (!authStore.isAuthenticated) {
-      // حفظ المسار الذي حاول المستخدم الدخول إليه للعودة إليه بعد تسجيل الدخول
+      // إذا انتهت الصلاحية أو لم يسجل دخوله، يتم حفظ المسار وطرده تلقائياً لشاشة الدخول
       authStore.returnUrl = to.fullPath
       next({ name: 'Login' })
     } else {
       const requiredPermission = to.meta.permission
-      // التحقق من الصلاحيات إذا كان المسار يتطلب ذلك
+      // التحقق من الصلاحيات والـ Permissions الممررة مع المسار
       if (requiredPermission && !authStore.can(requiredPermission)) {
         console.warn(
           `Access denied: route "${String(to.name)}" requires permission "${requiredPermission}"`,
         )
-        // توجيه المستخدم للوحة التحكم إذا لم تكن لديه الصلاحية
+        // توجيه المستخدم للوحة التحكم إذا لم تكن لديه الصلاحية الخاصة بالشاشة
         next({ name: 'Dashboard' })
       } else {
-        next() // السماح بالمرور
+        next() // السماح بالمرور للمسار المحمي
       }
     }
-  } else {
-    next() // المسارات العامة مسموحة دائماً
+  }
+  // 2. التحقق من صفحات الضيوف (دخول، تسجيل، استعادة)
+  else if (to.matched.some((record) => record.meta.requiresGuest) && authStore.isAuthenticated) {
+    // إذا كان المستخدم يمتلك توكن وجلسة نشطة مسبقاً، يحول تلقائياً للـ Dashboard لمنع التكرار
+    next({ name: 'Dashboard' })
+  }
+  // 3. المسارات العامة المفتوحة بالكامل
+  else {
+    next()
   }
 })
 

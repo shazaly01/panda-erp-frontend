@@ -1,4 +1,3 @@
-// src/stores/authStore.js
 import { defineStore } from 'pinia'
 import authService from '@/services/authService'
 
@@ -24,6 +23,7 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(credentials) {
+      // credentials المتوقع إرسالها: { phone, password }
       const response = await authService.login(credentials)
       const { access_token, user } = response.data
 
@@ -34,14 +34,28 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('user', JSON.stringify(user))
     },
 
+    async sendOtp(payload) {
+      return await authService.sendOtp(payload)
+    },
+
+    async register(payload) {
+      return await authService.register(payload)
+    },
+
+    async forgotPassword(payload) {
+      return await authService.forgotPassword(payload)
+    },
+
+    async resetPassword(payload) {
+      return await authService.resetPassword(payload)
+    },
+
     async logout() {
       try {
-        // محاولة استدعاء الـ API لتسجيل الخروج من السيرفر
         await authService.logout()
       } catch (error) {
         console.error('Logout API call failed, but clearing local state anyway:', error)
       } finally {
-        // --- تنظيف الحالة المحلية ---
         this.user = null
         this.token = null
         this.returnUrl = null
@@ -49,8 +63,6 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
 
-        // --- [الحل هنا] التوجيه الإجباري لصفحة الدخول ---
-        // نستخدم window.location.href لضمان تنظيف الذاكرة تماماً
         window.location.href = '/login'
       }
     },

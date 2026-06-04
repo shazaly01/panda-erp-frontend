@@ -1,3 +1,4 @@
+<!--src\components\layout\TheHeader.vue--->
 <template>
   <header
     class="flex h-16 items-center justify-between bg-surface-section px-4 sm:px-6 lg:px-8 flex-shrink-0"

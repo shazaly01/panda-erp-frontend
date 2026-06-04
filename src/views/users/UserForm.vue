@@ -1,20 +1,27 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-6">
+  <form @submit.prevent="handleSubmit" class="space-y-6 text-right">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
       <AppInput
         id="user-full-name"
         label="الاسم الكامل *"
         v-model="form.full_name"
-        placeholder="الاسم الثلاثي..."
+        placeholder="الاسم الثلاثي للموظف..."
+        required
+      />
+
+      <AppInput
+        id="user-phone"
+        label="رقم الهاتف الأساسي *"
+        v-model="form.phone"
+        placeholder="0500000000..."
         required
       />
 
       <AppInput
         id="user-username"
-        label="اسم المستخدم *"
+        label="اسم المستخدم (اختياري)"
         v-model="form.username"
-        placeholder="اسم الدخول..."
-        required
+        placeholder="اسم الدخول للنظام..."
       />
 
       <AppInput
@@ -27,7 +34,7 @@
 
       <AppDropdown
         id="user-role"
-        label="الدور / الصلاحية *"
+        label="الدور / الصلاحية الوظيفية *"
         v-model="form.roles[0]"
         :options="roles"
         option-label="name"
@@ -41,7 +48,7 @@
       <div
         class="border-b border-surface-border pb-2 flex items-center gap-2 text-primary font-bold text-sm"
       >
-        إعدادات العمليات الافتراضية
+        إعدادات العمليات الافتراضية للربط المحاسبي
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -80,30 +87,9 @@
       </div>
     </div>
 
-    <div class="border-t border-surface-border pt-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <AppInput
-          id="user-password"
-          :label="form.id ? 'تغيير كلمة المرور' : 'كلمة المرور *'"
-          type="password"
-          v-model="form.password"
-          :required="!form.id"
-          autocomplete="new-password"
-        />
-        <AppInput
-          id="user-password-confirmation"
-          label="تأكيد كلمة المرور"
-          type="password"
-          v-model="form.password_confirmation"
-          :required="!form.id || form.password"
-          autocomplete="new-password"
-        />
-      </div>
-    </div>
-
     <div class="mt-8 flex justify-end gap-3 border-t border-surface-border pt-4">
       <AppButton type="submit" :disabled="isSaving" class="px-10">
-        {{ isSaving ? 'جاري الحفظ...' : 'حفظ البيانات' }}
+        {{ isSaving ? 'جاري حفظ البيانات...' : 'حفظ التغييرات الوظيفية' }}
       </AppButton>
     </div>
   </form>
@@ -115,7 +101,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 
-import { useRoleStore } from '@/stores/roleStore' // 👈 استيراد متجر الأدوار
+import { useRoleStore } from '@/stores/roleStore'
 import { useCostCenterStore } from '@/modules/accounting/stores/costCenterStore'
 import { useBoxStore } from '@/modules/accounting/stores/boxStore'
 import { useBankAccountStore } from '@/modules/accounting/stores/bankAccountStore'
@@ -153,9 +139,8 @@ const form = ref({
   id: null,
   full_name: '',
   username: '',
+  phone: '',
   email: '',
-  password: '',
-  password_confirmation: '',
   roles: [],
   default_cost_center_id: null,
   default_box_id: null,
@@ -167,13 +152,27 @@ watch(
   (newData) => {
     if (newData && newData.id) {
       form.value = {
-        ...newData,
-        password: '',
-        password_confirmation: '',
+        id: newData.id,
+        full_name: newData.full_name || '',
+        username: newData.username || '',
+        phone: newData.phone || '',
+        email: newData.email || '',
         roles: newData.roles ? newData.roles.map((r) => r.name) : [],
         default_cost_center_id: newData.default_cost_center_id || null,
         default_box_id: newData.default_box_id || null,
         default_bank_account_id: newData.default_bank_account_id || null,
+      }
+    } else {
+      form.value = {
+        id: null,
+        full_name: '',
+        username: '',
+        phone: '',
+        email: '',
+        roles: [],
+        default_cost_center_id: null,
+        default_box_id: null,
+        default_bank_account_id: null,
       }
     }
   },
@@ -181,11 +180,6 @@ watch(
 )
 
 const handleSubmit = () => {
-  const payload = { ...form.value }
-  if (payload.id && !payload.password) {
-    delete payload.password
-    delete payload.password_confirmation
-  }
-  emit('submit', payload)
+  emit('submit', { ...form.value })
 }
 </script>

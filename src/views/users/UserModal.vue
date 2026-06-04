@@ -25,7 +25,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import UserForm from './UserForm.vue' // <-- استيراد النموذج
+import UserForm from './UserForm.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -38,7 +38,9 @@ const emit = defineEmits(['update:modelValue', 'save'])
 const isOpen = ref(props.modelValue)
 const userData = ref(props.user)
 
-const title = computed(() => (props.user && props.user.id ? 'تعديل مستخدم' : 'إضافة مستخدم جديد'))
+const title = computed(() =>
+  props.user && props.user.id ? 'تعديل بيانات المستخدم' : 'إضافة مستخدم جديد للنظام',
+)
 
 watch(
   () => props.modelValue,

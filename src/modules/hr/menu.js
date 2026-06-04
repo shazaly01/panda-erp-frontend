@@ -64,6 +64,17 @@ export default [
         routeName: 'TeamAttendance', // تأكد أن هذا يطابق اسم الـ Route في Vue Router
         permission: 'hr.team_attendance.manage',
       },
+      {
+        name: 'أذونات الخروج المؤقت',
+        routeName: 'LeavePassesList',
+        permission: 'leave_passes.view',
+      },
+      // 🛡️ شاشة الأمن والسلامة الصناعية الحية لإخلاء المنشأة في الطوارئ
+      {
+        name: 'لوحة الطوارئ والسلامة',
+        routeName: 'EmergencyMuster',
+        permission: 'leave_passes.view',
+      },
     ],
   },
 

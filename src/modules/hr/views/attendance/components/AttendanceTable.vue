@@ -1,9 +1,8 @@
-<!--src\modules\hr\views\attendance\components\AttendanceTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="logs" :is-loading="loading">
       <template #cell-employee="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right">
           <span class="font-bold text-sm text-text-primary">
             {{ item.employee_name }}
           </span>
@@ -14,40 +13,39 @@
       </template>
 
       <template #cell-shift="{ item }">
-        <span class="text-sm text-text-primary">
+        <span class="text-sm text-text-primary block text-right">
           {{ item.shift_name || '---' }}
         </span>
       </template>
 
       <template #cell-times="{ item }">
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1 text-right">
           <span class="text-xs text-text-primary">
             دخول:
             <span
-              class="font-mono font-bold"
-              :class="item.check_in ? 'text-primary' : 'text-text-muted'"
-              >{{ item.check_in || '--:--' }}</span
+              class="font-mono font-bold transition-colors"
+              :class="item.check_in ? 'text-blue-600 dark:text-sky-400' : 'text-text-muted'"
             >
+              {{ item.check_in || '--:--' }}
+            </span>
           </span>
+
           <span class="text-xs text-text-primary flex items-center gap-1">
             خروج:
-            <!-- 1. إذا كان هناك بصمة خروج فعلية -->
-            <span v-if="item.check_out" class="font-mono font-bold text-primary">
+            <span v-if="item.check_out" class="font-mono font-bold text-blue-600 dark:text-sky-400">
               {{ item.check_out }}
             </span>
 
-            <!-- 2. إذا كان النظام يعتمد بصمة واحدة (لا نطلب انصراف) -->
             <span
               v-else-if="item.attendance_mode === 'single_punch'"
-              class="text-[10px] text-text-muted bg-surface-ground border border-surface-border px-1.5 py-0.5 rounded"
+              class="text-[10px] text-text-muted bg-surface-ground border border-surface-border px-1.5 py-0.5 rounded shadow-sm"
             >
               غير مطلوب
             </span>
 
-            <!-- 3. إذا كان النظام صارماً والموظف نسي بصمة الخروج -->
             <span
               v-else
-              class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded"
+              class="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 px-1.5 py-0.5 rounded shadow-sm animate-pulse"
             >
               مفقودة!
             </span>
@@ -56,17 +54,23 @@
       </template>
 
       <template #cell-calculations="{ item }">
-        <div class="flex flex-col gap-1 text-[11px] font-mono">
-          <span v-if="item.delay_minutes > 0" class="text-rose-600 font-bold">
+        <div class="flex flex-col gap-1 text-[11px] font-mono text-right">
+          <span v-if="item.delay_minutes > 0" class="text-rose-600 dark:text-rose-400 font-bold">
             تأخير: {{ item.delay_minutes }} دقيقة
           </span>
           <span v-else class="text-text-muted">تأخير: 0</span>
 
-          <span v-if="item.early_leave_minutes > 0" class="text-amber-600 font-bold">
+          <span
+            v-if="item.early_leave_minutes > 0"
+            class="text-amber-600 dark:text-amber-400 font-bold"
+          >
             خروج مبكر: {{ item.early_leave_minutes }} دقيقة
           </span>
 
-          <span v-if="item.overtime_minutes > 0" class="text-emerald-600 font-bold">
+          <span
+            v-if="item.overtime_minutes > 0"
+            class="text-emerald-600 dark:text-emerald-400 font-bold"
+          >
             إضافي: {{ item.overtime_minutes }} دقيقة
           </span>
         </div>
@@ -74,7 +78,7 @@
 
       <template #cell-status="{ item }">
         <span
-          class="px-2.5 py-1 text-[11px] font-bold rounded-full inline-flex items-center gap-1.5"
+          class="px-2.5 py-1 text-[11px] font-bold rounded-full inline-flex items-center gap-1.5 shadow-sm border transition-all"
           :class="getStatusClass(item.status)"
         >
           <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.status)"></span>
@@ -87,7 +91,7 @@
           <button
             v-if="authStore.can('attendance.update')"
             @click.stop="$emit('edit', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            class="p-1.5 text-sky-500 dark:text-sky-400 hover:text-sky-600 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded-lg transition-all duration-150"
             title="تعديل السجل"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -103,7 +107,7 @@
           <button
             v-if="authStore.can('attendance.delete')"
             @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            class="p-1.5 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all duration-150"
             title="حذف السجل"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +153,6 @@ const tableHeaders = computed(() => [
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 
-// --- دوال مساعدة لتنسيق الحالة ---
 const getStatusLabel = (status) => {
   const labels = {
     present: 'حاضر',
@@ -160,22 +163,29 @@ const getStatusLabel = (status) => {
   return labels[status] || status
 }
 
+/**
+ * دمج فئات التصميم المتجاوبة مع وضع الـ Dark Mode تلقائياً
+ * تم استبدال الألوان القديمة بطبقات معتمة متباينة بشكل مريح ومحترف للعين
+ */
 const getStatusClass = (status) => {
   const classes = {
-    present: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-    absent: 'bg-rose-50 text-rose-700 border border-rose-100',
-    late: 'bg-amber-50 text-amber-700 border border-amber-100',
-    on_leave: 'bg-blue-50 text-blue-700 border border-blue-100',
+    present:
+      'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30',
+    absent:
+      'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/30',
+    late: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/30',
+    on_leave:
+      'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-900/30',
   }
-  return classes[status] || 'bg-surface-ground text-text-secondary border border-surface-border'
+  return classes[status] || 'bg-surface-ground text-text-secondary border-surface-border'
 }
 
 const getStatusDotClass = (status) => {
   const classes = {
-    present: 'bg-emerald-500',
-    absent: 'bg-rose-500',
-    late: 'bg-amber-500',
-    on_leave: 'bg-blue-500',
+    present: 'bg-emerald-500 dark:bg-emerald-400',
+    absent: 'bg-rose-500 dark:bg-rose-400',
+    late: 'bg-amber-500 dark:bg-amber-400',
+    on_leave: 'bg-sky-500 dark:bg-sky-400',
   }
   return classes[status] || 'bg-gray-400'
 }

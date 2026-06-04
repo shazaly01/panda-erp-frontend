@@ -38,6 +38,9 @@ const CalendarExceptionsList = () => import('./views/schedules/CalendarException
 
 // 🌟 إضافة شاشة أكواد الإنترنت
 const InternetVouchersList = () => import('./views/internet_vouchers/InternetVouchersList.vue')
+// 🌟 إضافات منظومة أذونات الخروج المؤقت والأمن والسلامة
+const LeavePassesList = () => import('./views/leave-passes/LeavePassesList.vue')
+const EmergencyMuster = () => import('./views/leave-passes/EmergencyMuster.vue')
 
 // ==========================================
 // 4. الرواتب والأجور
@@ -173,6 +176,20 @@ export default [
         name: 'InternetVouchersList',
         component: InternetVouchersList,
         meta: { permission: 'internet_vouchers.view' },
+      },
+
+      // --- أذونات الخروج المؤقت والسلامة الصناعية (HSE) ---
+      {
+        path: 'leave-passes',
+        name: 'LeavePassesList',
+        component: LeavePassesList,
+        meta: { permission: 'leave_passes.view' },
+      },
+      {
+        path: 'leave-passes/emergency-muster',
+        name: 'EmergencyMuster',
+        component: EmergencyMuster,
+        meta: { permission: 'leave_passes.view' },
       },
       // --- الرواتب والمدخلات ---
       {

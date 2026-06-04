@@ -1,4 +1,4 @@
-// src/stores/userStore.js (النسخة المحصنة)
+// src/stores/userStore.js
 import { defineStore } from 'pinia'
 import userService from '@/services/userService'
 
@@ -8,19 +8,27 @@ export const useUserStore = defineStore('users', {
     user: null,
     pagination: {},
     loading: false,
+    filters: {
+      search: '',
+      status: 'active',
+    },
   }),
 
   actions: {
-    async fetchUsers(page = 1) {
+    async fetchUsers(page = 1, newFilters = null) {
       this.loading = true
+      if (newFilters) {
+        this.filters = { ...this.filters, ...newFilters }
+      }
+
       try {
-        const response = await userService.get(page)
-        // [تحصين]
+        const response = await userService.get(page, this.filters)
         this.users = response.data.data || []
         this.pagination = response.data.meta || {}
       } catch (error) {
         console.error('Failed to fetch users:', error)
-        this.users = [] // إجراء وقائي
+        this.users = []
+        this.pagination = {}
         throw error
       } finally {
         this.loading = false
@@ -46,7 +54,7 @@ export const useUserStore = defineStore('users', {
         await userService.create(payload)
       } catch (error) {
         console.error('Failed to create user:', error)
-        throw error // أعد رمي الخطأ ليتم التعامل معه في المكون
+        throw error
       }
     },
 
@@ -55,17 +63,44 @@ export const useUserStore = defineStore('users', {
         await userService.update(id, payload)
       } catch (error) {
         console.error(`Failed to update user ${id}:`, error)
-        throw error // أعد رمي الخطأ
+        throw error
       }
     },
 
     async deleteUser(id) {
       try {
         await userService.delete(id)
-        // [تحسين] نعتمد على fetchUsers لتحديث القائمة لضمان التزامن
       } catch (error) {
         console.error(`Failed to delete user ${id}:`, error)
-        throw error // أعد رمي الخطأ
+        throw error
+      }
+    },
+
+    async approveUser(id, payload) {
+      this.loading = true
+      try {
+        await userService.approve(id, payload)
+      } catch (error) {
+        console.error(`Failed to approve user ${id}:`, error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    /**
+     * [إضافة مستحدثة] استدعاء خدمة تبديل حالة الحساب من نشط إلى معلق والعكس
+     */
+    async toggleUserStatus(id) {
+      this.loading = true
+      try {
+        const response = await userService.toggleStatus(id)
+        return response.data
+      } catch (error) {
+        console.error(`Failed to toggle status for user ${id}:`, error)
+        throw error
+      } finally {
+        this.loading = false
       }
     },
   },
