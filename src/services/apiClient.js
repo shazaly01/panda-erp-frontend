@@ -1,4 +1,3 @@
-// src/services/apiClient.js
 import axios from 'axios'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -33,16 +32,30 @@ apiClient.interceptors.response.use(
     return response
   },
   async (error) => {
-    // التحقق مما إذا كانت الاستجابة تعود لخطأ عدم الصلاحية 401
+    // التحقق مما إذا كانت الاستجابة تعود لخطأ عدم الصلاحية أو فشل التحقق المحمي 401
     if (error.response && error.response.status === 401) {
       const authStore = useAuthStore()
 
-      // 🛡️ درع حماية لكسر التكرار: إذا كان الطلب الفاشل هو نفسه طلب تسجيل الخروج أو الدخول
-      // نقوم بالتنظيف المحلي الصارم فوراً دون إعادة ضرب السيرفر لمنع الـ Loop
-      if (
-        error.config &&
-        (error.config.url.includes('/logout') || error.config.url.includes('/login'))
-      ) {
+      // 🛡️ تحديد الروابط العامة (Guest Endpoints) التي تعتمد الـ 401 كاستجابة منطقية للفشل
+      const guestEndpoints = [
+        '/login',
+        '/register',
+        '/send-otp',
+        '/forgot-password',
+        '/reset-password',
+      ]
+
+      // فحص إذا كان الطلب الحالي ينتمي للمنافذ العامة للضيوف
+      const isGuestRequest =
+        error.config && guestEndpoints.some((endpoint) => error.config.url.includes(endpoint))
+
+      if (isGuestRequest) {
+        // نمرر الخطأ فوراً للمكون (Component) ليعرضه للمستخدم في الواجهة بدون عمل أي إعادة توجيه
+        return Promise.reject(error)
+      }
+
+      // 🛡️ درع حماية لكسر التكرار: إذا كان الطلب الفاشل هو نفسه طلب تسجيل الخروج
+      if (error.config && error.config.url.includes('/logout')) {
         authStore.token = null
         authStore.user = null
         localStorage.removeItem('token')
@@ -51,10 +64,10 @@ apiClient.interceptors.response.use(
       }
 
       console.warn(
-        '🚫 تم رصد جلسة باطلة أو منتهية (خطأ 401). جاري تطهير البيانات محلياً وطرد المستخدم...',
+        '🚫 تم رصد جلسة باطلة أو منتهية لطلب محمي (خطأ 401). جاري تطهير البيانات محلياً وطرد المستخدم...',
       )
 
-      // التنظيف المحلي الفوري الآمن وإعادة التوجيه لضمان عزل الذاكرة الميتة
+      // التنظيف المحلي الفوري الآمن وإعادة التوجيه للمستخدمين المسجلين فقط الذين انتهت جلستهم
       authStore.token = null
       authStore.user = null
       localStorage.removeItem('token')
