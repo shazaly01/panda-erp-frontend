@@ -127,6 +127,12 @@ export default [
           // layout: 'blank' // قم بتفعيلها إذا كان نظامك يدعم تخطيطاً فارغاً للشاشات الكاملة
         },
       },
+      {
+        path: 'leave-passes/gate',
+        name: 'GateDashboard',
+        component: () => import('@/modules/hr/views/leave-passes/GateDashboard.vue'),
+        meta: { permission: 'hr_leave_passes.gate_check' },
+      },
 
       {
         path: 'attendance/summary-print',
@@ -183,13 +189,13 @@ export default [
         path: 'leave-passes',
         name: 'LeavePassesList',
         component: LeavePassesList,
-        meta: { permission: 'leave_passes.view' },
+        meta: { permission: 'hr_leave_passes.view' },
       },
       {
         path: 'leave-passes/emergency-muster',
         name: 'EmergencyMuster',
         component: EmergencyMuster,
-        meta: { permission: 'leave_passes.view' },
+        meta: { permission: 'hr_leave_passes.view' },
       },
       // --- الرواتب والمدخلات ---
       {

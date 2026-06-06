@@ -20,8 +20,10 @@
     <LeavePassesFilter
       v-model:searchQuery="searchQuery"
       v-model:statusFilter="statusFilter"
+      v-model:dateFilter="dateFilter"
       @update:searchQuery="onSearch"
       @update:statusFilter="handlePageChange(1)"
+      @update:dateFilter="handlePageChange(1)"
     />
 
     <LeavePassesTable
@@ -74,6 +76,7 @@ const { leavePasses, pagination, loading } = storeToRefs(leavePassStore)
 // -- الفلاتر والبحث اللحظي --
 const searchQuery = ref('')
 const statusFilter = ref('')
+const dateFilter = ref('') // تعريف المتغير الموحد لتاريخ التصفية
 let searchTimeout = null
 
 const onSearch = () => {
@@ -90,6 +93,7 @@ const handlePageChange = async (page = 1) => {
     page,
     search: searchQuery.value,
     status: statusFilter.value,
+    date: dateFilter.value, // توجيه تاريخ الفلترة للباكيند ليطابق فحص المتحكم $request->date
   }
 
   try {
@@ -115,7 +119,7 @@ const openCreateModal = () => {
 const openEditModal = (leavePass) => {
   // حماية: لا يمكن تعديل إذن تم استغلاله حركياً بالخروج الفعلي
   if (leavePass.status === 'out' || leavePass.status === 'returned') {
-    toast.warning('لا يمكن تعديل إذن خروج تم استخدامه وتوثيقه عند البوابة.')
+    toast.warning('لا يمكن تعديل إذن خروج تم استخدمه وتوثيقه عند البوابة.')
     return
   }
   leavePassToEdit.value = leavePass

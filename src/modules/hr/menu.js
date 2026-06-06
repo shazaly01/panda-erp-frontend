@@ -1,4 +1,5 @@
 import {
+  ShieldCheckIcon,
   UserGroupIcon,
   Cog8ToothIcon,
   ClockIcon,
@@ -8,6 +9,19 @@ import {
 } from '@heroicons/vue/24/outline'
 
 export default [
+  {
+    name: 'بوابة الأمن والاستقبال',
+    icon: ShieldCheckIcon, // أيقونة حماية مخصصة للأمن
+    permission: 'hr_leave_passes.gate_check', // تظهر فقط لمن يملك صلاحية الحراسة
+    children: [
+      {
+        name: 'شاشة استقبال البوابة',
+        routeName: 'GateDashboard',
+        permission: 'hr_leave_passes.gate_check',
+      },
+      // مستقبلاً يمكنك إضافة (شاشة مسح الـ QR المؤتمتة) هنا تحت نفس القسم
+    ],
+  },
   // =========================================================
   // 1. شؤون الموظفين (استخدام يومي / أسبوعي)
   // =========================================================
@@ -44,36 +58,34 @@ export default [
       {
         name: 'أكواد الإنترنت',
         routeName: 'InternetVouchersList',
-        icon: WifiIcon, // استخدمنا الأيقونة هنا إذا كان نظامك يدعم أيقونات فرعية، وإلا تجاهل هذا السطر
+        icon: WifiIcon,
         permission: 'internet_vouchers.view',
       },
     ],
   },
 
-  // 👈👈👈 أضف هذه الكتلة الجديدة بالكامل هنا 👇👇👇
   // =========================================================
   // 4. بوابة المشرفين (الخدمة الذاتية للمدير)
   // =========================================================
   {
     name: 'بوابة المشرفين',
     icon: ClipboardDocumentCheckIcon,
-    permission: 'hr.team_attendance.manage', // تظهر فقط لمن لديه هذه الصلاحية
+    permission: 'hr.team_attendance.manage',
     children: [
       {
         name: 'حضور فريقي',
-        routeName: 'TeamAttendance', // تأكد أن هذا يطابق اسم الـ Route في Vue Router
+        routeName: 'TeamAttendance',
         permission: 'hr.team_attendance.manage',
       },
       {
         name: 'أذونات الخروج المؤقت',
         routeName: 'LeavePassesList',
-        permission: 'leave_passes.view',
+        permission: 'hr_leave_passes.view',
       },
-      // 🛡️ شاشة الأمن والسلامة الصناعية الحية لإخلاء المنشأة في الطوارئ
       {
         name: 'لوحة الطوارئ والسلامة',
         routeName: 'EmergencyMuster',
-        permission: 'leave_passes.view',
+        permission: 'hr_leave_passes.view',
       },
     ],
   },
@@ -91,7 +103,7 @@ export default [
         routeName: 'PayrollInputsList',
         permission: 'hr.payroll_inputs.view',
       },
-      { name: 'السلف والعهد', routeName: 'LoansList', permission: 'hr.loans.view' }, // نُقلت هنا لارتباطها بالرواتب
+      { name: 'السلف والعهد', routeName: 'LoansList', permission: 'hr.loans.view' },
       { name: 'مسيرات الرواتب', routeName: 'PayrollBatchesList', permission: 'hr.payroll.view' },
     ],
   },
