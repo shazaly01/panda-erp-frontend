@@ -118,7 +118,15 @@ const selectedPermissions = ref([])
 const dialogTitle = computed(() => `تعديل صلاحيات دور: ${props.role?.name || ''}`)
 
 const permissionGroups = computed(() => roleStore.permissions.groups || [])
-const permissionActions = computed(() => roleStore.permissions.actions || [])
+
+// 🌟 تعديل ذكي: نضمن دائماً وجود عمود "فحص البوابة" للأفعال الخاصة غير القياسية إذا لم توفرها الخلفية برمجياً
+const permissionActions = computed(() => {
+  const actions = [...(roleStore.permissions.actions || [])]
+  if (actions.length > 0 && !actions.some((a) => a.key === 'gate_check')) {
+    actions.push({ key: 'gate_check', display: 'فحص البوابة' })
+  }
+  return actions
+})
 
 const categoriesDef = [
   {
@@ -146,6 +154,7 @@ const categoriesDef = [
       'pay_periods',
       'overtime_policies',
       'internet_vouchers',
+      'hr_leave_passes', // 🌟 إضافة المفتاح هنا ليعرض السطر في قسم الموارد البشرية الصحيح
     ],
   },
   {
