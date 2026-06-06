@@ -8,7 +8,11 @@
           اللحظية للبوابة.
         </p>
       </div>
-      <AppButton v-if="authStore.can('leave_passes.create')" @click="openCreateModal" icon="plus">
+      <AppButton
+        v-if="authStore.can('hr_leave_passes.create')"
+        @click="openCreateModal"
+        icon="plus"
+      >
         إصدار إذن خروج مباشر
       </AppButton>
     </div>
@@ -90,7 +94,7 @@ const handlePageChange = async (page = 1) => {
 
   try {
     await leavePassStore.fetchLeavePasses(filters)
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب قائمة أذونات الخروج.')
   }
 }
@@ -151,7 +155,7 @@ const confirmDelete = async () => {
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error('فشلت عملية إلغاء إذن الخروج، يرجى المحاولة لاحقاً.')
   } finally {
     isDeleteDialogOpen.value = false

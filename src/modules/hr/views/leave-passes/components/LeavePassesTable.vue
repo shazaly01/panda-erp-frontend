@@ -1,3 +1,4 @@
+<!---src\modules\hr\views\leave-passes\components\LeavePassesTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="leavePasses" :is-loading="loading">
@@ -86,7 +87,7 @@
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
-            v-if="authStore.can('leave_passes.create')"
+            v-if="authStore.can('hr_leave_passes.update')"
             @click.stop="$emit('edit', item)"
             :class="[
               'p-1.5 rounded-lg transition-colors',
@@ -101,7 +102,7 @@
             "
             :disabled="item.status === 'out' || item.status === 'returned'"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24 " stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -112,7 +113,7 @@
           </button>
 
           <button
-            v-if="authStore.can('leave_passes.create')"
+            v-if="authStore.can('hr_leave_passes.delete')"
             @click.stop="$emit('delete', item)"
             :class="[
               'p-1.5 rounded-lg transition-colors',
