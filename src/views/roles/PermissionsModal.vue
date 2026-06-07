@@ -1,66 +1,66 @@
-<!-- src/views/roles/PermissionsModal.vue -->
 <template>
-  <div
-    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40"
-    @click.self="close"
+  <AppDialog
+    :model-value="modelValue"
+    @update:modelValue="close"
+    :title="dialogTitle"
+    size="max-w-7xl"
   >
-    <div
-      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-7xl transform transition-all duration-300 scale-95"
-      :class="{ 'scale-100': modelValue }"
-    >
-      >
-      <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-        <h3 class="text-lg font-semibold text-text-primary">
-          تعديل صلاحيات دور: <span class="font-bold text-primary">{{ role?.name }}</span>
-        </h3>
-        <button
-          @click="close"
-          class="text-text-muted hover:text-text-primary text-2xl leading-none"
-        >
-          &times;
-        </button>
-      </div>
+    <div class="max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
+      <PermissionsChecklist v-model:selectedPermissions="selectedPermissions" />
+    </div>
 
-      <div class="max-h-[60vh] overflow-y-auto pr-2">
-        <PermissionsChecklist v-model:selectedPermissions="selectedPermissions" />
-      </div>
-
-      <div class="mt-8 flex justify-end gap-4">
-        <AppButton type="button" variant="secondary" @click="close"> إلغاء </AppButton>
-        <AppButton @click="handleSave" :disabled="isSaving">
+    <template #footer>
+      <div class="mt-4 flex justify-end gap-3 pt-4 border-t border-surface-border w-full">
+        <AppButton type="button" variant="secondary" @click="close">إلغاء</AppButton>
+        <AppButton @click="handleSave" :disabled="isSaving" class="px-8 shadow-sm">
           <span v-if="isSaving">جاري الحفظ...</span>
           <span v-else>حفظ الصلاحيات</span>
         </AppButton>
       </div>
-    </div>
-  </div>
+    </template>
+  </AppDialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import PermissionsChecklist from '@/components/forms/PermissionsChecklist.vue'
+import { ref, watch, computed } from 'vue'
+import AppDialog from '@/components/ui/AppDialog.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import PermissionsChecklist from '@/components/forms/PermissionsChecklist.vue'
 
 const props = defineProps({
-  modelValue: { type: Boolean, default: false },
-  role: { type: Object, default: null },
-  isSaving: { type: Boolean, default: false },
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+  role: {
+    type: Object,
+    default: null,
+  },
+  isSaving: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
 const selectedPermissions = ref([])
 
-// هذا الـ watcher مهم لتعبئة الصلاحيات عند فتح النافذة
+const dialogTitle = computed(() => `تعديل صلاحيات دور: ${props.role?.name || ''}`)
+
+// 🌟 تحسين أمني: مراقبة حالة فتح النافذة والدور معاً لضمان شحن الصلاحيات الصحيحة دائماً
 watch(
-  () => props.role,
-  (newRole) => {
-    if (newRole && props.modelValue) {
-      // املأ الصلاحيات الحالية للدور
+  () => [props.role, props.modelValue],
+  ([newRole, isOpen]) => {
+    if (isOpen && newRole) {
+      // استخراج مصفوفة أسماء الصلاحيات النصية (String Names) لتمريرها للمكون التابع
       selectedPermissions.value = newRole.permissions ? newRole.permissions.map((p) => p.name) : []
+    } else if (!isOpen) {
+      // تفريغ المصفوفة عند الإغلاق لمنع تسريب البيانات بين النوافذ
+      selectedPermissions.value = []
     }
   },
-  { immediate: true }, // immediate: true تضمن تشغيله عند تحميل المكون لأول مرة
+  { immediate: true, deep: true },
 )
 
 const close = () => {
@@ -68,14 +68,31 @@ const close = () => {
 }
 
 const handleSave = () => {
-  // تأكد من وجود الدور قبل إرسال البيانات
   if (!props.role) return
 
+  // تجهيز الـ Payload المتطابق بالكامل مع متطلبات الـ Validation في الباك كوند
   const payload = {
     id: props.role.id,
-    name: props.role.name, // يجب إرسال الاسم لتجنب فشل التحقق في الـ Backend
+    name: props.role.name,
     permissions: selectedPermissions.value,
   }
+
   emit('save', payload)
 }
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--surface-border, #e5e7eb);
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--text-muted, #9ca3af);
+}
+</style>

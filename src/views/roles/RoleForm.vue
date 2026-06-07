@@ -1,8 +1,6 @@
-<!-- src/views/roles/RoleForm.vue -->
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="space-y-6">
-      <!-- حقل اسم الدور -->
       <AppInput
         id="role-name"
         label="اسم الدور"
@@ -12,22 +10,21 @@
         :disabled="isDefaultRole"
       />
       <p v-if="isDefaultRole" class="text-sm text-yellow-500 -mt-2">
-        لا يمكن تعديل اسم الأدوار الافتراضية.
+        لا يمكن تعديل أسماء الأدوار الافتراضية والأساسية للنظام.
       </p>
 
-      <!-- مكون قائمة الصلاحيات -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-text-secondary mb-2">
-          الصلاحيات
+          الصلاحيات الممنوحة لهذا الدور
         </label>
         <PermissionsChecklist v-model:selectedPermissions="form.permissions" />
       </div>
     </div>
 
     <div class="mt-8 flex justify-end">
-      <AppButton type="submit" :disabled="isSaving">
+      <AppButton type="submit" :disabled="isSaving" class="px-8 shadow-sm">
         <span v-if="isSaving">جاري الحفظ...</span>
-        <span v-else>حفظ</span>
+        <span v-else>حفظ التغييرات</span>
       </AppButton>
     </div>
   </form>
@@ -52,20 +49,20 @@ const props = defineProps({
 
 const emit = defineEmits(['submit'])
 
-// تعريف بنية النموذج
+// تعريف بنية النموذج النظيفة للنمو المستقبلي
 const form = ref({
   id: null,
   name: '',
-  permissions: [], // مصفوفة من أسماء الصلاحيات
+  permissions: [], // مصفوفة من أسماء الصلاحيات النصية (String Names) لتتوافق مع الـ API
 })
 
-// التحقق مما إذا كان الدور هو دور افتراضي لا يمكن تعديل اسمه
+// 🌟 تزامن أمني شامل لحماية الأدوار الافتراضية من التعديل العشوائي للأسماء
 const isDefaultRole = computed(() => {
   if (!form.value || !form.value.name) return false
-  return ['Super Admin', 'Admin', 'User'].includes(form.value.name)
+  return ['Super Admin', 'Admin', 'User', 'Employee', 'HR Manager'].includes(form.value.name)
 })
 
-// مراقبة التغييرات في البيانات الأولية لملء النموذج
+// مراقبة التغييرات في البيانات الأولية لملء النموذج بدقة متناهية
 watch(
   () => props.initialData,
   (newData) => {
@@ -73,11 +70,11 @@ watch(
       form.value = {
         id: newData.id,
         name: newData.name,
-        // استخراج أسماء الصلاحيات فقط من الكائنات
+        // استخراج أسماء الصلاحيات النصية فقط من كائنات الصلاحيات القادمة من قاعدة البيانات
         permissions: newData.permissions ? newData.permissions.map((p) => p.name) : [],
       }
     } else {
-      // إعادة تعيين النموذج عند إضافة دور جديد
+      // إعادة تعيين النموذج بالكامل عند الرغبة في إنشاء دور جديد
       form.value = { id: null, name: '', permissions: [] }
     }
   },
