@@ -11,47 +11,80 @@
     ></div>
 
     <div
-      class="w-full max-w-4xl relative z-10 flex flex-col items-center min-h-full justify-between py-4 gap-6"
+      class="w-full max-w-xl relative z-10 flex flex-col items-center min-h-full justify-between py-2 gap-4"
     >
       <KioskHeader />
 
-      <div class="w-full max-w-md flex justify-center">
+      <div
+        class="w-full bg-slate-900/50 p-1 rounded-2xl border border-slate-800 flex items-center gap-1 shadow-lg"
+      >
         <button
           type="button"
-          @click="toggleEmergencyMode"
+          @click="switchMode('hardware')"
           :class="[
-            'px-5 py-2.5 rounded-xl font-bold text-xs border transition-all duration-300 flex items-center gap-2 shadow-lg',
-            isEmergencyMode
-              ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30'
-              : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-300 hover:border-slate-700',
+            'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5',
+            activeMode === 'hardware'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
           ]"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+              d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          {{
-            isEmergencyMode
-              ? 'العودة للوضع الافتراضي (الماسح العادي)'
-              : 'تفعيل وضع(كاميرا الهاتف / إدخال يدوي)'
-          }}
+          الماسح السلكي
+        </button>
+
+        <button
+          type="button"
+          @click="switchMode('camera')"
+          :class="[
+            'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5',
+            activeMode === 'camera'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
+          ]"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+            />
+          </svg>
+          كاميرا الهاتف
+        </button>
+
+        <button
+          type="button"
+          @click="switchMode('manual')"
+          :class="[
+            'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5',
+            activeMode === 'manual'
+              ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
+          ]"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 11h.01M9 11h.01M12 14h.01M15 11h.01M12 17h.01"
+            />
+          </svg>
+          لوحة الأرقام
         </button>
       </div>
 
-      <div
-        :class="[
-          'w-full flex justify-center gap-6 flex-1 my-2 transition-all duration-500',
-          isEmergencyMode
-            ? 'flex-col lg:flex-row items-center lg:items-start'
-            : 'flex-col items-center max-w-md',
-        ]"
-      >
-        <div class="w-full flex flex-col items-center justify-center gap-4">
-          <div v-if="!isEmergencyMode" class="relative w-full group">
+      <div class="w-full flex flex-col items-center justify-start gap-4 flex-1">
+        <div class="w-full flex justify-center">
+          <div v-if="activeMode === 'hardware'" class="relative w-full group animate-fade-in">
             <div
               class="absolute inset-0 bg-blue-500/5 rounded-xl blur-xl transition-all duration-500 group-focus-within:bg-blue-500/15 animate-pulse"
             ></div>
@@ -74,39 +107,23 @@
             </div>
           </div>
 
-          <div v-else class="w-full flex flex-col items-center gap-4 animate-fade-in">
-            <KioskCameraScanner
-              v-if="showCamera"
-              @scan="processAttendanceCode"
-              @close="showCamera = false"
-              @error="handleCameraError"
-            />
+          <KioskCameraScanner
+            v-else-if="activeMode === 'camera'"
+            @scan="processAttendanceCode"
+            @error="handleCameraError"
+          />
 
-            <button
-              v-else
-              type="button"
-              @click="showCamera = true"
-              class="w-full py-3 bg-blue-950/40 hover:bg-blue-950/60 border border-blue-900/40 text-blue-400 rounded-2xl font-bold text-sm transition-all duration-150 flex items-center justify-center gap-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                />
-              </svg>
-              فتح كاميرا الهاتف للمسح
-            </button>
-
-            <KioskManualNumpad v-model="manualEmployeeNumber" @submit="processAttendanceCode" />
-          </div>
+          <KioskManualNumpad
+            v-else-if="activeMode === 'manual'"
+            v-model="manualEmployeeNumber"
+            @submit="processAttendanceCode"
+          />
         </div>
 
-        <div class="w-full min-h-[380px] relative flex items-center justify-center">
+        <div class="w-full min-h-[360px] relative flex items-start justify-center pt-2">
           <Transition
             enter-active-class="transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
-            enter-from-class="opacity-0 translate-y-8 scale-95 blur-sm"
+            enter-from-class="opacity-0 translate-y-6 scale-95 blur-sm"
             enter-to-class="opacity-100 translate-y-0 scale-100 blur-0"
             leave-active-class="transition-all duration-300 cubic-bezier(0.7, 0, 0.84, 0)"
             leave-from-class="opacity-100 scale-100"
@@ -160,7 +177,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
 
-// استيراد المكوّنات الفرعية المجهزة للهيكلة الجديدة
+// استيراد المكوّنات الفرعية الستة المجهزة للهيكلة الجديدة
 import KioskHeader from './components/KioskHeader.vue'
 import KioskClock from './components/KioskClock.vue'
 import KioskResultCard from './components/KioskResultCard.vue'
@@ -173,15 +190,13 @@ const employeeNumber = ref('')
 const manualEmployeeNumber = ref('')
 const scanResult = ref(null)
 
-// متغيرات التحكم في الحالات الخاصة بوضع الطوارئ والهاتف
-const isEmergencyMode = ref(false)
-const showCamera = ref(false)
-
+// التعديل الهيكلي: تبديل الحالات الثلاث النشطة تلقائياً (hardware | camera | manual)
+const activeMode = ref('hardware')
 let resultTimeout = null
 
-// إبقاء التركيز على حقل الإدخال فقط في حال لم نكن في وضع الطوارئ
+// إبقاء التركيز التلقائي للماسح العتادي فقط وفصله تماماً في أوضاع الموبايل لمنع ظهور كيبورد الهاتف
 const keepFocus = () => {
-  if (isEmergencyMode.value) return
+  if (activeMode.value !== 'hardware') return
   nextTick(() => {
     if (barcodeInput.value) barcodeInput.value.focus()
   })
@@ -191,22 +206,19 @@ const handleBackgroundClick = () => {
   keepFocus()
 }
 
-// تشغيل/إيقاف وضع الطوارئ بالهاتف ممرراً فصل/وصل التحكم والتركيز
-const toggleEmergencyMode = () => {
-  isEmergencyMode.value = !isEmergencyMode.value
+// دالة التبديل النظيف والآمن بين الحالات الثلاث وتصفير المدخلات السابقة لمنع التداخل
+const switchMode = (mode) => {
+  activeMode.value = mode
   scanResult.value = null
   employeeNumber.value = ''
   manualEmployeeNumber.value = ''
 
-  if (isEmergencyMode.value) {
-    showCamera.value = true
-  } else {
-    showCamera.value = false
+  if (mode === 'hardware') {
     keepFocus()
   }
 }
 
-// معالجة قراءة الباركود العادي من الـ Hardware Scanner الخاص بالكشك
+// معالجة القراءة القادمة من الماسح العتادي المرتبط بالكشك القياسي
 const handleHardwareScan = () => {
   const code = employeeNumber.value.trim()
   employeeNumber.value = ''
@@ -215,7 +227,6 @@ const handleHardwareScan = () => {
   }
 }
 
-// استقبال كود الخطأ الممرر من الكاميرا وعرضه على فرد الأمن بشكل كرت تنبيه
 const handleCameraError = (errorMessage) => {
   scanResult.value = {
     status: 'error',
@@ -224,9 +235,14 @@ const handleCameraError = (errorMessage) => {
   }
 }
 
-// النواة المركزية الموحدة لاستقبال الأكواد من أي وسيلة كانت (كاميرا، يدوي، ماسح عتادي) وإرسالها للـ API
+// النواة المركزية الموحدة لاستقبال وتجهيز الأكواد وإرسالها للـ API
 const processAttendanceCode = async (code) => {
   if (!code || attendanceStore.loading) return
+
+  // حقن الأرقام داخل لوحة الأرقام عند قراءتها من الكاميرا للشاشات الفرعية
+  if (activeMode.value === 'camera' || activeMode.value === 'manual') {
+    manualEmployeeNumber.value = code
+  }
 
   scanResult.value = null
   clearTimeout(resultTimeout)
@@ -253,17 +269,13 @@ const processAttendanceCode = async (code) => {
       }
     }, 50)
   } finally {
-    // تصفير الخانات المخصصة لليدوي
+    // تصفير شاشة عرض لوحة اللمس بعد نجاح العملية بالكامل
     manualEmployeeNumber.value = ''
 
-    // إعادة بناء الكاميرا تلقائيًا للمسح التالي في وضع الطوارئ إذا أغلقت بعد المسح الناجح
-    if (isEmergencyMode.value) {
-      showCamera.value = true
-    } else {
+    if (activeMode.value === 'hardware') {
       keepFocus()
     }
 
-    // إخفاء كرت البيانات تلقائيًا بعد 8 ثوانٍ من ظهور النتيجة للتهيؤ للموظف القادم
     resultTimeout = setTimeout(() => {
       scanResult.value = null
     }, 8000)
@@ -301,7 +313,7 @@ onUnmounted(() => {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -315,6 +327,6 @@ onUnmounted(() => {
   animation: float-reverse 12s ease-in-out infinite;
 }
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>

@@ -35,7 +35,7 @@
         </div>
         <span
           class="text-[10px] font-bold text-emerald-400/80 mt-2 tracking-wide bg-slate-950/80 px-2 py-0.5 rounded-md backdrop-blur-sm"
-          >وجّه مستطيل الفوكس على الباركود مباشرة</span
+          >وجّه مستطيل على الباركود مباشرة</span
         >
       </div>
     </div>
