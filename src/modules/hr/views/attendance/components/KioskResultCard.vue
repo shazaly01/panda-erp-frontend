@@ -6,14 +6,29 @@
       resultTheme.glow,
     ]"
   >
-    <div
-      class="relative w-40 h-40 rounded-full p-[3px] overflow-hidden bg-slate-900 shadow-[0_0_35px_rgba(234,179,8,0.3)] flex items-center justify-center mb-5 z-10 border border-slate-800"
-    >
+    <div class="relative w-44 h-44 flex items-center justify-center mb-5 group select-none">
       <div
-        class="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_50%,#eab308_90%,#eab308_100%)] animate-laser-rotate"
-      ></div>
+        :class="['absolute inset-0 pointer-events-none animate-pulse-slow', resultTheme.techColor]"
+      >
+        <div
+          class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-current rounded-tl-md"
+        ></div>
+        <div
+          class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-current rounded-tr-md"
+        ></div>
+        <div
+          class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-current rounded-bl-md"
+        ></div>
+        <div
+          class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-current rounded-br-md"
+        ></div>
+      </div>
+
       <div
-        class="relative w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center"
+        :class="[
+          'w-36 h-36 rounded-full p-1 bg-slate-950 border transition-all duration-500 flex items-center justify-center overflow-hidden',
+          resultTheme.photoBorder,
+        ]"
       >
         <img
           v-if="result.profile_photo"
@@ -22,10 +37,10 @@
               ? result.profile_photo?.url
               : result.profile_photo
           "
-          class="w-full h-full object-cover scale-[1.02]"
-          alt="Employee Photo"
+          class="w-full h-full object-cover rounded-full scale-[1.01] bg-slate-900"
+          alt="Employee"
         />
-        <svg v-else class="w-20 h-20 text-slate-700 mt-4" fill="currentColor" viewBox="0 0 24 24">
+        <svg v-else class="w-16 h-16 text-slate-700 mt-2" fill="currentColor" viewBox="0 0 24 24">
           <path
             d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
           />
@@ -78,7 +93,7 @@ const props = defineProps({
   },
 })
 
-// عزل حساب الثيمات البصرية داخل المكوّن لتخفيف العبء عن الملف الرئيسي
+// تحديث مصفوفة الثيمات لتوزيع الهالات والزوايا التقنية حسب الحالة تلقائياً
 const resultTheme = computed(() => {
   if (!props.result) return {}
   const status = props.result.status
@@ -90,11 +105,15 @@ const resultTheme = computed(() => {
           card: 'bg-emerald-950/20 border-emerald-500/30',
           glow: 'shadow-[0_0_50px_rgba(16,185,129,0.15)]',
           time: 'text-emerald-400',
+          photoBorder: 'border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2)]',
+          techColor: 'text-emerald-500/60',
         }
       : {
           card: 'bg-blue-950/20 border-blue-500/30',
           glow: 'shadow-[0_0_50px_rgba(59,130,246,0.15)]',
           time: 'text-blue-400',
+          photoBorder: 'border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.2)]',
+          techColor: 'text-blue-500/60',
         }
   }
 
@@ -103,21 +122,20 @@ const resultTheme = computed(() => {
         card: 'bg-amber-950/20 border-amber-500/30',
         glow: 'shadow-[0_0_50px_rgba(245,158,11,0.15)]',
         time: 'text-amber-400',
+        photoBorder: 'border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.2)]',
+        techColor: 'text-amber-500/60',
       }
     : {
         card: 'bg-rose-950/20 border-rose-500/30',
         glow: 'shadow-[0_0_50px_rgba(244,63,94,0.15)]',
         time: 'text-rose-400',
+        photoBorder: 'border-rose-500/40 shadow-[0_0_30px_rgba(244,63,94,0.2)]',
+        techColor: 'text-rose-500/60',
       }
 })
 </script>
 
 <style scoped>
-@keyframes laser-rotate {
-  100% {
-    transform: rotate(360deg);
-  }
-}
 @keyframes pulseSlow {
   0%,
   100% {
@@ -125,12 +143,9 @@ const resultTheme = computed(() => {
     transform: scale(1);
   }
   50% {
-    opacity: 0.95;
-    transform: scale(0.98);
+    opacity: 0.6;
+    transform: scale(0.97);
   }
-}
-.animate-laser-rotate {
-  animation: laser-rotate 2s linear infinite;
 }
 .animate-pulse-slow {
   animation: pulseSlow 2.5s ease-in-out infinite;
