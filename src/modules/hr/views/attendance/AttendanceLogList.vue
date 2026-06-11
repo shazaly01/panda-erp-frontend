@@ -61,11 +61,21 @@
 
     <AttendanceFilter
       v-model:searchQuery="searchQuery"
-      v-model:dateFilter="dateFilter"
-      v-model:statusFilter="statusFilter"
+      v-model:startDate="startDate"
+      v-model:endDate="endDate"
+      v-model:departmentId="departmentId"
+      v-model:positionId="positionId"
+      v-model:employmentType="employmentType"
+      v-model:presentOnly="presentOnly"
+      :departmentOptions="departmentOptions"
+      :positionOptions="positionOptions"
       @update:searchQuery="onSearch"
-      @update:dateFilter="handlePageChange(1)"
-      @update:statusFilter="handlePageChange(1)"
+      @update:startDate="handlePageChange(1)"
+      @update:endDate="handlePageChange(1)"
+      @update:departmentId="handlePageChange(1)"
+      @update:positionId="handlePageChange(1)"
+      @update:employmentType="handlePageChange(1)"
+      @update:presentOnly="handlePageChange(1)"
     />
 
     <AttendanceTable
@@ -78,7 +88,12 @@
       @delete="openDeleteDialog"
     />
 
-    <AttendanceSummaryTable v-else :summary-logs="summaryLogs" :loading="summaryLoading" />
+    <AttendanceSummaryTable
+      v-else
+      :summary-logs="summaryLogs"
+      :loading="summaryLoading"
+      :date-filter="startDate"
+    />
 
     <AttendanceLogModal
       v-if="isModalOpen"
@@ -99,13 +114,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import axios from 'axios'
 useAuthStore
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
 import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
+
+// 🌟 حقن مخزن الإدارات الجديد للاستفادة من القائمة المسطحة الجاهزة
+import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 
 import AppButton from '@/components/ui/AppButton.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
@@ -113,26 +132,39 @@ import AttendanceFilter from './components/AttendanceFilter.vue'
 import AttendanceTable from './components/AttendanceTable.vue'
 import AttendanceLogModal from './components/AttendanceLogModal.vue'
 import attendanceLogService from '@/modules/hr/services/attendanceLog.service'
-
-// استيراد المكون الجديد المخصص لعرض البيانات التجميعية والخلاصة
 import AttendanceSummaryTable from './AttendanceSummaryTable.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const attendanceStore = useAttendanceLogStore()
+const departmentStore = useDepartmentStore() // تهيئة الـ Store
 const toast = useToast()
 
 const { logs, pagination, loading } = storeToRefs(attendanceStore)
 
 // -- إدارة وضع العرض والبيانات التجميعية --
-const viewMode = ref('detailed') // يمكن أن تكون 'detailed' أو 'summary'
+const viewMode = ref('detailed')
 const summaryLogs = ref([])
 const summaryLoading = ref(false)
 
-// -- الفلاتر والبحث --
+// -- متغيرات الفلاتر --
 const searchQuery = ref('')
-const dateFilter = ref(new Date().toISOString().split('T')[0]) // عرض سجلات اليوم افتراضياً
-const statusFilter = ref('')
+const startDate = ref(new Date().toISOString().split('T')[0])
+const endDate = ref(new Date().toISOString().split('T')[0])
+const departmentId = ref('')
+const positionId = ref('')
+const employmentType = ref('')
+const presentOnly = ref(false)
+
+// 🌟 تعبئة خيارات الأقسام بشكل ديناميكي شجري بربطها مباشرة مع الـ flatDepartments المحسوبة في الـ Store
+const departmentOptions = computed(() => {
+  return departmentStore.flatDepartments.map((dept) => ({
+    id: dept.id,
+    name: dept.dropdownName, // حقل التنسيق الجمالي الهرمي المتوفر في الـ Store الخاص بك
+  }))
+})
+
+const positionOptions = ref([])
 let searchTimeout = null
 
 const onSearch = () => {
@@ -142,21 +174,18 @@ const onSearch = () => {
   }, 500)
 }
 
-// -- التبديل الآمن بين وضعيات العرض وإعادة جلب البيانات --
 const switchView = (mode) => {
   viewMode.value = mode
   handlePageChange(1)
 }
 
-// -- جلب البيانات الموحد بناءً على الفلاتر النشطة ووضع العرض --
 const handlePageChange = async (page = 1) => {
   if (viewMode.value === 'detailed') {
-    // 1. وضع السجلات التفصيلية اليومية: يعتمد على الـ Store
     const filters = {
       page,
       search: searchQuery.value,
-      date: dateFilter.value,
-      status: statusFilter.value,
+      date: startDate.value,
+      department_id: departmentId.value || null,
     }
 
     loading.value = true
@@ -168,11 +197,14 @@ const handlePageChange = async (page = 1) => {
       loading.value = false
     }
   } else {
-    // 2. وضع التقرير المجمع: استدعاء مباشر من الخدمة لتوفير الذاكرة والأكواد
     const summaryFilters = {
-      start_date: dateFilter.value,
-      end_date: dateFilter.value,
+      start_date: startDate.value,
+      end_date: endDate.value,
       search: searchQuery.value,
+      department_id: departmentId.value || null,
+      position_id: positionId.value || null,
+      employment_type: employmentType.value || null,
+      present_only: presentOnly.value ? 1 : 0,
     }
 
     summaryLoading.value = true
@@ -187,17 +219,29 @@ const handlePageChange = async (page = 1) => {
   }
 }
 
-onMounted(() => {
+// 🌟 استدعاء دالة جلب الأقسام الرسمية من الـ Store وجلب المسميات الوظيفية بشكل آمن
+const loadFiltersLookupData = async () => {
+  try {
+    await departmentStore.fetchDepartments()
+
+    // جلب المسميات الوظيفية بشكل مؤقت لحين تزويدي بالـ Store الخاص بها إذا لزم الأمر
+    const posRes = await axios.get('/api/hr/positions').catch(() => ({ data: [] }))
+    positionOptions.value = posRes.data?.data || posRes.data || []
+  } catch (e) {
+    console.error('فشل تحميل بيانات الفلاتر المساعدة:', e)
+  }
+}
+
+onMounted(async () => {
+  await loadFiltersLookupData()
   handlePageChange(1)
 })
 
-// -- فتح شاشة الاستقبال في تبويب جديد --
 const goToKiosk = () => {
   const routeData = router.resolve({ name: 'attendance.kiosk' })
   window.open(routeData.href, '_blank')
 }
 
-// -- إدارة النافذة المنبثقة (إضافة / تعديل) --
 const isModalOpen = ref(false)
 const logToEdit = ref(null)
 
@@ -215,7 +259,6 @@ const onLogSaved = () => {
   handlePageChange(pagination.value?.current_page || 1)
 }
 
-// -- إدارة الحذف --
 const isDeleteDialogOpen = ref(false)
 const logToDelete = ref(null)
 
