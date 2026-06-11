@@ -1,6 +1,6 @@
 <template>
   <AuthCardWrapper
-    title="باندا لإدارة الشركات"
+    :title="brandingStore.appName"
     subtitle="نظام التخطيط الموحد للموارد ERP"
     :error-message="errorMessage"
     max-width="md"
@@ -142,6 +142,8 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
 import AuthCardWrapper from './AuthCardWrapper.vue'
+import { useBrandingStore } from '@/stores/brandingStore'
+const brandingStore = useBrandingStore()
 
 const authStore = useAuthStore()
 const router = useRouter()

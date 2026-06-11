@@ -14,7 +14,11 @@
 
         <div class="relative z-10">
           <div class="text-center mb-6">
-            <img src="/MainLogo.png" alt="Project Logo" class="logo-main mx-auto mb-4" />
+            <img
+              :src="brandingStore.logoFullUrl"
+              :alt="brandingStore.appName"
+              class="logo-main mx-auto mb-4"
+            />
             <h1 class="text-3xl font-bold text-white tracking-wider">{{ title }}</h1>
             <p v-if="subtitle" class="mt-2 text-slate-300 opacity-80 text-xs">{{ subtitle }}</p>
           </div>
@@ -42,6 +46,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useBrandingStore } from '@/stores/brandingStore'
+const brandingStore = useBrandingStore()
 
 const props = defineProps({
   title: { type: String, required: true },

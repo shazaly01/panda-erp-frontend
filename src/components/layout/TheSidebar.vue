@@ -5,8 +5,12 @@
   >
     <div class="flex h-16 items-center justify-between px-5 flex-shrink-0">
       <RouterLink :to="{ name: 'Dashboard' }" class="flex items-center gap-2">
-        <img src="/MainLogo2.png" alt="Project Logo" class="w-8 h-8 rounded-md" />
-        <h1 class="text-xl font-bold text-text-primary">باندا الشامل</h1>
+        <img
+          v-if="appStore.isSidebarCollapsed"
+          :src="brandingStore.logoMiniUrl"
+          :alt="brandingStore.appName"
+          class="w-8 h-8 rounded-md"
+        />
       </RouterLink>
       <button
         @click="$emit('close-sidebar')"
@@ -99,6 +103,8 @@ const route = useRoute()
 // استخدام القائمة المستوردة بدلاً من كتابتها هنا
 // ==========================================
 import { useAppStore } from '@/stores/appStore' // 1. استدعاء الستور
+import { useBrandingStore } from '@/stores/brandingStore'
+const brandingStore = useBrandingStore()
 
 const appStore = useAppStore() // 2. التهيئة
 

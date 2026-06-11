@@ -19,9 +19,14 @@ import Toast from 'vue-toastification'
 // استيراد ملف الأنماط الخاص بالمكتبة
 import 'vue-toastification/dist/index.css'
 
+// [إضافة مستحدثة]: استيراد مخزن الهوية البصرية الديناميكي
+import { useBrandingStore } from '@/stores/brandingStore'
+
 const app = createApp(App)
 
-app.use(createPinia())
+// المعيار الاحترافي: فصل Pinia في متغير لتمكين استخدامه خارج المكونات قبل الـ Mount
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 
 // [صحيح] استدعاء واحد فقط لـ PrimeVue مع خيار unstyled
@@ -51,4 +56,11 @@ const options = {
 app.use(Toast, options) // استخدام المكتبة مع الخيارات
 // --- [نهاية الإضافة] ---
 
-app.mount('#app')
+// --- حارس الإقلاع المعماري (Application Bootstrapping Guard) ---
+// نقوم بتمرير الـ pinia instance للمخزن لحمايته من خطأ الـ getActivePinia() قبل الـ Mount
+const brandingStore = useBrandingStore(pinia)
+
+brandingStore.fetchBranding().then(() => {
+  // تفعيل إقلاع وربط واجهة التطبيق بالـ DOM فقط بعد اكتمال جلب الهوية وتحديث الـ Favicon والـ Title
+  app.mount('#app')
+})
