@@ -15,7 +15,7 @@
         <div class="relative z-10">
           <div class="text-center mb-6">
             <img
-              :src="brandingStore.logoFullUrl"
+              :src="brandingStore.logoMiniUrl"
               :alt="brandingStore.appName"
               class="logo-main mx-auto mb-4"
             />
