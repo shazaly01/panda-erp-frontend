@@ -2,7 +2,6 @@
   <div
     class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100/60 text-slate-800 flex flex-col justify-center items-center font-sans p-3 sm:p-6 antialiased relative overflow-hidden"
   >
-    <!-- 🌊 أمواج انسيابية شفافة ومتحركة متناسقة بصرياً مع تيمة الشعار المائي -->
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
       <svg
         class="absolute bottom-0 left-0 right-0 w-full min-w-[1200px] h-[340px] transition-all duration-1000"
@@ -36,7 +35,6 @@
       </svg>
     </div>
 
-    <!-- هالات نيونية علوية ناعمة ومضيئة لتأكيد فخامة المظهر -->
     <div
       class="absolute top-[-10%] left-[-15%] w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-[120px] pointer-events-none z-0"
     ></div>
@@ -44,9 +42,7 @@
       class="absolute inset-0 bg-[radial-gradient(#0f172a03_1px,transparent_1px)] [background-size:32px_32px] opacity-60 z-0"
     ></div>
 
-    <!-- 📱 الحاوية العريضة المريحة على الهواتف والشاشات دون انضغاط -->
     <div class="w-full max-w-2xl z-10 relative space-y-6 px-1 sm:px-0">
-      <!-- الهيدر العلوي المتناسق مع شعار ملف image_1c6dc0.png المائي -->
       <div class="flex flex-col items-center justify-center text-center space-y-3">
         <div class="relative group">
           <div
@@ -59,7 +55,6 @@
           />
         </div>
         <div>
-          <!-- 🌟 تم استخدام العنوان الرئيسي للنظام بدلاً من النص الثابت -->
           <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-950 drop-shadow-sm">
             {{ appName || 'بوابة تسجيل الزوار الذاتية' }}
           </h1>
@@ -71,18 +66,15 @@
         </div>
       </div>
 
-      <!-- 💳 كارت الاستمارة المطور والمحمي بـ Glassmorphic Shadow -->
       <div
         class="bg-white/80 backdrop-blur-xl border border-slate-200/90 rounded-3xl p-5 sm:p-8 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.08)] relative transition-all duration-500"
       >
-        <!-- خط التزيين المضيء الانسيابي في أعلى الكارت -->
         <div class="absolute top-0 left-0 right-0 h-[3px] overflow-hidden rounded-t-3xl">
           <div
             class="w-full h-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-shimmer"
           ></div>
         </div>
 
-        <!-- شاشة إدخال البيانات العريضة والمرنة بالكامل -->
         <div v-if="!isRegistered" class="space-y-5 animate-fadeIn">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="space-y-1.5">
@@ -92,7 +84,7 @@
               <input
                 v-model="form.name"
                 type="text"
-                placeholder="أدخل اسمك الثلاثي..."
+                placeholder="أدخل اسمك الرباعى..."
                 class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
               />
             </div>
@@ -104,7 +96,7 @@
               <input
                 v-model="form.phone"
                 type="tel"
-                placeholder="مثال: 05xxxxxxx"
+                placeholder="مثال: 09xxxxxxx"
                 class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-medium"
               />
             </div>
@@ -112,9 +104,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-slate-700 tracking-wide"
-                >رقم الهوية / جواز السفر</label
-              >
+              <label class="block text-xs font-bold text-slate-700 tracking-wide">رقم الهوية</label>
               <input
                 v-model="form.national_id"
                 type="text"
@@ -136,7 +126,6 @@
             </div>
           </div>
 
-          <!-- حقل البحث الأوتوماتيكي الممتد بعرض الحاوية المريح -->
           <div class="space-y-1.5 relative">
             <label class="block text-xs font-bold text-slate-700 tracking-wide"
               >الشخص المراد مقابلته (المستضيف) *</label
@@ -160,7 +149,6 @@
               </span>
             </div>
 
-            <!-- قائمة الأسماء التفاعلية المنسدلة -->
             <ul
               v-if="hosts.length > 0 && showDropdown"
               class="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-[0_15px_35px_-5px_rgba(0,0,0,0.08)] mt-1.5 max-h-44 overflow-y-auto divide-y divide-slate-100"
@@ -194,7 +182,6 @@
             ></textarea>
           </div>
 
-          <!-- زر الحفظ وإصدار بطاقة الدخول -->
           <button
             @click="handleSubmit"
             :disabled="isSaving"
@@ -222,7 +209,6 @@
           </button>
         </div>
 
-        <!-- 🎫 كارت عرض النتيجة والـ QR بعد الحفظ بنجاح -->
         <div v-else class="text-center space-y-6 animate-scaleUp pb-2">
           <div
             class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm"
@@ -241,11 +227,12 @@
           <div>
             <h2 class="text-2xl font-black text-slate-900">تم إصدار بطاقة الدخول بنجاح!</h2>
             <p class="text-xs text-slate-500 font-medium mt-1">
-              يرجى حفظ لقطة الشاشة وإبراز الـ QR Code لمسؤول الأمن عند البوابة لتأكيد حضورك
+              يرجى حفظ البطاقة أدناه أو مشاركتها مباشرة لإبرازها لمسؤول الأمن عند البوابة
             </p>
           </div>
 
           <div
+            ref="passCardRef"
             class="bg-gradient-to-b from-slate-50 to-slate-100/50 rounded-2xl p-6 border border-slate-200/60 shadow-inner relative max-w-sm mx-auto overflow-hidden group"
           >
             <div
@@ -298,6 +285,52 @@
               </div>
             </div>
           </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 max-w-sm mx-auto pt-2">
+            <button
+              @click="sharePassCard"
+              :disabled="isProcessingImage"
+              class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl py-3 px-4 text-xs font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+              {{ isProcessingImage ? 'جاري التحضير...' : 'مشاركة عبر الواتساب' }}
+            </button>
+
+            <button
+              @click="downloadPassCard"
+              :disabled="isProcessingImage"
+              class="flex-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl py-3 px-4 text-xs font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              تحميل كصورة
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -309,6 +342,7 @@ import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import QrcodeVue from 'qrcode.vue'
+import html2canvas from 'html2canvas'
 import { useBrandingStore } from '@/stores/brandingStore'
 import { visitorService } from '../../services/visitor.service'
 
@@ -325,8 +359,10 @@ onMounted(() => {
 
 const isRegistered = ref(false)
 const isSaving = ref(false)
+const isProcessingImage = ref(false)
 const qrToken = ref('')
 const passData = ref(null)
+const passCardRef = ref(null)
 
 const form = ref({
   name: '',
@@ -396,6 +432,75 @@ const handleSubmit = async () => {
     )
   } finally {
     isSaving.value = false
+  }
+}
+
+// 📥 دالة التقاط الكارت وتحميله كصورة PNG على الجهاز
+const downloadPassCard = async () => {
+  if (!passCardRef.value) return
+  isProcessingImage.value = true
+
+  try {
+    const canvas = await html2canvas(passCardRef.value, {
+      scale: 2, // مضاعفة الجودة لمنع التشويش على شاشات الموبايل
+      useCORS: true,
+      backgroundColor: null,
+    })
+
+    const image = canvas.toDataURL('image/png')
+    const link = document.createElement('a')
+    link.href = image
+    link.download = `Visitor-Pass-${passData.value?.name || 'Gate'}.png`
+    link.click()
+
+    toast.success('تم تحميل بطاقة الدخول إلى جهازك!')
+  } catch (error) {
+    console.error('تنفيذ التحميل فشل', error)
+    toast.error('لم نتمكن من التقاط الصورة، يرجى حفظ لقطة الشاشة يدوياً.')
+  } finally {
+    isProcessingImage.value = false
+  }
+}
+
+// 📲 دالة مشاركة الكارت كملف صورة أصلي عبر تطبيقات الهاتف (الواتساب وغيره)
+const sharePassCard = async () => {
+  if (!passCardRef.value) return
+  isProcessingImage.value = true
+
+  try {
+    const canvas = await html2canvas(passCardRef.value, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+    })
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        toast.error('حدث خطأ أثناء معالجة الصورة.')
+        return
+      }
+
+      const fileName = `Pass-${passData.value?.name || 'Visitor'}.png`
+      const file = new File([blob], fileName, { type: 'image/png' })
+
+      // التحقق من دعم المتصفح لميزة مشاركة الملفات الأصيلة (متاحة في أغلب الهواتف الذكية الحديثة)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'بطاقة الدخول الرقمية',
+          text: `مرحباً، هذه هي بطاقة الدخول الرقمية الخاصة بالزائر: ${passData.value?.name || ''}`,
+        })
+      } else {
+        // Fallback في حال كان المتصفح لا يدعم مشاركة الملفات (مثل بعض متصفحات الكمبيوتر المكتبي)
+        downloadPassCard()
+      }
+    }, 'image/png')
+  } catch (error) {
+    console.error('فشلت مشاركة الملف', error)
+    // تحويل تلقائي للتحميل المباشر كخيار بديل آمن
+    downloadPassCard()
+  } finally {
+    isProcessingImage.value = false
   }
 }
 </script>
