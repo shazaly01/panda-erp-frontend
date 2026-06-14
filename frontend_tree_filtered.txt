@@ -1,0 +1,474 @@
+============ [ VUE SRC FOLDER ] ============
+├── App.vue
+├── [DIR] assets
+│   ├── base.css
+│   ├── logo.svg
+├── [DIR] components
+│   ├── [DIR] forms
+│   │   ├── CalculationOptionsDropdown.vue
+│   │   ├── CompaniesDropdown.vue
+│   │   ├── DriversDropdown.vue
+│   │   ├── OrderStatusesDropdown.vue
+│   │   ├── OwnersDropdown.vue
+│   │   ├── PermissionsChecklist.vue
+│   │   ├── ProductsDropdown.vue
+│   │   ├── RegionsDropdown.vue
+│   │   ├── RolesDropdown.vue
+│   │   ├── StationsDropdown.vue
+│   │   ├── WorkNaturesDropdown.vue
+│   ├── [DIR] icons
+│   │   ├── IconCommunity.vue
+│   │   ├── IconDocumentation.vue
+│   │   ├── IconEcosystem.vue
+│   │   ├── IconSupport.vue
+│   │   ├── IconTooling.vue
+│   ├── [DIR] layout
+│   │   ├── AppLayout.vue
+│   │   ├── AuthLayout.vue
+│   │   ├── SidebarItem.vue
+│   │   ├── TheHeader.vue
+│   │   ├── TheSidebar.vue
+│   ├── [DIR] ui
+│   │   ├── ActionItem.vue
+│   │   ├── ActivationModal.vue
+│   │   ├── ActivityItem.vue
+│   │   ├── AppButton.vue
+│   │   ├── AppCard.vue
+│   │   ├── AppCheckbox.vue
+│   │   ├── AppConfirmDialog.vue
+│   │   ├── AppCurrencyInput.vue
+│   │   ├── AppDialog.vue
+│   │   ├── AppDropdown.vue
+│   │   ├── AppImageUpload.vue
+│   │   ├── AppInput.vue
+│   │   ├── AppMultiSelect.vue
+│   │   ├── AppPagination.vue
+│   │   ├── AppTable.vue
+│   │   ├── AppTextarea.vue
+│   │   ├── FullScreenLoader.vue
+│   │   ├── ImagePreviewModal.vue
+│   │   ├── QuantityInput.vue
+│   │   ├── RiskOpportunityZone.vue
+│   │   ├── SkeletonCard.vue
+│   │   ├── SparklineChart.vue
+│   │   ├── StatCard.vue
+├── [DIR] core
+│   ├── [DIR] menus
+│   │   ├── index.js
+├── main.css
+├── main.js
+├── [DIR] modules
+│   ├── [DIR] accounting
+│   │   ├── [DIR] components
+│   │   │   ├── [DIR] CostCenters
+│   │   │   │   ├── CostCentersTable.vue
+│   │   │   ├── [DIR] FiscalYears
+│   │   │   │   ├── FiscalYearModal.vue
+│   │   │   │   ├── FiscalYearsFilter.vue
+│   │   │   │   ├── FiscalYearsTable.vue
+│   │   │   ├── [DIR] selects
+│   │   │   │   ├── AccountCandidateSelect.vue
+│   │   │   │   ├── AccountSelect.vue
+│   │   │   │   ├── CostCenterSelect.vue
+│   │   │   │   ├── EntryStatusSelect.vue
+│   │   │   │   ├── FiscalYearSelect.vue
+│   │   ├── menu.js
+│   │   ├── router.js
+│   │   ├── [DIR] services
+│   │   │   ├── account.service.js
+│   │   │   ├── accountMapping.service.js
+│   │   │   ├── bankAccount.service.js
+│   │   │   ├── box.service.js
+│   │   │   ├── costCenter.service.js
+│   │   │   ├── currency.service.js
+│   │   │   ├── fiscalYear.service.js
+│   │   │   ├── journalEntry.service.js
+│   │   │   ├── reporting.service.js
+│   │   │   ├── voucher.service.js
+│   │   ├── [DIR] stores
+│   │   │   ├── accountMappingStore.js
+│   │   │   ├── accountStore.js
+│   │   │   ├── bankAccountStore.js
+│   │   │   ├── boxStore.js
+│   │   │   ├── costCenterStore.js
+│   │   │   ├── currencyStore.js
+│   │   │   ├── fiscalYearStore.js
+│   │   │   ├── journalEntryStore.js
+│   │   │   ├── voucherStore.js
+│   │   ├── [DIR] views
+│   │   │   ├── [DIR] account-mappings
+│   │   │   │   ├── AccountMappingForm.vue
+│   │   │   │   ├── AccountMappingModal.vue
+│   │   │   │   ├── AccountMappingsFilter.vue
+│   │   │   │   ├── AccountMappingsList.vue
+│   │   │   │   ├── AccountMappingsTable.vue
+│   │   │   ├── [DIR] accounts
+│   │   │   │   ├── AccountForm.vue
+│   │   │   │   ├── AccountModal.vue
+│   │   │   │   ├── AccountsFilter.vue
+│   │   │   │   ├── AccountsList.vue
+│   │   │   │   ├── AccountsTable.vue
+│   │   │   │   ├── AccountsTreeNode.vue
+│   │   │   │   ├── AccountsTreeView.vue
+│   │   │   ├── [DIR] bank-accounts
+│   │   │   │   ├── BankAccountForm.vue
+│   │   │   │   ├── BankAccountModal.vue
+│   │   │   │   ├── BankAccountsFilter.vue
+│   │   │   │   ├── BankAccountsList.vue
+│   │   │   │   ├── BankAccountsTable.vue
+│   │   │   ├── [DIR] boxes
+│   │   │   │   ├── BoxesFilter.vue
+│   │   │   │   ├── BoxesList.vue
+│   │   │   │   ├── BoxesTable.vue
+│   │   │   │   ├── BoxForm.vue
+│   │   │   │   ├── BoxModal.vue
+│   │   │   ├── [DIR] cost-centers
+│   │   │   │   ├── CostCenterForm.vue
+│   │   │   │   ├── CostCenterModal.vue
+│   │   │   │   ├── CostCentersFilter.vue
+│   │   │   │   ├── CostCentersList.vue
+│   │   │   │   ├── CostCentersTable.vue
+│   │   │   │   ├── CostCentersTreeNode.vue
+│   │   │   │   ├── CostCentersTreeView.vue
+│   │   │   ├── [DIR] currencies
+│   │   │   │   ├── CurrenciesFilter.vue
+│   │   │   │   ├── CurrenciesList.vue
+│   │   │   │   ├── CurrenciesTable.vue
+│   │   │   │   ├── CurrencyForm.vue
+│   │   │   │   ├── CurrencyModal.vue
+│   │   │   ├── [DIR] fiscal-years
+│   │   │   │   ├── FiscalYearForm.vue
+│   │   │   │   ├── FiscalYearModal.vue
+│   │   │   │   ├── FiscalYearsFilter.vue
+│   │   │   │   ├── FiscalYearsList.vue
+│   │   │   │   ├── FiscalYearsTable.vue
+│   │   │   ├── [DIR] journal-entries
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── JournalEntryAutocomplete.vue
+│   │   │   │   │   ├── JournalEntryHeader.vue
+│   │   │   │   │   ├── JournalEntryLines.vue
+│   │   │   │   │   ├── JournalEntryViewModal.vue
+│   │   │   │   ├── JournalEntriesFilter.vue
+│   │   │   │   ├── JournalEntriesList.vue
+│   │   │   │   ├── JournalEntriesTable.vue
+│   │   │   │   ├── JournalEntryForm.vue
+│   │   │   │   ├── JournalEntryFormPage.vue
+│   │   │   │   ├── JournalEntryModal.vue
+│   │   │   ├── [DIR] reports
+│   │   │   │   ├── AccountStatement.vue
+│   │   │   │   ├── BalanceSheet.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── SummaryCard.vue
+│   │   │   │   ├── IncomeStatement.vue
+│   │   │   │   ├── TrialBalance.vue
+│   │   │   ├── [DIR] vouchers
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── VoucherHeader.vue
+│   │   │   │   │   ├── VoucherLines.vue
+│   │   │   │   │   ├── VoucherViewModal.vue
+│   │   │   │   ├── VoucherForm.vue
+│   │   │   │   ├── VoucherFormPage.vue
+│   │   │   │   ├── VoucherModal.vue
+│   │   │   │   ├── VouchersFilter.vue
+│   │   │   │   ├── VouchersList.vue
+│   │   │   │   ├── VouchersTable.vue
+│   ├── [DIR] core
+│   │   ├── [DIR] services
+│   │   │   ├── documentService.js
+│   │   │   ├── sequence.service.js
+│   │   ├── [DIR] stores
+│   │   │   ├── documentStore.js
+│   │   │   ├── sequenceStore.js
+│   │   ├── [DIR] views
+│   │   │   ├── [DIR] documents
+│   │   │   │   ├── DocumentForm.vue
+│   │   │   │   ├── DocumentPreviewModal.vue
+│   │   │   │   ├── DocumentsList.vue
+│   │   │   │   ├── DocumentsManagerModal.vue
+│   │   │   ├── [DIR] sequences
+│   │   │   │   ├── SequenceForm.vue
+│   │   │   │   ├── SequenceModal.vue
+│   │   │   │   ├── SequencesFilter.vue
+│   │   │   │   ├── SequencesList.vue
+│   │   │   │   ├── SequencesTable.vue
+│   ├── [DIR] hr
+│   │   ├── [DIR] components
+│   │   ├── menu.js
+│   │   ├── router.js
+│   │   ├── [DIR] services
+│   │   │   ├── attendanceLog.service.js
+│   │   │   ├── calendarException.service.js
+│   │   │   ├── contract.service.js
+│   │   │   ├── department.service.js
+│   │   │   ├── employee.service.js
+│   │   │   ├── internetVoucher.service.js
+│   │   │   ├── leave.service.js
+│   │   │   ├── leavePassService.js
+│   │   │   ├── loan.service.js
+│   │   │   ├── overtimePolicy.service.js
+│   │   │   ├── payGroup.service.js
+│   │   │   ├── payPeriod.service.js
+│   │   │   ├── payroll.service.js
+│   │   │   ├── payrollInput.service.js
+│   │   │   ├── position.service.js
+│   │   │   ├── salaryRule.service.js
+│   │   │   ├── salaryStructure.service.js
+│   │   │   ├── shift.service.js
+│   │   │   ├── shiftOverride.service.js
+│   │   │   ├── teamAttendance.service.js
+│   │   │   ├── workingSchedule.service.js
+│   │   ├── [DIR] stores
+│   │   │   ├── attendanceLogStore.js
+│   │   │   ├── calendarExceptionStore.js
+│   │   │   ├── contractStore.js
+│   │   │   ├── departmentStore.js
+│   │   │   ├── employeeStore.js
+│   │   │   ├── internetVoucherStore.js
+│   │   │   ├── leavePassStore.js
+│   │   │   ├── leaveStore.js
+│   │   │   ├── loanStore.js
+│   │   │   ├── overtimePolicyStore.js
+│   │   │   ├── payGroupStore.js
+│   │   │   ├── payPeriodStore.js
+│   │   │   ├── payrollInputStore.js
+│   │   │   ├── payrollStore.js
+│   │   │   ├── positionStore.js
+│   │   │   ├── salaryRuleStore.js
+│   │   │   ├── salaryStructureStore.js
+│   │   │   ├── shiftOverrideStore.js
+│   │   │   ├── shiftStore.js
+│   │   │   ├── teamAttendanceStore.js
+│   │   │   ├── workingScheduleStore.js
+│   │   ├── [DIR] views
+│   │   │   ├── [DIR] attendance
+│   │   │   │   ├── AttendanceKiosk.vue
+│   │   │   │   ├── AttendanceKioskOld.vue
+│   │   │   │   ├── AttendanceLogList.vue
+│   │   │   │   ├── AttendanceSummaryPrint.vue
+│   │   │   │   ├── AttendanceSummaryTable.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── AttendanceFilter.vue
+│   │   │   │   │   ├── AttendanceLogForm.vue
+│   │   │   │   │   ├── AttendanceLogModal.vue
+│   │   │   │   │   ├── AttendanceTable.vue
+│   │   │   │   │   ├── KioskCameraScanner.vue
+│   │   │   │   │   ├── KioskClock.vue
+│   │   │   │   │   ├── KioskHeader.vue
+│   │   │   │   │   ├── KioskManualNumpad.vue
+│   │   │   │   │   ├── KioskResultCard.vue
+│   │   │   │   ├── TeamAttendancePage.vue
+│   │   │   ├── [DIR] contracts
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── ContractsFilter.vue
+│   │   │   │   │   ├── ContractsTable.vue
+│   │   │   │   ├── ContractFormPage.vue
+│   │   │   │   ├── ContractsList.vue
+│   │   │   ├── [DIR] departments
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── DepartmentForm.vue
+│   │   │   │   │   ├── DepartmentModal.vue
+│   │   │   │   │   ├── DepartmentsTreeNode.vue
+│   │   │   │   │   ├── DepartmentsTreeView.vue
+│   │   │   │   ├── DepartmentsList.vue
+│   │   │   ├── [DIR] employees
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── AssignEmployeeShiftModal.vue
+│   │   │   │   │   ├── EmployeeIdentityCard.vue
+│   │   │   │   │   ├── EmployeesFilter.vue
+│   │   │   │   │   ├── EmployeeShiftModal.vue
+│   │   │   │   │   ├── EmployeesTable.vue
+│   │   │   │   │   ├── EmployeeStatementModal.vue
+│   │   │   │   ├── EmployeeFormPage.vue
+│   │   │   │   ├── EmployeeProfile.vue
+│   │   │   │   ├── EmployeesList.vue
+│   │   │   ├── [DIR] internet_vouchers
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── VoucherAssignModal.vue
+│   │   │   │   │   ├── VoucherImportModal.vue
+│   │   │   │   │   ├── VouchersFilter.vue
+│   │   │   │   │   ├── VouchersTable.vue
+│   │   │   │   ├── InternetVouchersList.vue
+│   │   │   ├── [DIR] leave-passes
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── LeavePassesFilter.vue
+│   │   │   │   │   ├── LeavePassesTable.vue
+│   │   │   │   │   ├── LeavePassForm.vue
+│   │   │   │   │   ├── LeavePassModal.vue
+│   │   │   │   ├── EmergencyMuster.vue
+│   │   │   │   ├── GateDashboard.vue
+│   │   │   │   ├── LeavePassesList.vue
+│   │   │   ├── [DIR] leaves
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── LeaveRequestForm.vue
+│   │   │   │   │   ├── LeaveRequestModal.vue
+│   │   │   │   │   ├── LeavesFilter.vue
+│   │   │   │   │   ├── LeavesTable.vue
+│   │   │   │   ├── LeavesList.vue
+│   │   │   ├── [DIR] loans
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── LoanForm.vue
+│   │   │   │   │   ├── LoanModal.vue
+│   │   │   │   │   ├── LoansFilter.vue
+│   │   │   │   │   ├── LoansTable.vue
+│   │   │   │   ├── LoanDetails.vue
+│   │   │   │   ├── LoansList.vue
+│   │   │   ├── [DIR] overtime-policies
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── OvertimePoliciesFilter.vue
+│   │   │   │   │   ├── OvertimePoliciesTable.vue
+│   │   │   │   ├── OvertimePoliciesList.vue
+│   │   │   │   ├── OvertimePolicyFormPage.vue
+│   │   │   ├── [DIR] pay-groups
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── PayGroupForm.vue
+│   │   │   │   │   ├── PayGroupModal.vue
+│   │   │   │   │   ├── PayGroupsFilter.vue
+│   │   │   │   │   ├── PayGroupsTable.vue
+│   │   │   │   ├── PayGroupsList.vue
+│   │   │   ├── [DIR] pay-periods
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── PayPeriodForm.vue
+│   │   │   │   │   ├── PayPeriodGenerateForm.vue
+│   │   │   │   │   ├── PayPeriodGenerateModal.vue
+│   │   │   │   │   ├── PayPeriodModal.vue
+│   │   │   │   │   ├── PayPeriodsFilter.vue
+│   │   │   │   │   ├── PayPeriodsTable.vue
+│   │   │   │   ├── PayPeriodsList.vue
+│   │   │   ├── [DIR] payroll
+│   │   │   │   ├── [DIR] batches
+│   │   │   │   │   ├── PayrollBatchesList.vue
+│   │   │   │   │   ├── PayrollHistoryTable.vue
+│   │   │   │   │   ├── PayrollPostingModal.vue
+│   │   │   │   │   ├── PayrollSummaryCards.vue
+│   │   │   │   │   ├── PayslipPreviewModal.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── PayrollInputForm.vue
+│   │   │   │   │   ├── PayrollInputModal.vue
+│   │   │   │   │   ├── PayrollInputsFilter.vue
+│   │   │   │   │   ├── PayrollInputsTable.vue
+│   │   │   │   │   ├── SalaryRuleForm.vue
+│   │   │   │   │   ├── SalaryRuleModal.vue
+│   │   │   │   │   ├── SalaryRulesFilter.vue
+│   │   │   │   │   ├── SalaryRulesTable.vue
+│   │   │   │   │   ├── SalaryStructuresFilter.vue
+│   │   │   │   │   ├── SalaryStructuresTable.vue
+│   │   │   │   ├── PayrollInputsList.vue
+│   │   │   │   ├── SalaryRulesList.vue
+│   │   │   │   ├── SalaryStructureFormPage.vue
+│   │   │   │   ├── SalaryStructuresList.vue
+│   │   │   ├── [DIR] positions
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── PositionForm.vue
+│   │   │   │   │   ├── PositionModal.vue
+│   │   │   │   │   ├── PositionsFilter.vue
+│   │   │   │   │   ├── PositionsTable.vue
+│   │   │   │   ├── PositionsList.vue
+│   │   │   ├── [DIR] schedules
+│   │   │   │   ├── CalendarExceptionsList.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── CalendarExceptionForm.vue
+│   │   │   │   │   ├── CalendarExceptionModal.vue
+│   │   │   │   │   ├── CalendarExceptionsTable.vue
+│   │   │   │   │   ├── ShiftOverrideForm.vue
+│   │   │   │   │   ├── ShiftOverrideModal.vue
+│   │   │   │   │   ├── ShiftOverridesTable.vue
+│   │   │   │   ├── ShiftOverridesList.vue
+│   │   │   ├── [DIR] shifts
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── ShiftForm.vue
+│   │   │   │   │   ├── ShiftModal.vue
+│   │   │   │   │   ├── ShiftsTable.vue
+│   │   │   │   ├── ShiftsList.vue
+│   │   │   ├── [DIR] working-schedules
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── WorkingScheduleLinesGrid.vue
+│   │   │   │   │   ├── WorkingSchedulesFilter.vue
+│   │   │   │   │   ├── WorkingSchedulesTable.vue
+│   │   │   │   ├── WorkingScheduleFormPage.vue
+│   │   │   │   ├── WorkingSchedulesList.vue
+├── [DIR] router
+│   ├── index.js
+│   ├── navigation.js
+├── [DIR] services
+│   ├── apiClient.js
+│   ├── authService.js
+│   ├── backupService.js
+│   ├── companyService.js
+│   ├── documentService.js
+│   ├── reportService.js
+│   ├── roleService.js
+│   ├── userService.js
+├── [DIR] stores
+│   ├── appStore.js
+│   ├── authStore.js
+│   ├── backupStore.js
+│   ├── brandingStore.js
+│   ├── companyStore.js
+│   ├── documentStore.js
+│   ├── reportStore.js
+│   ├── roleStore.js
+│   ├── themeStore.js
+│   ├── userStore.js
+├── [DIR] utils
+│   ├── formatters.js
+├── [DIR] views
+│   ├── AuthCardWrapper.vue
+│   ├── [DIR] companies
+│   │   ├── CompaniesList.vue
+│   │   ├── CompanyForm.vue
+│   │   ├── CompanyModal.vue
+│   ├── [DIR] dashboard
+│   │   ├── DashboardInteractiveSummary.vue
+│   │   ├── DashboardStatsCards.vue
+│   │   ├── DashboardView.vue
+│   ├── [DIR] documents
+│   │   ├── DocumentForm.vue
+│   │   ├── DocumentsList.vue
+│   │   ├── DocumentsManagerModal.vue
+│   ├── ForgotPasswordView.vue
+│   ├── LoginView.vue
+│   ├── [DIR] owners
+│   │   ├── OwnerForm.vue
+│   │   ├── OwnerModal.vue
+│   │   ├── OwnersList.vue
+│   ├── [DIR] payments
+│   │   ├── PaymentForm.vue
+│   │   ├── PaymentsList.vue
+│   │   ├── PaymentsManagerModal.vue
+│   ├── PlaceholderView.vue
+│   ├── [DIR] print
+│   │   ├── DriverReportPrint.vue
+│   │   ├── FuelOrderPrint.vue
+│   │   ├── FuelOrdersReportPrint.vue
+│   │   ├── MovementOrderPrint.vue
+│   ├── [DIR] projects
+│   │   ├── ProjectForm.vue
+│   │   ├── ProjectModal.vue
+│   │   ├── ProjectsFilter.vue
+│   │   ├── ProjectsList.vue
+│   │   ├── ProjectsTable.vue
+│   ├── RegisterView.vue
+│   ├── [DIR] reports
+│   │   ├── CompaniesSummaryReport.vue
+│   │   ├── CompanyStatementPrint.vue
+│   │   ├── CompanyStatementReport.vue
+│   │   ├── DriverReport.vue
+│   │   ├── OrderReport.vue
+│   │   ├── OrderReportFilters.vue
+│   │   ├── PrintSummary.vue
+│   │   ├── StationReport.vue
+│   ├── ResetPasswordView.vue
+│   ├── [DIR] roles
+│   │   ├── PermissionsModal.vue
+│   │   ├── RoleForm.vue
+│   │   ├── RoleModal.vue
+│   │   ├── RolePermissionsDialog.vue
+│   │   ├── RolesList.vue
+│   ├── [DIR] settings
+│   │   ├── BackupsList.vue
+│   ├── [DIR] users
+│   │   ├── UserApprovalModal.vue
+│   │   ├── UserFilterBar.vue
+│   │   ├── UserForm.vue
+│   │   ├── UserModal.vue
+│   │   ├── UsersList.vue

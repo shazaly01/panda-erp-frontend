@@ -19,6 +19,11 @@ export default [
         routeName: 'GateDashboard',
         permission: 'hr_leave_passes.gate_check',
       },
+      {
+        name: 'سجل وحركات الزوار',
+        routeName: 'VisitorsList',
+        permission: 'hr_visitors.view',
+      },
       // مستقبلاً يمكنك إضافة (شاشة مسح الـ QR المؤتمتة) هنا تحت نفس القسم
     ],
   },

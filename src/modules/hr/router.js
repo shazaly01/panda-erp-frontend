@@ -41,6 +41,8 @@ const InternetVouchersList = () => import('./views/internet_vouchers/InternetVou
 // 🌟 إضافات منظومة أذونات الخروج المؤقت والأمن والسلامة
 const LeavePassesList = () => import('./views/leave-passes/LeavePassesList.vue')
 const EmergencyMuster = () => import('./views/leave-passes/EmergencyMuster.vue')
+// 🌟 إضافة منظومة إدارة سجلات الزوار والبوابات الأمنية
+const VisitorsList = () => import('./views/visitors/VisitorsList.vue')
 
 // ==========================================
 // 4. الرواتب والأجور
@@ -61,7 +63,7 @@ const OvertimePolicyFormPage = () => import('./views/overtime-policies/OvertimeP
 const PayrollInputsList = () => import('./views/payroll/PayrollInputsList.vue')
 const PayrollBatchesList = () => import('./views/payroll/batches/PayrollBatchesList.vue')
 
-export default [
+export const hrDashboardRoutes = [
   {
     path: 'hr',
     children: [
@@ -197,6 +199,12 @@ export default [
         component: EmergencyMuster,
         meta: { permission: 'hr_leave_passes.view' },
       },
+      {
+        path: 'visitors',
+        name: 'VisitorsList',
+        component: VisitorsList,
+        meta: { permission: 'hr_visitors.view' },
+      },
       // --- الرواتب والمدخلات ---
       {
         path: 'payroll-inputs',
@@ -308,5 +316,20 @@ export default [
         meta: { permission: 'hr.overtime_policies.manage' },
       },
     ],
+  },
+]
+
+export const hrPublicRoutes = [
+  {
+    path: '/register-visit',
+    name: 'PublicVisitorRegister',
+    component: () => import('@/modules/hr/views/visitors/PublicVisitorRegister.vue'),
+    meta: { layout: 'blank' }, // لا تحتوي على requiresAuth ولا requiresGuest لتصبح عامة تماماً
+  },
+  {
+    path: '/verify-visitor/:token',
+    name: 'VerifyVisitor',
+    component: () => import('@/modules/hr/views/visitors/VerifyVisitor.vue'),
+    meta: { layout: 'blank' },
   },
 ]

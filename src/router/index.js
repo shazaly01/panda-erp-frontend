@@ -23,7 +23,7 @@ import DashboardView from '@/views/dashboard/DashboardView.vue'
 // 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، إلخ)
 // ==============================================================
 import accountingRoutes from '@/modules/accounting/router'
-import hrRoutes from '@/modules/hr/router'
+import { hrDashboardRoutes, hrPublicRoutes } from '@/modules/hr/router'
 
 const routes = [
   // --- المسارات العامة (لا تتطلب مصادقة وشرطها أن يكون المستخدم ضيفاً لحمايتها) ---
@@ -58,7 +58,7 @@ const routes = [
       // 🌟 دمج مسارات الموديولات هنا كأبناء لـ AppLayout
       // ==============================================================
       ...accountingRoutes,
-      ...hrRoutes,
+      ...hrDashboardRoutes,
 
       {
         path: 'users',
@@ -83,6 +83,7 @@ const routes = [
     ],
   },
 
+  ...hrPublicRoutes,
   // مسار للتعامل مع الصفحات غير الموجودة (404 Fallback)
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
