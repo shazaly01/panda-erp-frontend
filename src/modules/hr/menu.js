@@ -10,7 +10,7 @@ import {
 
 export default [
   {
-    name: 'بوابة الأمن والاستقبال',
+    name: 'ادارة الامن والسلامة',
     icon: ShieldCheckIcon, // أيقونة حماية مخصصة للأمن
     permission: 'hr_leave_passes.gate_check', // تظهر فقط لمن يملك صلاحية الحراسة
     children: [
