@@ -1,3 +1,4 @@
+//src\modules\hr\services\workingSchedule.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/hr/working-schedules'

@@ -1,3 +1,4 @@
+//src\modules\hr\stores\visitorStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { visitorService } from '../services/visitor.service'

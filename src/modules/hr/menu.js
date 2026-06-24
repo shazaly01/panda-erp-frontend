@@ -37,6 +37,11 @@ export default [
     children: [
       { name: 'قائمة الموظفين', routeName: 'EmployeesList', permission: 'hr.employees.view' },
       { name: 'العقود والتوظيف', routeName: 'ContractsList', permission: 'hr.contracts.view' },
+      {
+        name: 'برنامج التدريب الأكاديمي',
+        routeName: 'InternshipApplicationsList',
+        permission: 'hr.internship_applications.view',
+      },
     ],
   },
 

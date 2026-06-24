@@ -1,3 +1,4 @@
+<!---src\modules\hr\views\visitors\components\VisitorsTable.vue-->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="visitors" :is-loading="loading">

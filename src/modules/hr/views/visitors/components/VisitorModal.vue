@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\visitors\components\VisitorModal.vue--->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"

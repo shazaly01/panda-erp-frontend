@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\visitors\PublicVisitorRegister.vue--->
 <template>
   <div
     class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100/60 text-slate-800 flex flex-col justify-center items-center font-sans p-3 sm:p-6 antialiased relative overflow-hidden"

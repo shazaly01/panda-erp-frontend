@@ -21,6 +21,9 @@ const EmployeeProfile = () => import('./views/employees/EmployeeProfile.vue')
 
 const ContractsList = () => import('./views/contracts/ContractsList.vue')
 const ContractFormPage = () => import('./views/contracts/ContractFormPage.vue')
+// 🌟 إضافات منظومة التدريب الأكاديمي
+const InternshipApplicationsList = () =>
+  import('./views/internships/InternshipApplicationsList.vue')
 
 // ==========================================
 // 3. الحضور والطلبات والعمليات
@@ -91,6 +94,14 @@ export const hrDashboardRoutes = [
         name: 'employees.edit',
         component: EmployeeFormPage,
         meta: { permission: 'hr.employees.update' },
+      },
+
+      // --- إدارة التدريب والمتدربين (لوحة التحكم) ---
+      {
+        path: 'internship-applications',
+        name: 'InternshipApplicationsList',
+        component: InternshipApplicationsList,
+        meta: { permission: 'hr.internship_applications.view' },
       },
 
       // --- العقود ---
@@ -330,6 +341,13 @@ export const hrPublicRoutes = [
     path: '/verify-visitor/:token',
     name: 'VerifyVisitor',
     component: () => import('@/modules/hr/views/visitors/VerifyVisitor.vue'),
+    meta: { layout: 'blank' },
+  },
+  // 🌟 رابط التقديم الخارجي العام للمتدربين (التقاط صورة الكاميرا أونلاين)
+  {
+    path: '/internship/apply',
+    name: 'PublicInternshipApply',
+    component: () => import('@/modules/hr/views/internships/PublicInternshipApply.vue'),
     meta: { layout: 'blank' },
   },
 ]
