@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\attendance\components\KioskCameraScanner.vue---->
 <template>
   <div
     class="w-full max-w-md bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col items-center p-4 animate-fade-in select-none"

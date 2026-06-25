@@ -1,6 +1,6 @@
 <template>
   <div
-    class="fixed inset-0 z-[100] w-full h-full bg-slate-950 flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto font-sans select-none"
+    class="fixed inset-0 z-[100] w-full h-full bg-slate-950 flex flex-col items-center justify-between p-4 md:p-6 overflow-hidden font-sans select-none"
     @click="handleBackgroundClick"
   >
     <div
@@ -11,7 +11,7 @@
     ></div>
 
     <div
-      class="w-full max-w-xl relative z-10 flex flex-col items-center min-h-full justify-between py-2 gap-4"
+      class="w-full max-w-xl relative z-10 flex flex-col items-center flex-1 justify-between gap-4 py-2"
     >
       <KioskHeader />
 
@@ -62,6 +62,27 @@
 
         <button
           type="button"
+          @click="switchMode('qr')"
+          :class="[
+            'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5',
+            activeMode === 'qr'
+              ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
+          ]"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+            />
+          </svg>
+          ماسح الـ QR
+        </button>
+
+        <button
+          type="button"
           @click="switchMode('manual')"
           :class="[
             'flex-1 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-1.5',
@@ -82,94 +103,110 @@
         </button>
       </div>
 
-      <div class="w-full flex flex-col items-center justify-start gap-4 flex-1">
-        <div class="w-full flex justify-center">
-          <div v-if="activeMode === 'hardware'" class="relative w-full group animate-fade-in">
+      <div class="w-full flex justify-center items-center flex-1 py-4 relative">
+        <div v-if="activeMode === 'hardware'" class="relative w-full group animate-fade-in">
+          <div
+            class="absolute inset-0 bg-blue-500/5 rounded-xl blur-xl transition-all duration-500 group-focus-within:bg-blue-500/15 animate-pulse"
+          ></div>
+          <input
+            ref="barcodeInput"
+            v-model="employeeNumber"
+            @keyup.enter="handleHardwareScan"
+            @blur="keepFocus"
+            type="text"
+            placeholder="مرر بطاقتك الوظيفية الآن..."
+            class="relative w-full text-center text-lg font-bold bg-slate-950/90 border border-slate-800 text-white placeholder-slate-600 rounded-xl px-6 py-4 outline-none transition-all duration-300 focus:border-blue-500/50 focus:shadow-[0_0_25px_rgba(59,130,246,0.2)]"
+            autocomplete="off"
+            autofocus
+          />
+          <div class="absolute right-4 top-1/2 -translate-y-1/2 flex h-2 w-2">
+            <span
+              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"
+            ></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+          </div>
+        </div>
+
+        <KioskCameraScanner
+          v-else-if="activeMode === 'camera'"
+          @scan="processAttendanceCode"
+          @error="handleCameraError"
+        />
+
+        <KioskQrCameraScanner
+          v-else-if="activeMode === 'qr'"
+          @scan="processAttendanceCode"
+          @error="handleCameraError"
+        />
+
+        <KioskManualNumpad
+          v-else-if="activeMode === 'manual'"
+          v-model="manualEmployeeNumber"
+          @submit="processAttendanceCode"
+        />
+
+        <Transition
+          enter-active-class="transition duration-200"
+          enter-from-class="opacity-0 scale-95"
+          leave-to-class="opacity-0 scale-95"
+        >
+          <div
+            v-if="attendanceStore.loading"
+            class="absolute inset-0 flex items-center justify-center z-20 bg-slate-950/40 backdrop-blur-sm rounded-3xl"
+          >
             <div
-              class="absolute inset-0 bg-blue-500/5 rounded-xl blur-xl transition-all duration-500 group-focus-within:bg-blue-500/15 animate-pulse"
-            ></div>
-            <input
-              ref="barcodeInput"
-              v-model="employeeNumber"
-              @keyup.enter="handleHardwareScan"
-              @blur="keepFocus"
-              type="text"
-              placeholder="مرر بطاقتك الوظيفية الآن..."
-              class="relative w-full text-center text-lg font-bold bg-slate-950/90 border border-slate-800 text-white placeholder-slate-600 rounded-xl px-6 py-4 outline-none transition-all duration-300 focus:border-blue-500/50 focus:shadow-[0_0_25px_rgba(59,130,246,0.2)]"
-              autocomplete="off"
-              autofocus
-            />
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 flex h-2 w-2">
-              <span
-                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"
-              ></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              class="bg-slate-900/95 backdrop-blur-xl px-6 py-3 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.6)] border border-slate-800 flex items-center gap-3"
+            >
+              <svg class="animate-spin h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span class="text-xs font-black text-slate-200"
+                >جاري معالجة البيانات بالسيرفر...</span
+              >
             </div>
           </div>
-
-          <KioskCameraScanner
-            v-else-if="activeMode === 'camera'"
-            @scan="processAttendanceCode"
-            @error="handleCameraError"
-          />
-
-          <KioskManualNumpad
-            v-else-if="activeMode === 'manual'"
-            v-model="manualEmployeeNumber"
-            @submit="processAttendanceCode"
-          />
-        </div>
-
-        <div class="w-full min-h-[360px] relative flex items-start justify-center pt-2">
-          <Transition
-            enter-active-class="transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)"
-            enter-from-class="opacity-0 translate-y-6 scale-95 blur-sm"
-            enter-to-class="opacity-100 translate-y-0 scale-100 blur-0"
-            leave-active-class="transition-all duration-300 cubic-bezier(0.7, 0, 0.84, 0)"
-            leave-from-class="opacity-100 scale-100"
-            leave-to-class="opacity-0 scale-95 translate-y-4 blur-sm"
-          >
-            <KioskResultCard v-if="scanResult" :result="scanResult" />
-          </Transition>
-
-          <Transition
-            enter-active-class="transition duration-200"
-            enter-from-class="opacity-0 scale-95"
-            leave-to-class="opacity-0 scale-95"
-          >
-            <div
-              v-if="attendanceStore.loading"
-              class="absolute inset-0 flex items-center justify-center z-20"
-            >
-              <div
-                class="bg-slate-900/95 backdrop-blur-xl px-6 py-3 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.6)] border border-slate-800 flex items-center gap-3"
-              >
-                <svg class="animate-spin h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                <span class="text-xs font-black text-slate-200"
-                  >جاري معالجة البيانات بالسيرفر...</span
-                >
-              </div>
-            </div>
-          </Transition>
-        </div>
+        </Transition>
       </div>
 
       <KioskClock />
     </div>
+
+    <Transition
+      enter-active-class="transition-all duration-400 cubic-bezier(0.16, 1, 0.3, 1)"
+      enter-from-class="opacity-0 backdrop-blur-0 scale-95"
+      enter-to-class="opacity-100 backdrop-blur-xl scale-100"
+      leave-active-class="transition-all duration-300 cubic-bezier(0.7, 0, 0.84, 0)"
+      leave-from-class="opacity-100 backdrop-blur-xl scale-100"
+      leave-to-class="opacity-0 backdrop-blur-0 scale-95"
+    >
+      <div
+        v-if="scanResult"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md cursor-pointer"
+        @click="dismissResult"
+      >
+        <div class="w-full max-w-md transform transition-all">
+          <KioskResultCard :result="scanResult" />
+
+          <p
+            class="text-center text-[10px] text-slate-500 font-bold mt-4 tracking-wider animate-pulse"
+          >
+            انقر هنا أو في أي مكان على الشاشة للمسح التالي فوراً
+          </p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -177,11 +214,11 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
 
-// استيراد المكوّنات الفرعية الستة المجهزة للهيكلة الجديدة
 import KioskHeader from './components/KioskHeader.vue'
 import KioskClock from './components/KioskClock.vue'
 import KioskResultCard from './components/KioskResultCard.vue'
 import KioskCameraScanner from './components/KioskCameraScanner.vue'
+import KioskQrCameraScanner from './components/KioskQrCameraScanner.vue'
 import KioskManualNumpad from './components/KioskManualNumpad.vue'
 
 const attendanceStore = useAttendanceLogStore()
@@ -190,13 +227,11 @@ const employeeNumber = ref('')
 const manualEmployeeNumber = ref('')
 const scanResult = ref(null)
 
-// التعديل الهيكلي: تبديل الحالات الثلاث النشطة تلقائياً (hardware | camera | manual)
 const activeMode = ref('hardware')
 let resultTimeout = null
 
-// إبقاء التركيز التلقائي للماسح العتادي فقط وفصله تماماً في أوضاع الموبايل لمنع ظهور كيبورد الهاتف
 const keepFocus = () => {
-  if (activeMode.value !== 'hardware') return
+  if (activeMode.value !== 'hardware' || scanResult.value) return
   nextTick(() => {
     if (barcodeInput.value) barcodeInput.value.focus()
   })
@@ -206,10 +241,9 @@ const handleBackgroundClick = () => {
   keepFocus()
 }
 
-// دالة التبديل النظيف والآمن بين الحالات الثلاث وتصفير المدخلات السابقة لمنع التداخل
 const switchMode = (mode) => {
   activeMode.value = mode
-  scanResult.value = null
+  dismissResult()
   employeeNumber.value = ''
   manualEmployeeNumber.value = ''
 
@@ -218,7 +252,6 @@ const switchMode = (mode) => {
   }
 }
 
-// معالجة القراءة القادمة من الماسح العتادي المرتبط بالكشك القياسي
 const handleHardwareScan = () => {
   const code = employeeNumber.value.trim()
   employeeNumber.value = ''
@@ -235,12 +268,19 @@ const handleCameraError = (errorMessage) => {
   }
 }
 
-// النواة المركزية الموحدة لاستقبال وتجهيز الأكواد وإرسالها للـ API
+// دالة التصفير الفوري والآمن للنتيجة عند النقر لتسريع المسح المتتابع للموظفين
+const dismissResult = () => {
+  scanResult.value = null
+  clearTimeout(resultTimeout)
+  if (activeMode.value === 'hardware') {
+    keepFocus()
+  }
+}
+
 const processAttendanceCode = async (code) => {
   if (!code || attendanceStore.loading) return
 
-  // حقن الأرقام داخل لوحة الأرقام عند قراءتها من الكاميرا للشاشات الفرعية
-  if (activeMode.value === 'camera' || activeMode.value === 'manual') {
+  if (activeMode.value === 'camera' || activeMode.value === 'manual' || activeMode.value === 'qr') {
     manualEmployeeNumber.value = code
   }
 
@@ -269,15 +309,10 @@ const processAttendanceCode = async (code) => {
       }
     }, 50)
   } finally {
-    // تصفير شاشة عرض لوحة اللمس بعد نجاح العملية بالكامل
     manualEmployeeNumber.value = ''
 
-    if (activeMode.value === 'hardware') {
-      keepFocus()
-    }
-
     resultTimeout = setTimeout(() => {
-      scanResult.value = null
+      dismissResult()
     }, 8000)
   }
 }

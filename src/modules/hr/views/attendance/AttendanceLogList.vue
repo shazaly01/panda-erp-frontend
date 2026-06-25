@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\attendance\AttendanceLogList.vue--->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -39,6 +40,7 @@
 
       <div class="flex items-center gap-3">
         <AppButton
+          v-if="authStore.can('hr.attendance.manage')"
           @click="goToKiosk"
           class="bg-slate-800 text-amber-400 border border-amber-500/30 font-bold shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 transition-all duration-200"
         >
@@ -53,7 +55,11 @@
           شاشة الباركود
         </AppButton>
 
-        <AppButton v-if="authStore.can('attendance.create')" @click="openCreateModal" icon="plus">
+        <AppButton
+          v-if="authStore.can('hr.attendance.manage')"
+          @click="openCreateModal"
+          icon="plus"
+        >
           تسجيل حركة يدوية
         </AppButton>
       </div>
@@ -92,7 +98,9 @@
       v-else
       :summary-logs="summaryLogs"
       :loading="summaryLoading"
-      :date-filter="startDate"
+      :start-date="startDate"
+      :end-date="endDate"
+      :department-name="selectedDepartmentName"
     />
 
     <AttendanceLogModal
@@ -118,12 +126,9 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import axios from 'axios'
-useAuthStore
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
 import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
-
-// 🌟 حقن مخزن الإدارات الجديد للاستفادة من القائمة المسطحة الجاهزة
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 
 import AppButton from '@/components/ui/AppButton.vue'
@@ -137,17 +142,15 @@ import AttendanceSummaryTable from './AttendanceSummaryTable.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const attendanceStore = useAttendanceLogStore()
-const departmentStore = useDepartmentStore() // تهيئة الـ Store
+const departmentStore = useDepartmentStore()
 const toast = useToast()
 
 const { logs, pagination, loading } = storeToRefs(attendanceStore)
 
-// -- إدارة وضع العرض والبيانات التجميعية --
 const viewMode = ref('detailed')
 const summaryLogs = ref([])
 const summaryLoading = ref(false)
 
-// -- متغيرات الفلاتر --
 const searchQuery = ref('')
 const startDate = ref(new Date().toISOString().split('T')[0])
 const endDate = ref(new Date().toISOString().split('T')[0])
@@ -156,12 +159,16 @@ const positionId = ref('')
 const employmentType = ref('')
 const presentOnly = ref(false)
 
-// 🌟 تعبئة خيارات الأقسام بشكل ديناميكي شجري بربطها مباشرة مع الـ flatDepartments المحسوبة في الـ Store
 const departmentOptions = computed(() => {
   return departmentStore.flatDepartments.map((dept) => ({
     id: dept.id,
-    name: dept.dropdownName, // حقل التنسيق الجمالي الهرمي المتوفر في الـ Store الخاص بك
+    name: dept.dropdownName,
   }))
+})
+
+const selectedDepartmentName = computed(() => {
+  const matched = departmentOptions.value.find((dept) => dept.id === departmentId.value)
+  return matched ? matched.name : null
 })
 
 const positionOptions = ref([])
@@ -219,12 +226,9 @@ const handlePageChange = async (page = 1) => {
   }
 }
 
-// 🌟 استدعاء دالة جلب الأقسام الرسمية من الـ Store وجلب المسميات الوظيفية بشكل آمن
 const loadFiltersLookupData = async () => {
   try {
     await departmentStore.fetchDepartments()
-
-    // جلب المسميات الوظيفية بشكل مؤقت لحين تزويدي بالـ Store الخاص بها إذا لزم الأمر
     const posRes = await axios.get('/api/hr/positions').catch(() => ({ data: [] }))
     positionOptions.value = posRes.data?.data || posRes.data || []
   } catch (e) {
@@ -280,7 +284,7 @@ const confirmDelete = async () => {
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error(attendanceStore.error || 'فشل عملية الحذف.')
   } finally {
     isDeleteDialogOpen.value = false

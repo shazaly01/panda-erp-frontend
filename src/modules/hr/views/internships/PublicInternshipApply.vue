@@ -249,7 +249,7 @@
               <input
                 v-model="form.academic_institution"
                 type="text"
-                placeholder="مثال: جامعة الخرطوم..."
+                placeholder=""
                 class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
               />
             </div>
@@ -261,7 +261,7 @@
               <input
                 v-model="form.academic_major"
                 type="text"
-                placeholder="مثال: هندسة برمجيات / تقنية معلومات..."
+                placeholder=""
                 class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
               />
             </div>

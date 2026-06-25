@@ -180,27 +180,30 @@ const props = defineProps({
     required: true,
     default: false,
   },
-  dateFilter: {
-    // 🌟 السطر الجديد المطلوب إضافته
+  startDate: {
     type: String,
     default: '',
   },
+  endDate: {
+    type: String,
+    default: '',
+  },
+  departmentName: {
+    type: String,
+    default: null,
+  },
 })
 
-// دالة تحفيز طباعة المتصفح النظيفة
-// دالة تجهيز البيانات وفتح تبويب الطباعة الخام المستقل
 const printReport = () => {
-  // 1. تخزين مصفوفة الموظفين الحالية في الجلسة المؤقتة
   sessionStorage.setItem('printAttendanceSummaryData', JSON.stringify(props.summaryLogs))
 
-  // 2. تخزين الفلاتر الزمنية للترويسة الرسمية
   const filters = {
-    start_date: props.dateFilter,
-    end_date: props.dateFilter,
+    start_date: props.startDate,
+    end_date: props.endDate,
+    department_name: props.departmentName,
   }
   sessionStorage.setItem('printAttendanceFilters', JSON.stringify(filters))
 
-  // 3. فتح مسار شاشة الطباعة المستقلة في تبويب جديد
   const routeData = router.resolve({ name: 'hr.attendance.summary.print' })
   window.open(routeData.href, '_blank')
 }
@@ -208,22 +211,19 @@ const printReport = () => {
 
 <style scoped>
 @media print {
-  /* إجبار المتصفح على إلغاء الألوان الداكنة واستخدام المظهر الفاتح الورقي */
   :deep(body),
   html {
     background: #ffffff !important;
     color: #000000 !important;
   }
 
-  /* إخفاء كل العناصر الأبوية الجانبية والعلوية خارج حدود التقرير الحالي */
   :global(#app > div:not(.printable-section)),
-  :global(nav),
-  :global(aside),
-  :global(header) {
+  nav,
+  aside,
+  header {
     display: none !important;
   }
 
-  /* منع قطع أسطر الموظفين عبر الصفحات بشكل مشوه */
   .page-break-inside-avoid {
     page-break-inside: avoid;
     break-inside: avoid;

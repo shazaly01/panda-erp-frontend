@@ -1,72 +1,120 @@
-<!-- src/modules/hr/views/attendance/TeamAttendancePage.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <!-- الترويسة العلوية (Vivid & Glossy Header) -->
+  <div class="space-y-5 max-w-7xl mx-auto pb-12">
     <div
-      class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg shadow-indigo-500/30 p-6 sm:p-8"
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-surface-border gap-2"
     >
-      <!-- Wave SVG Background -->
-      <svg
-        class="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none"
-        viewBox="0 0 1440 320"
-        preserveAspectRatio="none"
-      >
-        <path
-          fill="#ffffff"
-          fill-opacity="1"
-          d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,170.7C960,160,1056,192,1152,208C1248,224,1344,224,1392,224L1440,224L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-        ></path>
-      </svg>
+      <div>
+        <h1 class="text-2xl font-bold text-text-primary flex items-center gap-2.5">
+          <span
+            class="w-2 h-6 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.7)]"
+          ></span>
+          حضور فريقي
+        </h1>
+        <p class="text-xs text-text-muted mt-0.5">
+          الخدمة الذاتية للمدير - متابعة واعتماد الحضور اليومي للموظفين.
+        </p>
+      </div>
+    </div>
 
-      <div
-        class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-      >
-        <div class="text-white">
-          <h1 class="text-3xl font-bold tracking-tight">حضور فريقي</h1>
-          <p class="text-indigo-100 mt-1">
-            الخدمة الذاتية للمدير - متابعة واعتماد الحضور اليومي للموظفين.
-          </p>
+    <div class="bg-surface-section p-4 rounded-xl shadow-sm border border-surface-border">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div class="flex flex-col gap-1.5">
+          <label for="search-filter" class="text-xs font-semibold text-text-secondary"
+            >البحث بالاسم:</label
+          >
+          <div class="relative">
+            <input
+              id="search-filter"
+              type="text"
+              v-model="searchQuery"
+              @input="fetchData"
+              placeholder="اكتب اسم الموظف..."
+              class="w-full pl-3 pr-9 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-ground text-text-primary text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+            />
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </span>
+          </div>
         </div>
 
-        <!-- فلتر التاريخ المخصص -->
-        <div
-          class="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-xl"
-        >
-          <label for="date-filter" class="text-sm font-medium text-white whitespace-nowrap pl-2">
-            تاريخ السجل:
-          </label>
-          <input
-            id="date-filter"
-            type="date"
-            v-model="selectedDate"
-            @change="fetchData"
-            class="p-2 border-0 rounded-lg bg-white text-gray-900 font-mono text-sm focus:ring-2 focus:ring-indigo-300 outline-none cursor-pointer"
-          />
-          <button
-            @click="fetchData"
-            class="p-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
-            title="تحديث البيانات"
+        <div class="flex flex-col gap-1.5">
+          <label for="position-filter" class="text-xs font-semibold text-text-secondary"
+            >الوظيفة:</label
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
+          <select
+            id="position-filter"
+            v-model="selectedPosition"
+            @change="fetchData"
+            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-ground text-text-primary text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+          >
+            <option value="">كل الوظائف</option>
+            <option v-for="pos in positions" :key="pos.id" :value="pos.id">
+              {{ pos.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label for="status-filter" class="text-xs font-semibold text-text-secondary"
+            >حالة التواجد:</label
+          >
+          <select
+            id="status-filter"
+            v-model="selectedStatus"
+            @change="fetchData"
+            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-ground text-text-primary text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+          >
+            <option value="">كل الحالات</option>
+            <option value="present">حاضر</option>
+            <option value="absent">لم يحضر (بدون بصمة)</option>
+            <option value="late">متأخر</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label for="date-filter" class="text-xs font-semibold text-text-secondary"
+            >تاريخ السجل:</label
+          >
+          <div class="flex items-center gap-2">
+            <input
+              id="date-filter"
+              type="date"
+              v-model="selectedDate"
+              @change="fetchData"
+              class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-ground text-text-primary font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+            />
+            <button
+              @click="fetchData"
+              class="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-sm"
+              title="تحديث البيانات"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- البطاقات الإحصائية -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
       <div
         class="bg-surface-section p-5 rounded-xl shadow-sm border border-surface-border flex items-center justify-between border-l-4 border-l-indigo-500"
       >
         <div>
-          <p class="text-sm text-text-muted font-medium mb-1">إجمالي الفريق</p>
+          <p class="text-sm text-text-muted font-medium mb-1">إجمالي الفريق المتوفر</p>
           <h3 class="text-2xl font-bold text-text-primary">
             {{ teamStore.totalTeamMembers || 0 }}
           </h3>
@@ -87,7 +135,7 @@
         class="bg-surface-section p-5 rounded-xl shadow-sm border border-surface-border flex items-center justify-between border-l-4 border-l-emerald-500"
       >
         <div>
-          <p class="text-sm text-text-muted font-medium mb-1">الحضور اليوم</p>
+          <p class="text-sm text-text-muted font-medium mb-1">الحضور الحركي</p>
           <h3 class="text-2xl font-bold text-text-primary">
             {{ teamStore.presentMembersCount || 0 }}
           </h3>
@@ -126,14 +174,12 @@
       </div>
     </div>
 
-    <!-- جدول إدخال الحضور (AppTable) -->
     <AppTable
       :headers="tableHeaders"
       :items="teamStore.teamMatrix"
       :isLoading="teamStore.loading"
       :row-clickable="false"
     >
-      <!-- معلومات الموظف -->
       <template #cell-employee="{ item }">
         <div class="flex items-center gap-3">
           <div
@@ -148,12 +194,10 @@
         </div>
       </template>
 
-      <!-- المنصب -->
       <template #cell-position="{ item }">
         <span class="text-text-secondary">{{ item.position?.name || 'غير محدد' }}</span>
       </template>
 
-      <!-- الحالة (مع إشارة للمعدل يدوياً) -->
       <template #cell-status="{ item }">
         <div class="flex flex-col gap-1 items-start">
           <span
@@ -197,7 +241,6 @@
         </div>
       </template>
 
-      <!-- حقول الإدخال المباشرة (Inline Editing) -->
       <template #cell-check_in="{ item }">
         <input
           type="time"
@@ -223,7 +266,6 @@
         />
       </template>
 
-      <!-- زر الحفظ -->
       <template #cell-actions="{ item }">
         <button
           @click="saveRow(item.id)"
@@ -258,7 +300,8 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useTeamAttendanceStore } from '@/modules/hr/stores/teamAttendanceStore'
-import AppTable from '@/components/ui/AppTable.vue' // استيراد مكونك الجاهز
+import apiClient from '@/services/apiClient'
+import AppTable from '@/components/ui/AppTable.vue'
 
 const toast = useToast()
 const teamStore = useTeamAttendanceStore()
@@ -274,28 +317,48 @@ const tableHeaders = [
   { key: 'actions', label: 'الإجراء', class: 'text-center' },
 ]
 
-// الحالة (State)
+// الحالات والروابط التفاعلية
 const selectedDate = ref(new Date().toISOString().split('T')[0])
-const editForms = ref({}) // قاموس لحفظ بيانات الإدخال لكل صف بمعزل عن الآخر
+const searchQuery = ref('')
+const selectedPosition = ref('')
+const selectedStatus = ref('')
+const positions = ref([])
+const editForms = ref({})
 
-// جلب البيانات ومزامنة حقول الإدخال
 onMounted(() => {
+  fetchPositions()
   fetchData()
 })
 
-const fetchData = async () => {
+// جلب قائمة الوظائف
+const fetchPositions = async () => {
   try {
-    await teamStore.fetchTeamMatrix(selectedDate.value)
-    syncEditForms() // تجهيز حقول الإدخال بعد جلب البيانات
+    const response = await apiClient.get('/hr/positions')
+    positions.value = response.data.data || response.data || []
   } catch (error) {
-    toast.error('فشل في جلب مصفوفة الحضور')
+    console.error('Failed to load positions for filter:', error)
   }
 }
 
-// بناء النماذج (Inline Forms) لكل موظف
+// جلب المصفوفة مع الفلاتر المحدثة
+const fetchData = async () => {
+  try {
+    const payload = {
+      date: selectedDate.value,
+      search: searchQuery.value.trim() || null,
+      position_id: selectedPosition.value || null,
+      status: selectedStatus.value || null,
+    }
+    await teamStore.fetchTeamMatrix(payload)
+    syncEditForms()
+  } catch {
+    toast.error('فشل في جلب مصفوفة الحضور للخيارات المحددة')
+  }
+}
+
+// بناء النماذج (Inline Forms) وتعبئتها لكل صف
 const syncEditForms = () => {
   teamStore.teamMatrix.forEach((emp) => {
-    // إنشاء كائن لكل موظف إذا لم يكن موجوداً
     if (!editForms.value[emp.id]) {
       editForms.value[emp.id] = {
         check_in: '',
@@ -305,7 +368,6 @@ const syncEditForms = () => {
       }
     }
 
-    // تعبئة الأوقات إذا كان للموظف سجل في هذا اليوم
     if (emp.today_attendance) {
       editForms.value[emp.id].check_in = emp.today_attendance.check_in
         ? emp.today_attendance.check_in.substring(0, 5)
@@ -313,7 +375,6 @@ const syncEditForms = () => {
       editForms.value[emp.id].check_out = emp.today_attendance.check_out
         ? emp.today_attendance.check_out.substring(0, 5)
         : ''
-      // لا نملأ السبب القديم حتى يكتب المشرف سبباً جديداً لكل تعديل (إجراء تدقيقي أفضل)
     } else {
       editForms.value[emp.id].check_in = ''
       editForms.value[emp.id].check_out = ''
@@ -326,7 +387,6 @@ const syncEditForms = () => {
 const saveRow = async (employeeId) => {
   const form = editForms.value[employeeId]
 
-  // التحقق من وجود مبرر
   if (!form.reason.trim()) {
     return toast.warning('يجب كتابة سبب التعديل (في خانة السبب) لاعتماده.')
   }
@@ -343,8 +403,6 @@ const saveRow = async (employeeId) => {
 
     await teamStore.overrideAttendance(payload)
     toast.success('تم اعتماد التعديل وتسجيل التدقيق بنجاح.')
-
-    // تفريغ حقل السبب بعد نجاح العملية لتجنب تكرار إرساله بالخطأ
     form.reason = ''
   } catch (error) {
     const errorMsg =

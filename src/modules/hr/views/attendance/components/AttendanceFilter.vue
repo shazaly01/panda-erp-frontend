@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\attendance\components\AttendanceFilter.vue--->
 <template>
   <div class="bg-surface-section p-5 rounded-xl border border-surface-border mb-6 shadow-sm">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
