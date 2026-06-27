@@ -1,21 +1,6 @@
+<!--src\modules\hr\views\attendance\TeamAttendancePage.vue--->
 <template>
   <div class="space-y-5 max-w-7xl mx-auto pb-12">
-    <div
-      class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-surface-border gap-2"
-    >
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary flex items-center gap-2.5">
-          <span
-            class="w-2 h-6 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.7)]"
-          ></span>
-          حضور فريقي
-        </h1>
-        <p class="text-xs text-text-muted mt-0.5">
-          الخدمة الذاتية للمدير - متابعة واعتماد الحضور اليومي للموظفين.
-        </p>
-      </div>
-    </div>
-
     <div class="bg-surface-section p-4 rounded-xl shadow-sm border border-surface-border">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
         <div class="flex flex-col gap-1.5">

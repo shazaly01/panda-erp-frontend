@@ -24,13 +24,14 @@ export const useTeamAttendanceStore = defineStore('teamAttendance', {
 
   actions: {
     /**
-     * جلب مصفوفة الفريق من الخادم
+     * جلب مصفوفة الفريق من الخادم باستخدام الفلاتر المرسلة
      */
-    async fetchTeamMatrix(date) {
+    async fetchTeamMatrix(payload) {
       this.loading = true
       this.error = null
       try {
-        const response = await teamAttendanceService.getTeamMatrix({ date })
+        // تمرير كائن الفلاتر مباشرة دون إعادة تدويره أو تغليفه بشكل متداخل
+        const response = await teamAttendanceService.getTeamMatrix(payload)
         // استلام البيانات وحفظها في الحالة
         this.teamMatrix = response.data.data || []
       } catch (err) {
