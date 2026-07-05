@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\internships\components\InternshipApplicationModal.vue--->
 <template>
   <AppDialog
     :model-value="isOpen"

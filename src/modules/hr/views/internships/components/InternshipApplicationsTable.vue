@@ -1,3 +1,4 @@
+<!---src\modules\hr\views\internships\components\InternshipApplicationsTable.vue--->
 <template>
   <AppCard
     class="overflow-hidden bg-slate-900/20 border border-slate-800/80 shadow-xl rounded-2xl text-right"
@@ -11,21 +12,45 @@
       @row-click="$emit('row-click', $event)"
     >
       <template #cell-applicant_info="{ item }">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-1">
-          <span class="font-extrabold text-sm text-slate-100 tracking-wide">
-            {{ item.full_name }}
-          </span>
-          <span class="text-slate-600 font-bold">|</span>
-          <span class="text-xs text-slate-400 font-mono font-semibold">
-            {{ item.phone }}
-          </span>
-
-          <span
-            v-if="item.national_id"
-            class="text-[10px] font-mono font-bold text-slate-300 bg-slate-800 border border-slate-700/60 px-2 py-0.5 rounded-md shadow-sm"
+        <div class="flex items-center gap-3 py-1">
+          <!-- صورة المتدرب الشخصية (Avatar) -->
+          <div
+            class="w-10 h-10 rounded-full overflow-hidden border border-slate-700/80 bg-slate-800 shrink-0 shadow-sm relative group"
           >
-            هوية/إقامة: {{ item.national_id }}
-          </span>
+            <img
+              v-if="item.photo_url"
+              :src="item.photo_url"
+              class="w-full h-full object-cover transform -scale-x-100"
+              alt="صورة المتدرب"
+            />
+            <div
+              v-else
+              class="w-full h-full flex items-center justify-center text-[10px] font-black text-slate-500 bg-slate-900/50"
+            >
+              HR
+            </div>
+          </div>
+
+          <!-- التفاصيل النصية للمتقدم -->
+          <div class="flex flex-col gap-0.5 justify-center">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span class="font-extrabold text-sm text-slate-100 tracking-wide">
+                {{ item.full_name }}
+              </span>
+              <span class="text-slate-700 font-bold">|</span>
+              <span class="text-xs text-slate-400 font-mono font-semibold">
+                {{ item.phone }}
+              </span>
+            </div>
+
+            <div v-if="item.national_id" class="pt-0.5">
+              <span
+                class="inline-block text-[10px] font-mono font-bold text-slate-400 bg-slate-950 border border-slate-800 px-2 py-0.5 rounded shadow-sm"
+              >
+                هوية/إقامة: {{ item.national_id }}
+              </span>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -37,7 +62,7 @@
           >
             {{ item.tracking_code }}
           </span>
-          <span v-else class="text-slate-600 font-bold italic font-sans text-[11px]">لا يوجد</span>
+          <span class="text-slate-600 font-bold italic font-sans text-[11px]">لا يوجد</span>
         </div>
       </template>
 
@@ -113,10 +138,10 @@ defineProps({
 
 defineEmits(['page-change', 'row-click'])
 
-// ترويسات الجدول المعمارية النظيفة بعد إضافة عمود كود المتابعة المستقل
+// ترويسات الجدول المعمارية النظيفة بعد إضافة عمود كود المتابعة المستقل وتوسيع العمود الأول ليستوعب الصورة الشخصية
 const tableHeaders = computed(() => [
-  { key: 'applicant_info', label: 'بيانات المتدرب الشخصية', class: 'min-w-[240px]' },
-  { key: 'tracking_code', label: 'كود المتابعة', class: 'min-w-[130px]' }, // 🌟 العمود المخصص الجديد
+  { key: 'applicant_info', label: 'بيانات المتدرب الشخصية', class: 'min-w-[280px]' },
+  { key: 'tracking_code', label: 'كود المتابعة', class: 'min-w-[130px]' },
   { key: 'academic_info', label: 'المنشأة والتخصص الأكاديمي', class: 'min-w-[260px]' },
   { key: 'duration_details', label: 'فترة التدريب المعتمدة', class: 'min-w-[200px]' },
   { key: 'status', label: 'حالة السجل', class: 'min-w-[100px]' },
