@@ -1,3 +1,4 @@
+<!---src\modules\hr\views\internships\PublicInternshipApply.vue-->
 <template>
   <div
     class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100/60 text-slate-800 flex flex-col justify-center items-center font-sans p-3 sm:p-6 antialiased relative overflow-hidden"
@@ -267,41 +268,18 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-slate-700 tracking-wide"
-                >تاريخ بدء التدريب *</label
-              >
-              <input
-                v-model="form.internship_start_date"
-                type="date"
-                class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-medium"
-              />
-            </div>
-
-            <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-slate-700 tracking-wide"
-                >تاريخ انتهاء التدريب *</label
-              >
-              <input
-                v-model="form.internship_end_date"
-                type="date"
-                class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-medium"
-              />
-            </div>
-
-            <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-slate-700 tracking-wide"
-                >الساعات التدريبية المطلوبة</label
-              >
-              <input
-                v-model.number="form.required_training_hours"
-                type="number"
-                min="1"
-                placeholder="مثال: 120 ساعة"
-                class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-mono"
-              />
-            </div>
+          <!-- تم تعديلها لتصبح حقل واحد ممتد بالكامل خاص بالساعات فقط -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700 tracking-wide"
+              >الساعات التدريبية المطلوبة *</label
+            >
+            <input
+              v-model.number="form.required_training_hours"
+              type="number"
+              min="1"
+              placeholder="مثال: 120 ساعة"
+              class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-mono"
+            />
           </div>
 
           <div class="space-y-1.5">
@@ -595,8 +573,6 @@ const form = ref({
   national_id: '',
   academic_institution: '',
   academic_major: '',
-  internship_start_date: '',
-  internship_end_date: '',
   required_training_hours: null,
   notes: '',
 })
@@ -671,8 +647,6 @@ const handleSubmit = async () => {
   if (!form.value.phone.trim()) return toast.error('يرجى إدخال رقم هاتفك الجوال.')
   if (!form.value.academic_institution.trim()) return toast.error('يرجى تحديد جهتك الأكاديمية.')
   if (!form.value.academic_major.trim()) return toast.error('يرجى إدخال تخصصك الأكاديمي.')
-  if (!form.value.internship_start_date) return toast.error('يرجى تحديد تاريخ بدء التدريب.')
-  if (!form.value.internship_end_date) return toast.error('يرجى تحديد تاريخ انتهاء التدريب.')
   if (!photoBlob.value)
     return toast.error('برجاء التقاط صورتك الشخصية الحية عبر الكاميرا أولاً لاستكمال الطلب.')
 
@@ -687,8 +661,6 @@ const handleSubmit = async () => {
 
   formData.append('academic_institution', form.value.academic_institution.trim())
   formData.append('academic_major', form.value.academic_major.trim())
-  formData.append('internship_start_date', form.value.internship_start_date)
-  formData.append('internship_end_date', form.value.internship_end_date)
 
   if (
     form.value.required_training_hours !== null &&
@@ -715,8 +687,6 @@ const handleSubmit = async () => {
       national_id: '',
       academic_institution: '',
       academic_major: '',
-      internship_start_date: '',
-      internship_end_date: '',
       required_training_hours: null,
       notes: '',
     }

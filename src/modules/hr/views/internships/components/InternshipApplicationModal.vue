@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\internships\components\InternshipApplicationModal.vue--->
 <template>
   <AppDialog
     :model-value="isOpen"
@@ -98,7 +97,7 @@
             >تاريخ بدء التدريب الأكاديمي</span
           >
           <span class="text-xs font-bold font-mono text-emerald-400">{{
-            application?.internship_start_date
+            application?.internship_start_date || 'لم يحدد بعد'
           }}</span>
         </div>
         <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
@@ -106,7 +105,7 @@
             >تاريخ انتهاء فترة التدريب</span
           >
           <span class="text-xs font-bold font-mono text-rose-400">{{
-            application?.internship_end_date
+            application?.internship_end_date || 'لم يحدد بعد'
           }}</span>
         </div>
       </div>
@@ -155,6 +154,29 @@
               min="0"
               placeholder="أدخل 0 إذا كان التدريب غير مدفوع..."
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-slate-100 text-right focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all shadow-sm"
+            />
+          </div>
+
+          <!-- الحقول الجديدة المستحدثة لتاريخ البدء والانتهاء المعتمدين -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-400 mb-1"
+              >تاريخ بدء التدريب المعتمد *</label
+            >
+            <input
+              v-model="approvalForm.internship_start_date"
+              type="date"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-100 text-right focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all shadow-sm"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-400 mb-1"
+              >تاريخ انتهاء التدريب المعتمد *</label
+            >
+            <input
+              v-model="approvalForm.internship_end_date"
+              type="date"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-100 text-right focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all shadow-sm"
             />
           </div>
 
@@ -216,6 +238,7 @@
                 class="opacity-25"
                 cx="12"
                 cy="12"
+                box="12"
                 r="10"
                 stroke="currentColor"
                 stroke-width="4"
@@ -305,6 +328,8 @@ const approvalForm = ref({
   basic_salary: 0,
   department_id: null,
   manager_id: null,
+  internship_start_date: '', // لقطة التاريخ الجديد للبدء
+  internship_end_date: '', // لقطة التاريخ الجديد للنهاية
 })
 
 // المحرك المركزي الموحد لتهيئة البيانات وحقن الـ Hydration بشكل متزامن وآمن
@@ -315,6 +340,8 @@ const initModal = async () => {
     basic_salary: 0,
     department_id: props.application?.department_id || null,
     manager_id: props.application?.manager_id || null,
+    internship_start_date: '', // تصفير الحقل عند الفتح الممتد لطلب جديد
+    internship_end_date: '', // text تصفير الحقل عند الفتح الممتد لطلب جديد
   }
 
   if (props.statusType === 'pending') {
@@ -364,6 +391,20 @@ const handleApprove = async () => {
     approvalForm.value.basic_salary < 0
   ) {
     return toast.error('برجاء إدخل قيمة المكافأة المالية المقطوعة.')
+  }
+
+  // التحقق الإجباري الصارم من إدخال المشرف للتواريخ
+  if (!approvalForm.value.internship_start_date) {
+    return toast.error('برجاء تحديد تاريخ بدء التدريب المعتمد للمتدرب.')
+  }
+  if (!approvalForm.value.internship_end_date) {
+    return toast.error('برجاء تحديد تاريخ انتهاء فترة التدريب المعتمدة.')
+  }
+  if (
+    new Date(approvalForm.value.internship_end_date) <=
+    new Date(approvalForm.value.internship_start_date)
+  ) {
+    return toast.error('تاريخ انتهاء التدريب يجب أن يكون بعد تاريخ البدء المعتمد.')
   }
 
   try {

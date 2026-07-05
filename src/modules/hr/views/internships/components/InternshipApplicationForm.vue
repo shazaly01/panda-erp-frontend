@@ -92,30 +92,6 @@
           class="!rounded-xl text-xs font-bold text-slate-800 focus:ring-indigo-600/5 shadow-sm"
         />
       </div>
-
-      <div class="md:col-span-1">
-        <AppInput
-          id="intern-start-date"
-          type="date"
-          label="تاريخ بدء التدريب المقترح *"
-          :model-value="modelValue.internship_start_date"
-          @update:model-value="updateField('internship_start_date', $event)"
-          required
-          class="!rounded-xl text-xs font-semibold text-slate-900 text-right focus:ring-indigo-600/5 shadow-sm"
-        />
-      </div>
-
-      <div class="md:col-span-1">
-        <AppInput
-          id="intern-end-date"
-          type="date"
-          label="تاريخ انتهاء التدريب المقترح *"
-          :model-value="modelValue.internship_end_date"
-          @update:model-value="updateField('internship_end_date', $event)"
-          required
-          class="!rounded-xl text-xs font-semibold text-slate-900 text-right focus:ring-indigo-600/5 shadow-sm"
-        />
-      </div>
     </div>
 
     <div>
