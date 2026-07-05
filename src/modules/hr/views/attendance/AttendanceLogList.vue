@@ -75,13 +75,6 @@
       v-model:presentOnly="presentOnly"
       :departmentOptions="departmentOptions"
       :positionOptions="positionOptions"
-      @update:searchQuery="onSearch"
-      @update:startDate="handlePageChange(1)"
-      @update:endDate="handlePageChange(1)"
-      @update:departmentId="handlePageChange(1)"
-      @update:positionId="handlePageChange(1)"
-      @update:employmentType="handlePageChange(1)"
-      @update:presentOnly="handlePageChange(1)"
     />
 
     <AttendanceTable
@@ -122,7 +115,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import axios from 'axios'
@@ -174,12 +167,18 @@ const selectedDepartmentName = computed(() => {
 const positionOptions = ref([])
 let searchTimeout = null
 
-const onSearch = () => {
+// مراقبة التغيرات في فلاتر التواريخ والأقسام لإعادة جلب البيانات تلقائياً وبأمان
+watch([startDate, endDate, departmentId, positionId, employmentType, presentOnly], () => {
+  handlePageChange(1)
+})
+
+// مراقبة حقل البحث بالاسم مع تطبيق تأخير (Debounce 500ms) لحماية السيرفر من كثرة الطلبات أثناء الكتابة
+watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     handlePageChange(1)
   }, 500)
-}
+})
 
 const switchView = (mode) => {
   viewMode.value = mode
@@ -191,14 +190,16 @@ const handlePageChange = async (page = 1) => {
     const filters = {
       page,
       search: searchQuery.value,
-      date: startDate.value,
+      // 🌟 تم التحديث هنا لإرسال نطاق التواريخ بالكامل مثل الخلاصة التجميعية
+      start_date: startDate.value,
+      end_date: endDate.value,
       department_id: departmentId.value || null,
     }
 
     loading.value = true
     try {
       await attendanceStore.fetchLogs(filters)
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء جلب سجلات الحضور التفصيلية.')
     } finally {
       loading.value = false

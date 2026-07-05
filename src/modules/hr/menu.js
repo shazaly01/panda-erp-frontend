@@ -12,7 +12,7 @@ export default [
   {
     name: 'ادارة الامن والسلامة',
     icon: ShieldCheckIcon, // أيقونة حماية مخصصة للأمن
-    permission: 'hr_leave_passes.gate_check', // تظهر فقط لمن يملك صلاحية الحراسة
+    // 🌟 تم إزالة الصلاحية الثابتة من هنا ليعتمد الأب تلقائياً على صلاحيات الأبناء بالداخل
     children: [
       {
         name: 'شاشة استقبال البوابة',
@@ -24,7 +24,6 @@ export default [
         routeName: 'VisitorsList',
         permission: 'hr_visitors.view',
       },
-      // مستقبلاً يمكنك إضافة (شاشة مسح الـ QR المؤتمتة) هنا تحت نفس القسم
     ],
   },
   // =========================================================
@@ -87,6 +86,7 @@ export default [
         routeName: 'TeamAttendance',
         permission: 'hr.team_attendance.manage',
       },
+      { name: 'سجلات الحضور', routeName: 'AttendanceList', permission: 'hr.attendance.view' },
       {
         name: 'أذونات الخروج المؤقت',
         routeName: 'LeavePassesList',

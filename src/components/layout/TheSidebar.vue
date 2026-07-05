@@ -91,7 +91,7 @@ import { useAuthStore } from '@/stores/authStore'
 // استيراد الأيقونات الأساسية فقط التي يستخدمها الـ Sidebar نفسه
 import { ArrowLeftOnRectangleIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 
-// 🌟 هنا السر: نستورد القائمة المجمعة للـ ERP
+// استيراد القائمة المجمعة للـ ERP
 import { appMenus } from '@/core/menus'
 
 defineEmits(['close-sidebar'])
@@ -99,40 +99,42 @@ defineEmits(['close-sidebar'])
 const authStore = useAuthStore()
 const route = useRoute()
 
-// ==========================================
-// استخدام القائمة المستوردة بدلاً من كتابتها هنا
-// ==========================================
-import { useAppStore } from '@/stores/appStore' // 1. استدعاء الستور
+import { useAppStore } from '@/stores/appStore'
 import { useBrandingStore } from '@/stores/brandingStore'
 const brandingStore = useBrandingStore()
 
-const appStore = useAppStore() // 2. التهيئة
+const appStore = useAppStore()
 
-// 3. جعل allNavLinks تتغير آلياً عندما يضغط المستخدم على زر المبدل في الأعلى
+// جعل allNavLinks تتغير آلياً عندما يضغط المستخدم على زر المبدل في الأعلى
 const allNavLinks = computed(() => {
   return appMenus[appStore.activeModule] || []
 })
 
-// باقي المنطق الخاص بك ممتاز ولم نمسه!
 const isGroupActive = (group) => {
   if (!group.children) return false
   return group.children.some((child) => child.routeName === route.name)
 }
 
+// 🌟 المنطق المطور والذكي للفلترة الديناميكية بدون التعارض مع صلاحيات الأبناء
 const filteredNavLinks = computed(() => {
-  const filterChildren = (children) => children.filter((child) => authStore.can(child.permission))
-
   return allNavLinks.value
-    .filter((item) => authStore.can(item.permission))
     .map((item) => {
       if (item.children) {
-        const filteredChildren = filterChildren(item.children)
-        if (filteredChildren.length > 0) {
+        // 1. فلترة شاشات الأبناء أولاً بناءً على صلاحيات المستخدم
+        const filteredChildren = item.children.filter((child) => authStore.can(child.permission))
+
+        // 2. التحقق مما إذا كان المستخدم يملك صلاحية مباشرة للأب (إن وجدت)
+        const hasParentPermission = item.permission ? authStore.can(item.permission) : false
+
+        // 3. يظهر القسم الرئيسي إذا تحقق شرط الأب أو إذا كان هناك ابن واحد متاح على الأقل
+        if (filteredChildren.length > 0 || hasParentPermission) {
           return { ...item, children: filteredChildren }
         }
         return null
       }
-      return item
+
+      // إذا كان رابطاً فرداً بدون شاشات داخلية، يفحص صلاحيته مباشرة
+      return !item.permission || authStore.can(item.permission) ? item : null
     })
     .filter(Boolean)
 })
@@ -171,7 +173,6 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-/* نفس الـ CSS الخاص بك ممتاز ولا يحتاج تعديل */
 .nav-link {
   @apply flex items-center rounded-lg px-3 py-2.5 text-text-secondary transition-colors duration-300 transform;
 }

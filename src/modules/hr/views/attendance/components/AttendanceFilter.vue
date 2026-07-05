@@ -39,6 +39,8 @@
           id="attendance-department-filter"
           :model-value="departmentId"
           :options="[{ id: '', name: 'كل الأقسام والإدارات' }, ...departmentOptions]"
+          option-label="name"
+          option-value="id"
           @update:model-value="$emit('update:departmentId', $event)"
           class="w-full"
         />

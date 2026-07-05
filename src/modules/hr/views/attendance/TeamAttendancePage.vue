@@ -2,7 +2,8 @@
 <template>
   <div class="space-y-5 max-w-7xl mx-auto pb-12">
     <div class="bg-surface-section p-4 rounded-xl shadow-sm border border-surface-border">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      <!-- 🌟 تم تحديث عدد الأعمدة إلى lg:grid-cols-5 ليتسع للفلتر الجديد في سطر واحد -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
         <div class="flex flex-col gap-1.5">
           <label for="search-filter" class="text-xs font-semibold text-text-secondary"
             >البحث بالاسم:</label
@@ -42,6 +43,24 @@
             <option value="">كل الوظائف</option>
             <option v-for="pos in positions" :key="pos.id" :value="pos.id">
               {{ pos.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 🌟 الفلتر الجديد: تصفية حسب طريقة / مجموعة الدفع -->
+        <div class="flex flex-col gap-1.5">
+          <label for="pay-group-filter" class="text-xs font-semibold text-text-secondary"
+            >طريقة الدفع:</label
+          >
+          <select
+            id="pay-group-filter"
+            v-model="selectedPayGroup"
+            @change="fetchData"
+            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-ground text-text-primary text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+          >
+            <option value="">كل طرق الدفع</option>
+            <option v-for="group in payGroups" :key="group.id" :value="group.id">
+              {{ group.name }}
             </option>
           </select>
         </div>
@@ -285,11 +304,14 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useTeamAttendanceStore } from '@/modules/hr/stores/teamAttendanceStore'
+// 🌟 استيراد متجر مجموعات الدفع
+import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
 import apiClient from '@/services/apiClient'
 import AppTable from '@/components/ui/AppTable.vue'
 
 const toast = useToast()
 const teamStore = useTeamAttendanceStore()
+const payGroupStore = usePayGroupStore() // 🌟 تهيئة المتجر
 
 // إعدادات الجدول
 const tableHeaders = [
@@ -306,12 +328,15 @@ const tableHeaders = [
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const searchQuery = ref('')
 const selectedPosition = ref('')
+const selectedPayGroup = ref('') // 🌟 متغير الفلتر الجديد المربوط بـ v-model
 const selectedStatus = ref('')
 const positions = ref([])
+const payGroups = ref([]) // 🌟 مصفوفة لتخزين مجموعات الدفع المجلوبة
 const editForms = ref({})
 
 onMounted(() => {
   fetchPositions()
+  fetchPayGroupsData() // 🌟 جلب مجموعات الدفع عند تحميل الصفحة
   fetchData()
 })
 
@@ -325,7 +350,17 @@ const fetchPositions = async () => {
   }
 }
 
-// جلب المصفوفة مع الفلاتر المحدثة
+// 🌟 دالة جلب مجموعات الدفع النشطة من المتجر الخاص بها
+const fetchPayGroupsData = async () => {
+  try {
+    await payGroupStore.fetchPayGroups({ is_active: 1 })
+    payGroups.value = payGroupStore.groups || []
+  } catch (error) {
+    console.error('Failed to load pay groups for filter:', error)
+  }
+}
+
+// جلب مصفوفة الحضور مع تمرير الفلاتر المحدثة
 const fetchData = async () => {
   try {
     const payload = {
@@ -333,6 +368,7 @@ const fetchData = async () => {
       search: searchQuery.value.trim() || null,
       position_id: selectedPosition.value || null,
       status: selectedStatus.value || null,
+      pay_group_id: selectedPayGroup.value || null, // 🌟 إرسال معرّف مجموعة الدفع إلى السيرفر
     }
     await teamStore.fetchTeamMatrix(payload)
     syncEditForms()
@@ -398,3 +434,7 @@ const saveRow = async (employeeId) => {
   }
 }
 </script>
+
+<style scoped>
+/* التنسيق متوافق مع النظام الحالي */
+</style>
