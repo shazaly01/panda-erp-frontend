@@ -56,7 +56,7 @@
           ></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
         </span>
-        <span class="text-xs font-bold text-slate-400">نمط التدقيق فائق الدقة (UHD) نشط</span>
+        <span class="text-xs font-bold text-slate-400">نمط التدقيق المطور نشط</span>
       </div>
 
       <button
@@ -71,29 +71,52 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { Html5Qrcode } from 'html5-qrcode'
 
 const emit = defineEmits(['scan', 'close', 'error'])
 
 const currentDecodingAttempt = ref('')
 const html5QrcodeInstance = ref(null)
+let isComponentDestroyed = false
 
 const initQrScanner = async () => {
+  if (isComponentDestroyed) return
+
+  // 1. فحص استباقي للبيئة الأمنية للمتصفح لمنع الأعطال الصامتة في الشبكات المحلية (HTTP vs HTTPS)
+  if (!window.isSecureContext) {
+    emit('error', 'فشل التشغيل: الكاميرا تتطلب بيئة آمنة (HTTPS) أو تشغيل التطبيق من localhost.')
+    emit('close')
+    return
+  }
+
   try {
-    // إنشاء كائن الماسح وربطه بالـ ID المخصص
-    html5QrcodeInstance.value = new Html5Qrcode('qr-reader')
+    const elementId = 'qr-reader'
+    const container = document.getElementById(elementId)
 
-    // المعامل الأول: يجب أن يحتوي على مفتاح واحد فقط (ممنوع وضع قيود الأبعاد هنا)
-    const cameraConfig = { facingMode: 'environment' }
+    if (!container) {
+      console.warn('DOM element #qr-reader not found yet.')
+      return
+    }
 
-    // المعامل الثاني: نضع كافة قيود الدقة الفائقة والتركيز المستمر بداخل تراكيب المتصفح الرسمية لـ videoConstraints
+    // تصفير وتنظيف ميكانيكي مسبق للحاوية لقطع الطريق على وجود أي كائن شبحي مخفي بالـ DOM
+    container.innerHTML = ''
+
+    html5QrcodeInstance.value = new Html5Qrcode(elementId)
+
+    // 2. إجبار المتصفح على اختيار الكاميرا الخلفية بشكل صارم كخيار أولي
+    const cameraConfig = {
+      facingMode: { exact: 'environment' },
+    }
+
+    // 3. ضبط عقلاني للأبعاد ومعدل الـ FPS لإنهاء تجميد خيط التنفيذ الرئيسي تماماً وتحرير المعالج
     const scannerConfig = {
-      fps: 25,
+      fps: 15, // معالجة متزنة ومثالية جداً لسرعة فك التشفير دون خنق خيط التنفيذ الخاص بالمتصفح
       videoConstraints: {
-        width: { ideal: 3840 }, // طلب دقة 4K للمتصفح إن وُجدت عتادياً كخيار مثالي
-        height: { ideal: 2160 },
-        advanced: [{ focusMode: 'continuous' }], // تفعيل الفوكس التلقائي المستمر لمنع غشاوة القراءة
+        facingMode: 'environment', // تأكيد مزدوج للمتصفحات اللوحية
+        width: { ideal: 1280 }, // دقة HD معيارية تضمن تشغيل العدسة الأساسية ذات البؤرة التلقائية (Autofocus)
+        height: { ideal: 720 },
+        advanced: [{ focusMode: 'continuous' }], // تفعيل التركيز التلقائي المستمر لمنع غشاوة الصورة
       },
     }
 
@@ -109,11 +132,42 @@ const initQrScanner = async () => {
         }
       },
       () => {
-        // خطأ صامت أثناء محاولات الفحص المتكررة لكل فريم لمنع ملء الكونسول
+        // دالة خطأ صامتة ومحمية تمنع تراكم الاستثناءات أو تسريب الذاكرة أثناء تفحص الفريمات
       },
     )
   } catch (err) {
-    emit('error', 'فشل تشغيل الكاميرا الفائقة للـ QR Code: ' + (err.message || err))
+    // 4. تراجع مرن وذكي في حال كانت بيئة المتصفح لا تدعم كلمة exact للكاميرات الخلفية (مثل بعض المتصفحات المكتبية المحاكية)
+    if (err.message?.includes('Constraints') || err.name === 'OverconstrainedError') {
+      try {
+        if (html5QrcodeInstance.value) {
+          await html5QrcodeInstance.value.start(
+            { facingMode: 'environment' },
+            {
+              fps: 15,
+              videoConstraints: {
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              },
+            },
+            (decodedText) => {
+              const cleanCode = decodedText.trim()
+              if (cleanCode) {
+                currentDecodingAttempt.value = cleanCode
+                emit('scan', cleanCode)
+                stopScanner()
+              }
+            },
+            () => {},
+          )
+          return
+        }
+      } catch (retryErr) {
+        emit('error', 'فشل تشغيل الكاميرا الخلفية للجهاز: ' + (retryErr.message || retryErr))
+      }
+    } else {
+      emit('error', 'فشل تهيئة سياق كاميرا الـ QR Code: ' + (err.message || err))
+    }
     emit('close')
   }
 }
@@ -123,20 +177,28 @@ const stopScanner = async () => {
     try {
       await html5QrcodeInstance.value.stop()
     } catch (err) {
-      console.error('Error stopping html5-qrcode:', err)
+      console.error('Error stopping html5-qrcode instance:', err)
     }
   }
+
+  // تنظيف وتصفير يدوي إضافي للحاوية لمنع بقاء دفق الكاميرا معلقاً في الخلفية
+  const container = document.getElementById('qr-reader')
+  if (container) {
+    container.innerHTML = ''
+  }
+
   currentDecodingAttempt.value = ''
   emit('close')
 }
 
-onMounted(() => {
-  setTimeout(() => {
-    initQrScanner()
-  }, 300)
+onMounted(async () => {
+  // إلغاء الميقاتي السحري القديم والاعتماد على دورة طلاء وتحديث الـ DOM الرسمية لـ Vue
+  await nextTick()
+  initQrScanner()
 })
 
 onUnmounted(async () => {
+  isComponentDestroyed = true
   await stopScanner()
 })
 </script>
@@ -170,7 +232,7 @@ onUnmounted(async () => {
   animation: qrLaser 2s ease-in-out infinite;
 }
 
-/* إجبار عتاد بث الفيديو بالمتصفح على ملء الحاوية المربعة بشكل متناسق ومريح للعين */
+/* ضبط إحداثيات الـ Canvas الداخلي ليتطابق هندسياً مع دفق الفيديو الحقيقي دون انحراف أبعاد القراءة */
 :deep(#qr-reader video) {
   width: 100% !important;
   height: 100% !important;
