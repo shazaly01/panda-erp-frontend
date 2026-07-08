@@ -1,12 +1,26 @@
-<!--src\modules\hr\views\attendance\components\AttendanceTable.vue--->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="logs" :is-loading="loading">
       <template #cell-employee="{ item }">
         <div class="flex flex-col gap-1 py-1 text-right">
-          <span class="font-bold text-sm text-text-primary">
-            {{ item.employee_name }}
-          </span>
+          <div class="flex items-center gap-2 justify-start">
+            <span class="font-bold text-sm text-text-primary">
+              {{ item.employee_name }}
+            </span>
+
+            <span
+              v-if="item.employment_type"
+              class="px-2 py-0.5 text-[9px] font-black rounded-md border tracking-wide transition-all"
+              :class="
+                item.employment_type === 'intern'
+                  ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+              "
+            >
+              {{ item.employment_type === 'intern' ? 'متدرب' : 'موظف' }}
+            </span>
+          </div>
+
           <span class="text-xs text-text-muted">
             التاريخ: <span class="font-mono">{{ item.date }}</span>
           </span>
@@ -164,10 +178,6 @@ const getStatusLabel = (status) => {
   return labels[status] || status
 }
 
-/**
- * دمج فئات التصميم المتجاوبة مع وضع الـ Dark Mode تلقائياً
- * تم استبدال الألوان القديمة بطبقات معتمة متباينة بشكل مريح ومحترف للعين
- */
 const getStatusClass = (status) => {
   const classes = {
     present:
@@ -191,3 +201,7 @@ const getStatusDotClass = (status) => {
   return classes[status] || 'bg-gray-400'
 }
 </script>
+
+<style scoped>
+/* قواعد تباين وهندسة الجداول المتوافقة مع Panda ERP */
+</style>

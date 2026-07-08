@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\attendance\components\AttendanceFilter.vue--->
 <template>
   <div class="bg-surface-section p-5 rounded-xl border border-surface-border mb-6 shadow-sm">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
@@ -13,23 +12,20 @@
         />
       </div>
 
-      <div class="md:col-span-2">
-        <label class="block text-xs font-bold text-slate-400 mb-2">من تاريخ</label>
-        <AppInput
-          id="attendance-start-date"
-          type="date"
-          :model-value="startDate"
-          @update:model-value="$emit('update:startDate', $event)"
-        />
-      </div>
-
-      <div class="md:col-span-2">
-        <label class="block text-xs font-bold text-slate-400 mb-2">إلى تاريخ</label>
-        <AppInput
-          id="attendance-end-date"
-          type="date"
-          :model-value="endDate"
-          @update:model-value="$emit('update:endDate', $event)"
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold text-slate-400 mb-2">فئة العمل (الحصر الفعلي)</label>
+        <AppDropdown
+          id="attendance-employment-type-filter"
+          :model-value="employmentType"
+          :options="[
+            { id: 'all', name: 'الكل (موظفين ومتدربين)' },
+            { id: 'full_time', name: 'الموظفين الرسميين' },
+            { id: 'intern', name: 'المتدربين الأكاديميين' },
+          ]"
+          option-label="name"
+          option-value="id"
+          @update:model-value="$emit('update:employmentType', $event)"
+          class="w-full"
         />
       </div>
 
@@ -45,6 +41,28 @@
           class="w-full"
         />
       </div>
+
+      <div class="md:col-span-3">
+        <label class="block text-xs font-bold text-slate-400 mb-2">من تاريخ</label>
+        <AppInput
+          id="attendance-start-date"
+          type="date"
+          :model-value="startDate"
+          @update:model-value="$emit('update:startDate', $event)"
+        />
+      </div>
+
+      <div class="md:col-span-3">
+        <label class="block text-xs font-bold text-slate-400 mb-2">إلى تاريخ</label>
+        <AppInput
+          id="attendance-end-date"
+          type="date"
+          :model-value="endDate"
+          @update:model-value="$emit('update:endDate', $event)"
+        />
+      </div>
+
+      <div class="hidden md:block md:col-span-6"></div>
 
       <div
         class="md:col-span-12 pt-3 border-t border-slate-800/40 mt-1 flex items-center justify-between"
@@ -81,7 +99,7 @@ defineProps({
   endDate: { type: String, default: '' },
   departmentId: { type: [String, Number], default: '' },
   positionId: { type: [String, Number], default: '' },
-  employmentType: { type: String, default: '' },
+  employmentType: { type: String, default: 'all' },
   presentOnly: { type: Boolean, default: false },
 
   // مصفوفات الخيارات الممررة ديناميكياً من المكون الأب

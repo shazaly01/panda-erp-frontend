@@ -9,8 +9,9 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   const pendingApplications = ref([])
   const activeInterns = ref([])
   const rejectedApplications = ref([])
+  const completedInterns = ref([])
 
-  // 🌟 لتخزين بيانات الطلب الحالي الذي يتابعه المتدرب الخارجي
+  // لتخزين بيانات الطلب الحالي الذي يتابعه المتدرب الخارجي
   const currentTrackedApplication = ref(null)
 
   const applicationsPagination = ref({
@@ -28,6 +29,13 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   })
 
   const rejectedPagination = ref({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 15,
+  })
+
+  const completedPagination = ref({
     current_page: 1,
     last_page: 1,
     total: 0,
@@ -102,6 +110,43 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   }
 
   /**
+   * جلب قائمة المتدربين الذين انتهت فترتهم التدريبية ولم يتم تثبيتهم بعد
+   */
+  async function fetchCompletedInterns(filters = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await internshipService.getCompletedInterns(filters)
+      completedInterns.value = response.data.data
+      if (response.data.meta) {
+        completedPagination.value = response.data.meta
+      }
+    } catch (err) {
+      error.value = 'فشل تحميل قائمة المتدربين المنتهية فترتهم'
+      console.error(err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 🌟 تمديد وتحديث تواريخ فترات التدريب للمتدرب الحالي أو المنتهي
+   */
+  async function updateInternshipDates(id, payload) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await internshipService.updateInternshipDates(id, payload)
+      return response.data.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل تحديث وتمديد فترة التدريب.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * التقديم الذاتي الخارجي للمتدربين (الرابط العام عبر الكاميرا)
    */
   async function submitPublicApplication(formData) {
@@ -126,7 +171,6 @@ export const useInternshipStore = defineStore('hrInternship', () => {
     error.value = null
     try {
       const response = await internshipService.approveApplication(id, payload)
-      // تحديث المصفوفة محلياً بحذف الطلب المقبول لسرعة الاستجابة التفاعلية
       pendingApplications.value = pendingApplications.value.filter((app) => app.id !== id)
       applicationsPagination.value.total -= 1
       return response.data.data
@@ -146,7 +190,6 @@ export const useInternshipStore = defineStore('hrInternship', () => {
     error.value = null
     try {
       await internshipService.rejectApplication(id)
-      // البحث عن الطلب المرفوض لنقله محلياً قبل حذفه من المعلقين
       const rejectedItem = pendingApplications.value.find((app) => app.id === id)
       if (rejectedItem) {
         rejectedItem.status = 'rejected'
@@ -165,7 +208,7 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   }
 
   /**
-   * 🌟 تتبع و جلب بيانات الطلب الشخصي للمتدرب برقم الهاتف والكود
+   * تتبع و جلب بيانات الطلب الشخصي للمتدرب برقم الهاتف والكود
    */
   async function trackApplication(phone, trackingCode) {
     loading.value = true
@@ -184,7 +227,7 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   }
 
   /**
-   * 🌟 تحديث بيانات الطلب المعلق وإعادة حفظ المخرجات في الـ State
+   * تحديث بيانات الطلب المعلق وإعادة حفظ المخرجات في الـ State
    */
   async function updatePublicApplication(id, formData) {
     loading.value = true
@@ -205,16 +248,20 @@ export const useInternshipStore = defineStore('hrInternship', () => {
     pendingApplications,
     activeInterns,
     rejectedApplications,
+    completedInterns,
     currentTrackedApplication,
     applicationsPagination,
     internsPagination,
     rejectedPagination,
+    completedPagination,
     loading,
     error,
 
     fetchPendingApplications,
     fetchActiveInterns,
     fetchRejectedApplications,
+    fetchCompletedInterns,
+    updateInternshipDates,
     submitPublicApplication,
     approveIntern,
     rejectIntern,

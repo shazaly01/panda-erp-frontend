@@ -194,6 +194,7 @@ const handlePageChange = async (page = 1) => {
       start_date: startDate.value,
       end_date: endDate.value,
       department_id: departmentId.value || null,
+      employment_type: employmentType.value || 'all',
     }
 
     loading.value = true
@@ -219,7 +220,7 @@ const handlePageChange = async (page = 1) => {
     try {
       const response = await attendanceLogService.getSummaryReport(summaryFilters)
       summaryLogs.value = response.data.data
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء جلب خلاصة البيانات التجميعية.')
     } finally {
       summaryLoading.value = false

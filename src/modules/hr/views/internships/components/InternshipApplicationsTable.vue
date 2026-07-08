@@ -1,4 +1,4 @@
-<!---src\modules\hr\views\internships\components\InternshipApplicationsTable.vue--->
+<!---src\modules\hr\views\internships\components\InternshipApplicationsTable.vue---->
 <template>
   <AppCard
     class="overflow-hidden bg-slate-900/20 border border-slate-800/80 shadow-xl rounded-2xl text-right"
@@ -62,7 +62,7 @@
           >
             {{ item.tracking_code }}
           </span>
-          <span class="text-slate-600 font-bold italic font-sans text-[11px]">لا يوجد</span>
+          <span v-else class="text-slate-600 font-bold italic font-sans text-[11px]">لا يوجد</span>
         </div>
       </template>
 
@@ -117,6 +117,35 @@
           </span>
         </div>
       </template>
+
+      <!-- عمود الإجراءات المطور والداعم لحالة التدريب اللحظية والاعتماد الباركودي -->
+      <template #cell-actions="{ item }">
+        <div class="flex items-center justify-end px-2">
+          <button
+            v-if="item.status === 'approved' || item.status === 'training' || item.approved_barcode"
+            @click.stop="$emit('print-card', item)"
+            class="p-1.5 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/60 rounded-xl border border-indigo-800/30 transition-all flex items-center justify-center shadow-sm hover:scale-105"
+            title="عرض وطباعة بطاقة الهوية الرسمية للمتدرب"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+              />
+            </svg>
+          </button>
+          <span v-else class="text-slate-600 text-[10px] font-medium pl-2 italic"
+            >بانتظار الاعتماد</span
+          >
+        </div>
+      </template>
     </AppTable>
 
     <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
@@ -136,32 +165,35 @@ defineProps({
   currentStatus: { type: String, default: 'pending' },
 })
 
-defineEmits(['page-change', 'row-click'])
+defineEmits(['page-change', 'row-click', 'print-card'])
 
-// ترويسات الجدول المعمارية النظيفة بعد إضافة عمود كود المتابعة المستقل وتوسيع العمود الأول ليستوعب الصورة الشخصية
+// ترويسات الجدول المعمارية النظيفة بعد دمج حقل الإجراءات المخصص للبطاقة الاحترافية
 const tableHeaders = computed(() => [
   { key: 'applicant_info', label: 'بيانات المتدرب الشخصية', class: 'min-w-[280px]' },
   { key: 'tracking_code', label: 'كود المتابعة', class: 'min-w-[130px]' },
   { key: 'academic_info', label: 'المنشأة والتخصص الأكاديمي', class: 'min-w-[260px]' },
   { key: 'duration_details', label: 'فترة التدريب المعتمدة', class: 'min-w-[200px]' },
   { key: 'status', label: 'حالة السجل', class: 'min-w-[100px]' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 
-// قواميس الترجمة والتسميات العربية
+// قواميس الترجمة والتسميات العربية بعد معالجة ثغرة النص الإنجليزي training
 const statusLabel = (status) => {
   const labels = {
     pending: 'انتظار المراجعة',
     approved: 'متدرب نشط',
+    training: 'متدرب نشط',
     rejected: 'طلب مرفوض',
   }
   return labels[status] || status
 }
 
-// التنسيق المطور لبطاقات الحالة ليتناسب مع الثيم المظلم لنظام Panda ERP
+// التنسيق المطور لبطاقات الحالة ليتناسب مع الثيم المظلم لنظام Panda ERP وضمان تلوين حالة التدريب باللون الأخضر
 const statusClasses = (status) => {
   const classes = {
     pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    training: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     rejected: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
   }
   return classes[status] || 'bg-slate-800 text-slate-400 border-slate-700'
@@ -171,8 +203,26 @@ const statusDotClasses = (status) => {
   const classes = {
     pending: 'bg-amber-400 shadow-sm shadow-amber-400/50',
     approved: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
+    training: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
     rejected: 'bg-rose-400 shadow-sm shadow-rose-400/50',
   }
   return classes[status] || 'bg-slate-500'
 }
 </script>
+
+<style scoped>
+table {
+  border-spacing: 0;
+  width: 100%;
+}
+
+tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.break-inside-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+</style>

@@ -1,4 +1,3 @@
-<!---src\modules\hr\views\internships\InternshipApplicationsList.vue-->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn p-4 sm:p-6 text-right" dir="rtl">
     <div
@@ -68,12 +67,25 @@
       </button>
 
       <button
+        @click="switchStatusFilter('completed')"
+        type="button"
+        :class="[
+          'px-4 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-300 border focus:outline-none',
+          currentStatus === 'completed'
+            ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-md shadow-rose-500/5'
+            : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:bg-slate-800/60 hover:text-slate-300',
+        ]"
+      >
+        المتدربين المنتهية فترتهم 🔴
+      </button>
+
+      <button
         @click="switchStatusFilter('rejected')"
         type="button"
         :class="[
           'px-4 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-300 border focus:outline-none',
           currentStatus === 'rejected'
-            ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-md shadow-rose-500/5'
+            ? 'bg-slate-500/10 text-slate-400 border-slate-500/30 shadow-md shadow-slate-500/5'
             : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:bg-slate-800/60 hover:text-slate-300',
         ]"
       >
@@ -81,11 +93,15 @@
       </button>
     </div>
 
-    <InternshipApplicationsFilter
+    <SidebarFilter
       v-model:searchQuery="searchQuery"
       v-model:institutionFilter="institutionFilter"
+      v-model:dateFrom="dateFrom"
+      v-model:dateTo="dateTo"
       @update:searchQuery="onSearch"
       @update:institutionFilter="handlePageChange(1)"
+      @update:dateFrom="onSearch"
+      @update:dateTo="onSearch"
     />
 
     <InternshipApplicationsTable
@@ -95,6 +111,7 @@
       :current-status="currentStatus"
       @page-change="handlePageChange"
       @row-click="openApplicationDetails"
+      @print-card="openIdentityCardPrint"
     />
 
     <InternshipApplicationModal
@@ -104,6 +121,35 @@
       :status-type="currentStatus"
       @refresh="onApplicationProcessed"
     />
+
+    <div
+      v-if="isCardModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hide-on-print"
+      @click.self="closeIdentityCardPrint"
+    >
+      <div
+        class="relative max-w-4xl w-full max-h-[95vh] overflow-y-auto overflow-x-hidden bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-2xl animate-scaleIn text-right"
+      >
+        <button
+          @click="closeIdentityCardPrint"
+          class="absolute top-4 left-4 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-xl transition-colors"
+          type="button"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
+        <div class="mt-6 flex justify-center">
+          <EmployeeIdentityCard :employee="selectedIntern" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -113,9 +159,10 @@ import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useInternshipStore } from '@/modules/hr/stores/internshipStore'
 
-import InternshipApplicationsFilter from './components/InternshipApplicationsFilter.vue'
+import SidebarFilter from './components/InternshipApplicationsFilter.vue'
 import InternshipApplicationsTable from './components/InternshipApplicationsTable.vue'
 import InternshipApplicationModal from './components/InternshipApplicationModal.vue'
+import EmployeeIdentityCard from '../employees/components/EmployeeIdentityCard.vue'
 
 const internshipStore = useInternshipStore()
 const toast = useToast()
@@ -124,31 +171,40 @@ const {
   pendingApplications,
   activeInterns,
   rejectedApplications,
+  completedInterns,
   applicationsPagination,
   internsPagination,
   rejectedPagination,
+  completedPagination,
   loading,
 } = storeToRefs(internshipStore)
 
 const currentStatus = ref('pending')
 const searchQuery = ref('')
 const institutionFilter = ref('')
+const dateFrom = ref('')
+const dateTo = ref('')
 let searchTimeout = null
 
+// توزيع وحساب المصفوفات النشطة تبعاً للتبويب الفعال
 const currentData = computed(() => {
   if (currentStatus.value === 'pending') return pendingApplications.value
   if (currentStatus.value === 'approved') return activeInterns.value
+  if (currentStatus.value === 'completed') return completedInterns.value
   if (currentStatus.value === 'rejected') return rejectedApplications.value
   return []
 })
 
+// حساب كائن الترقيم الفعال المتوافق مع الحالة الحالية
 const currentPagination = computed(() => {
   if (currentStatus.value === 'pending') return applicationsPagination.value
   if (currentStatus.value === 'approved') return internsPagination.value
+  if (currentStatus.value === 'completed') return completedPagination.value
   if (currentStatus.value === 'rejected') return rejectedPagination.value
   return { current_page: 1, last_page: 1, total: 0, per_page: 15 }
 })
 
+// محرك البحث المؤجل (Debounce) لتقليص الضغط على خادم الـ API
 const onSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -156,18 +212,24 @@ const onSearch = () => {
   }, 400)
 }
 
+// التبديل بين التبويبات وتفريغ حقول البحث تلقائياً لتهيئة المشهد الجديد
 const switchStatusFilter = (status) => {
   currentStatus.value = status
   searchQuery.value = ''
   institutionFilter.value = ''
+  dateFrom.value = ''
+  dateTo.value = ''
   handlePageChange(1)
 }
 
+// دالة جلب وضخ البيانات المركزية مع حقن معاملات البحث وفلاتر النطاق الزمني
 const handlePageChange = async (page = 1) => {
   const filters = {
     page,
     search: searchQuery.value,
     institution: institutionFilter.value,
+    date_from: dateFrom.value,
+    date_to: dateTo.value,
   }
 
   try {
@@ -175,6 +237,8 @@ const handlePageChange = async (page = 1) => {
       await internshipStore.fetchPendingApplications(filters)
     } else if (currentStatus.value === 'approved') {
       await internshipStore.fetchActiveInterns(filters)
+    } else if (currentStatus.value === 'completed') {
+      await internshipStore.fetchCompletedInterns(filters)
     } else if (currentStatus.value === 'rejected') {
       await internshipStore.fetchRejectedApplications(filters)
     }
@@ -201,6 +265,19 @@ const onApplicationProcessed = () => {
   handlePageChange(currentPagination.value?.current_page || 1)
 }
 
+const isCardModalOpen = ref(false)
+const selectedIntern = ref(null)
+
+const openIdentityCardPrint = (intern) => {
+  selectedIntern.value = intern
+  isCardModalOpen.value = true
+}
+
+const closeIdentityCardPrint = () => {
+  isCardModalOpen.value = false
+  selectedIntern.value = null
+}
+
 const copyPublicLink = () => {
   const publicUrl = `${window.location.origin}/internship/apply`
   navigator.clipboard
@@ -222,6 +299,11 @@ const openPublicLink = () => {
 .animate-fadeIn {
   animation: fadeIn 0.35s ease-out forwards;
 }
+
+.animate-scaleIn {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -230,6 +312,25 @@ const openPublicLink = () => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media print {
+  .hide-on-print {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
 }
 </style>

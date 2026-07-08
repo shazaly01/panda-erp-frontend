@@ -20,10 +20,24 @@ export const internshipService = {
   },
 
   /**
-   * جلب قائمة المتدربين الحاليين النشطين في المؤسسة (تم تصحيح المسار المكسور)
+   * جلب قائمة المتدربين الحاليين النشطين في المؤسسة
    */
   getActiveInterns(params = {}) {
     return apiClient.get('/hr/internship-applications/active-interns', { params })
+  },
+
+  /**
+   * جلب قائمة المتدربين المنتهية فترتهم التدريبية مع دعم الفلترة والترقيم
+   */
+  getCompletedInterns(params = {}) {
+    return apiClient.get('/hr/internship-applications/completed-interns', { params })
+  },
+
+  /**
+   * 🌟 تمديد فترة التدريب وتعديل تواريخ البدء والانتهاء للمتدرب الحالي أو المنتهي
+   */
+  updateInternshipDates(id, data) {
+    return apiClient.put(`/hr/internship-applications/${id}/update-dates`, data)
   },
 
   /**
@@ -52,7 +66,7 @@ export const internshipService = {
   },
 
   /**
-   * 🌟 استدعاء بوابة التحقق والمتابعة الخارجي برقم الهاتف وكود المتابعة
+   * استدعاء بوابة التحقق والمتابعة الخارجي برقم الهاتف وكود المتابعة
    */
   trackApplication(phone, trackingCode) {
     return apiClient.post('/hr/internship/track', {
@@ -62,7 +76,7 @@ export const internshipService = {
   },
 
   /**
-   * 🌟 تحديث وتعديل الطلب الخارجي المعلق (استقبال FormData لدعم تعديل الصورة)
+   * تحديث وتعديل الطلب الخارجي المعلق (استقبال FormData لدعم تعديل الصورة)
    */
   updatePublicApplication(id, formData) {
     return apiClient.post(`/hr/internship/update/${id}`, formData, {
