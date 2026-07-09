@@ -497,11 +497,51 @@
               </button>
             </div>
 
-            <!-- أ: إذا كان الطلب مقبولاً (approved) يعرض بطاقة الـ QR Code منعا للتعديل -->
-            <QrPassCard
-              v-if="store.currentTrackedApplication?.status === 'approved'"
-              :application="store.currentTrackedApplication"
-            />
+            <div v-if="store.currentTrackedApplication?.status === 'approved'" class="space-y-6">
+              <div class="text-center space-y-1">
+                <div
+                  class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-3 py-1 text-xs font-black"
+                >
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  تم قبول طلب التدريب رسمياً
+                </div>
+                <p class="text-xs text-slate-400 mt-1">
+                  يرجى تحميل بطاقتك الرقمية الرسمية الموحدة لإبرازها عند بوابات الدخول ومرافق
+                  المنشأة.
+                </p>
+              </div>
+
+              <div ref="passBadgeRef" class="max-w-sm mx-auto overflow-hidden rounded-[2.5rem]">
+                <EmployeeIdentityCard
+                  :employee="store.currentTrackedApplication"
+                  :isPublic="true"
+                />
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-3 max-w-sm mx-auto pt-2">
+                <button
+                  @click="downloadTrackedBadgeImage"
+                  :disabled="isProcessingTrackedImage"
+                  class="flex-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-xl py-3 px-4 text-xs font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 text-slate-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                  {{ isProcessingTrackedImage ? 'جاري المعالجة...' : 'تحميل البطاقة الرقمية' }}
+                </button>
+              </div>
+            </div>
 
             <!-- ب: إذا كان الطلب معلقاً (pending) يفتح المكون محرر التعديل الشامل للبيانات -->
             <TraineeApplicationEditor
@@ -542,7 +582,7 @@ import { useInternshipStore } from '../../stores/internshipStore'
 
 // استيراد المكونات الفرعية المجزأة والمبنية حديثاً
 import TrackingLogin from './components/TrackingLogin.vue'
-import QrPassCard from './components/QrPassCard.vue'
+import EmployeeIdentityCard from '../employees/components/EmployeeIdentityCard.vue'
 import TraineeApplicationEditor from './components/TraineeApplicationEditor.vue'
 
 const brandingStore = useBrandingStore()
@@ -558,6 +598,8 @@ const passCardRef = ref(null)
 const isCameraOpen = ref(false)
 const capturedImage = ref(null)
 const photoBlob = ref(null)
+const passBadgeRef = ref(null) // المرجع الخاص بلقطة الكارت الجديد
+const isProcessingTrackedImage = ref(false) // حالة معالجة تحميل كارت التتبع المقبول
 
 // متغيرات الحالة الأساسية
 const currentTab = ref('apply') // التبويب الحالي: apply | track
@@ -776,6 +818,48 @@ const downloadPassCard = async () => {
   }
 }
 
+/**
+ * 🌟 التقاط وتحميل كارت الهوية الموحد الجديد كصورة للموبيلات
+ * محسن ومحمي بنسبة 100% ضد الانضغاط أو التشويه على الشاشات الصغيرة
+ */
+const downloadTrackedBadgeImage = async () => {
+  if (!passBadgeRef.value) return
+  isProcessingTrackedImage.value = true
+
+  try {
+    // 🛡️ الحل الجذري: فرض الأبعاد الأصلية للتصميم (340x540) في الذاكرة لتفادي انضغاط الموبايل
+    const EXACT_WIDTH = 340
+    const EXACT_HEIGHT = 540
+
+    const dataUrl = await toPng(passBadgeRef.value, {
+      quality: 1.0, // أعلى جودة ألوان ممكنة بدون فقدان بيانات
+      pixelRatio: 3, // ضرب الأبعاد في 3 لإنتاج صورة سوبر HD (1020x1620) صالحة للقراءة الفورية
+      width: EXACT_WIDTH,
+      height: EXACT_HEIGHT,
+      skipFonts: true, // تخطي قيود خطوط جوجل لتفادي أخطاء حظر التحميل
+      cacheBust: true, // تصفير الكاش لجلب الصور الشخصية الحديثة حية
+      style: {
+        margin: '0',
+        transform: 'none',
+        width: `${EXACT_WIDTH}px`, // تثبيت العرض تماماً أثناء القذف والالتقاط
+        height: `${EXACT_HEIGHT}px`, // تثبيت الارتفاع تماماً لمنع المط أو الغفص
+      },
+    })
+
+    // تنفيذ إجراء التحميل التلقائي للملف
+    const link = document.createElement('a')
+    link.href = dataUrl
+    link.download = `Official-ID-${store.currentTrackedApplication?.full_name || 'Trainee'}.png`
+    link.click()
+
+    toast.success('تم حفظ بطاقة هويتك الرقمية بأبعادها الرسمية وبجودة عالية.')
+  } catch (error) {
+    console.error('Badge download failed', error)
+    toast.error('عذراً، لم نتمكن من معالجة الكارت، يرجى حفظ لقطة الشاشة (Screenshot).')
+  } finally {
+    isProcessingTrackedImage.value = false
+  }
+}
 /**
  * مشاركة التذكرة كملف صورة أصلي متكامل عبر تطبيقات الهاتف بدون حظر أمني
  */

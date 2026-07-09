@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\attendance\components\KioskQrCameraScanner.vue---->
 <template>
   <div
     class="w-full max-w-md bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col items-center p-4 animate-fade-in select-none"
@@ -111,12 +112,13 @@ const initQrScanner = async () => {
 
     // 3. ضبط عقلاني للأبعاد ومعدل الـ FPS لإنهاء تجميد خيط التنفيذ الرئيسي تماماً وتحرير المعالج
     const scannerConfig = {
-      fps: 15, // معالجة متزنة ومثالية جداً لسرعة فك التشفير دون خنق خيط التنفيذ الخاص بالمتصفح
+      fps: 15,
+      qrbox: { width: 250, height: 250 },
       videoConstraints: {
-        facingMode: 'environment', // تأكيد مزدوج للمتصفحات اللوحية
-        width: { ideal: 1280 }, // دقة HD معيارية تضمن تشغيل العدسة الأساسية ذات البؤرة التلقائية (Autofocus)
+        facingMode: 'environment',
+        width: { ideal: 1280 },
         height: { ideal: 720 },
-        advanced: [{ focusMode: 'continuous' }], // تفعيل التركيز التلقائي المستمر لمنع غشاوة الصورة
+        advanced: [{ focusMode: 'continuous' }],
       },
     }
 
@@ -236,6 +238,6 @@ onUnmounted(async () => {
 :deep(#qr-reader video) {
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important;
+  object-fit: contain !important;
 }
 </style>

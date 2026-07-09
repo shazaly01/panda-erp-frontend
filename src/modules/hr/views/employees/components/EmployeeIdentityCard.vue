@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\employees\components\EmployeeIdentityCard.vue--->
 <template>
   <div
     class="p-8 bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl"
@@ -6,12 +7,17 @@
       <div>
         <h3 class="text-xl font-black text-white drop-shadow-md">معاينة بطاقة الهوية</h3>
         <p class="text-xs text-slate-400 mt-1">
-          تصميم ديناميكي مخصص للطباعة على بطاقات PVC حسب رتبة الحساب
+          {{
+            isPublic
+              ? 'تصميم رقمي موحد ومحسن للعرض والمشاركة عبر الهواتف الذكية'
+              : 'تصميم ديناميكي مخصص للطباعة على بطاقات PVC حسب رتبة الحساب'
+          }}
         </p>
       </div>
     </div>
 
     <div id="id-card-content" class="flex flex-col md:flex-row gap-10 items-center justify-center">
+      <!-- 🟢 الوجه الأمامي للبطاقة (Front Side) -->
       <div
         class="w-[340px] h-[540px] bg-white rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.4)] overflow-hidden border border-slate-200/80 relative flex flex-col items-center text-center group"
       >
@@ -127,22 +133,29 @@
           </div>
         </div>
 
-        <div class="mt-auto pb-5 z-10 flex flex-col items-center justify-center w-full">
+        <div class="mt-auto pb-4 z-10 flex flex-col items-center justify-center w-full">
           <div
-            class="p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-102"
+            class="p-2.5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-102"
           >
             <qrcode-vue
               :value="String(scanValue)"
-              :size="95"
-              level="H"
+              :size="85"
+              level="M"
               render-as="svg"
               class="rounded-lg"
             />
           </div>
+
+          <!-- 🌟 حقن الباركود الخطي في الوجه الأمامي فقط عند التصفح العام الخارجي -->
+          <div v-if="isPublic" class="w-full flex justify-center px-6 mt-3">
+            <svg ref="barcodeElementFront" class="w-full h-auto max-h-[35px]"></svg>
+          </div>
         </div>
       </div>
 
+      <!-- 🔴 الوجه الخلفي للبطاقة (Back Side) - يختفي تماماً في العرض الخارجي العام للمدربين -->
       <div
+        v-if="!isPublic"
         class="w-[340px] h-[540px] rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.4)] overflow-hidden relative flex flex-col items-center text-center text-white border transition-all duration-500"
         :class="
           isIntern
@@ -185,7 +198,7 @@
           class="mt-auto w-full flex flex-col items-center z-10 bg-white pt-5 pb-5 rounded-b-[2.5rem] border-t border-slate-100"
         >
           <div class="w-full flex justify-center px-4 mb-3">
-            <svg ref="barcodeElement" class="w-full h-auto max-h-[50px]"></svg>
+            <svg ref="barcodeElementBack" class="w-full h-auto max-h-[50px]"></svg>
           </div>
 
           <div class="w-full flex justify-between items-center px-6 border-t border-slate-100 pt-3">
@@ -210,14 +223,15 @@ import { useBrandingStore } from '@/stores/brandingStore'
 
 const props = defineProps({
   employee: { type: Object, required: true },
+  isPublic: { type: Boolean, default: false }, // 🌟 معامل تحديد نوع الواجهة
 })
 
 const brandingStore = useBrandingStore()
-const barcodeElement = ref(null)
+const barcodeElementFront = ref(null)
+const barcodeElementBack = ref(null)
 
 /**
  * 🌟 محرك الفحص الذكي لتحديد نوع الموظف (متدرب أم موظف رسمي)
- * يفحص الحقل المخصص أو يعتمد على متتالية الرقم الإداري الحامي من التزامن الصارم
  */
 const isIntern = computed(() => {
   const type = props.employee.employment_type?.value || props.employee.employment_type
@@ -229,17 +243,19 @@ const scanValue = computed(() => {
   return props.employee.barcode || props.employee.employee_number || ''
 })
 
-// دالة توليد الباركود التناظري الخطي المدمج بالخلف
+// دالة توليد الباركود التناظري الخطي المدمج بالخلف أو بالأمام ديناميكياً
 const generateBarcode = () => {
-  if (barcodeElement.value && scanValue.value) {
-    JsBarcode(barcodeElement.value, String(scanValue.value), {
+  const targetElement = props.isPublic ? barcodeElementFront.value : barcodeElementBack.value
+
+  if (targetElement && scanValue.value) {
+    JsBarcode(targetElement, String(scanValue.value), {
       format: 'CODE128',
-      width: 2.0, // سماكة خطوط مثالية للطباعة على كروت الـ PVC الفوقية
-      height: 40, // ارتفاع دقيق متوافق مع المساحة التخزينية
+      width: 2.0,
+      height: props.isPublic ? 35 : 40, // تكييف الارتفاع حسب مكان العرض
       displayValue: false,
       margin: 0,
       background: 'transparent',
-      lineColor: '#0f172a', // كحلي غامق لرفع دقة التباين واللقط في الكاميرات الحساسة
+      lineColor: '#0f172a',
     })
   }
 }
@@ -276,14 +292,12 @@ watch(scanValue, () => {
     left: 0;
     top: 0;
     width: 100%;
-    /* صف البطاقتين جنباً إلى جنب بشكل عرضي متكامل في الطباعة */
     display: flex !important;
     flex-direction: row !important;
     justify-content: center !important;
     align-items: flex-start !important;
     gap: 15px !important;
   }
-  /* إجبار محركات المتصفحات والطابعات على إظهار الخلفيات والتدرجات بدقة متناهية */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

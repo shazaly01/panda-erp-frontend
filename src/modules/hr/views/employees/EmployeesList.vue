@@ -140,7 +140,7 @@ const onFilterChange = () => {
 const handlePageChange = async (page = 1) => {
   try {
     await employeeStore.fetchEmployees({ page, ...filters })
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب بيانات الموظفين.')
   }
 }
@@ -183,7 +183,7 @@ const confirmDelete = async () => {
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error(employeeStore.error || 'فشل عملية الحذف.')
   } finally {
     isDeleteDialogOpen.value = false

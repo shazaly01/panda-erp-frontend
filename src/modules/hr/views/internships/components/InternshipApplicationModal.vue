@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\internships\components\InternshipApplicationModal.vue--->
 <template>
   <Teleport to="body">
     <AppDialog

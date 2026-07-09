@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\internships\components\QrPassCard.vue---->
 <template>
   <div class="space-y-6 animate-scaleUp">
     <!-- عنوان التنبيه الفوقي -->

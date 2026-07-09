@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\internships\InternshipApplicationsList.vue---->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn p-4 sm:p-6 text-right" dir="rtl">
     <div

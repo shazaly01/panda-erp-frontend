@@ -222,7 +222,7 @@ const submit = async () => {
 
     emit('update:modelValue', false)
     emit('saved')
-  } catch (error) {
+  } catch {
     toast.error(shiftStore.error || 'حدث خطأ أثناء التعيين.')
   } finally {
     isSaving.value = false

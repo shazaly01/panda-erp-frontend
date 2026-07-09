@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\internships\components\TrackingLogin.vue--->
 <template>
   <div class="space-y-6 animate-fadeIn">
     <div class="text-center space-y-1.5">

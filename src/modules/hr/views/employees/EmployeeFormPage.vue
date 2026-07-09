@@ -360,7 +360,7 @@ onMounted(async () => {
         user_id: employeeData.user_id || null,
       }
     }
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء تحميل البيانات. العودة للقائمة.')
     goBack()
   } finally {
