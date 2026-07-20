@@ -18,13 +18,15 @@
       v-model:departmentId="filters.department_id"
       v-model:positionId="filters.position_id"
       v-model:status="filters.status"
+      v-model:contractFilter="filters.contractFilter"
       :departments="departmentStore.flatDepartments"
       :positions="positionStore.flatPositions"
       @update:searchQuery="onFilterChange"
-      @manage-shift="openShiftModal"
       @update:departmentId="onFilterChange"
       @update:positionId="onFilterChange"
       @update:status="onFilterChange"
+      @update:contractFilter="onFilterChange"
+      @manage-shift="openShiftModal"
     />
 
     <EmployeesTable
@@ -124,6 +126,7 @@ const filters = reactive({
   department_id: '',
   position_id: '',
   status: '',
+  contractFilter: '',
 })
 
 let searchTimeout = null
@@ -136,10 +139,19 @@ const onFilterChange = () => {
   }, 500)
 }
 
-// -- جلب البيانات --
+// -- جلب البيانات مع تحويل معلمات العقود --
 const handlePageChange = async (page = 1) => {
   try {
-    await employeeStore.fetchEmployees({ page, ...filters })
+    const params = {
+      page,
+      search: filters.search || undefined,
+      department_id: filters.department_id || undefined,
+      position_id: filters.position_id || undefined,
+      status: filters.status || undefined,
+      without_contract: filters.contractFilter === 'without_contract' ? 1 : undefined,
+      without_active_contract: filters.contractFilter === 'without_active_contract' ? 1 : undefined,
+    }
+    await employeeStore.fetchEmployees(params)
   } catch {
     toast.error('حدث خطأ أثناء جلب بيانات الموظفين.')
   }

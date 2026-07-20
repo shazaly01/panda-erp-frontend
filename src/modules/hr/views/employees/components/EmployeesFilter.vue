@@ -1,7 +1,7 @@
 <!--src\modules\hr\views\employees\components\EmployeesFilter.vue-->
 <template>
   <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6 shadow-sm">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div>
         <AppInput
           id="emp-search-query"
@@ -47,6 +47,18 @@
           @update:model-value="$emit('update:status', $event)"
         />
       </div>
+
+      <div>
+        <AppDropdown
+          id="emp-contract-filter"
+          :model-value="contractFilter"
+          :options="contractOptions"
+          option-label="name"
+          option-value="id"
+          placeholder="تصفية حسب العقود"
+          @update:model-value="$emit('update:contractFilter', $event)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -60,11 +72,18 @@ defineProps({
   departmentId: { type: [String, Number], default: '' },
   positionId: { type: [String, Number], default: '' },
   status: { type: String, default: '' },
+  contractFilter: { type: String, default: '' },
   departments: { type: Array, default: () => [] },
   positions: { type: Array, default: () => [] },
 })
 
-defineEmits(['update:searchQuery', 'update:departmentId', 'update:positionId', 'update:status'])
+defineEmits([
+  'update:searchQuery',
+  'update:departmentId',
+  'update:positionId',
+  'update:status',
+  'update:contractFilter',
+])
 
 // خيارات الحالة (مطابقة تماماً للـ Enum في الباك-إند)
 const statusOptions = [
@@ -74,5 +93,12 @@ const statusOptions = [
   { id: 'on_leave', name: 'في إجازة' },
   { id: 'resigned', name: 'مستقيل' },
   { id: 'terminated', name: 'منهى خدماته' },
+]
+
+// خيارات تصفية العقود المترابطة مع الـ Query Parameters في الـ EmployeeController
+const contractOptions = [
+  { id: '', name: 'جميع حالات العقود' },
+  { id: 'without_contract', name: 'بدون عقد عمل نهائياً' },
+  { id: 'without_active_contract', name: 'بدون عقد نشط' },
 ]
 </script>

@@ -116,7 +116,7 @@
                 : 'text-blue-600 bg-blue-50 border-blue-100'
             "
           >
-            {{ employee.position?.name || (isIntern ? 'متدرب فني' : 'موظف فني') }}
+            {{ employee.position?.name || (isIntern ? 'متدرب' : 'موظف') }}
           </p>
 
           <div class="mt-3 flex gap-2 justify-center w-full">

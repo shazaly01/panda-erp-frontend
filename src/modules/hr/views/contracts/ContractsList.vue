@@ -77,10 +77,16 @@ const onFilterChange = () => {
   }, 500)
 }
 
-// -- جلب البيانات --
+// -- جلب البيانات مع ضبط المعلمات المطابقة للباك-إند --
 const handlePageChange = async (page = 1) => {
   try {
-    await contractStore.fetchContracts({ page, ...filters })
+    const params = {
+      page,
+      search: filters.search || undefined,
+      status: filters.status || undefined,
+      active_only: filters.status === 'active' ? 1 : undefined,
+    }
+    await contractStore.fetchContracts(params)
   } catch (error) {
     toast.error('حدث خطأ أثناء جلب بيانات العقود.')
   }

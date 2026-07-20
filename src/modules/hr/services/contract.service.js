@@ -1,4 +1,4 @@
-//src\modules\hr\services\department.service.js
+// src/modules/hr/services/contract.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/hr/contracts'
@@ -7,6 +7,11 @@ export default {
   // جلب قائمة العقود
   get(params = {}) {
     return apiClient.get(resource, { params })
+  },
+
+  // 🌟 جلب الموظفين المتاحين لإنشاء عقود (الذين ليس لديهم عقود نهائياً أو ليس لديهم عقد نشط)
+  getAvailableEmployees(params = {}) {
+    return apiClient.get(`${resource}/available-employees`, { params })
   },
 
   // جلب تفاصيل عقد محدد
@@ -24,7 +29,7 @@ export default {
   },
 
   // تحديث العقد
-  // ملاحظة لارفيل: عند إرسال ملفات (FormData) مع التعديل، يجب إرسالها كـ POST مع إضافة حقل _method='PUT'
+  // ملاحظة لارافيل: عند إرسال ملفات (FormData) مع التعديل، يجب إرسالها كـ POST مع إضافة حقل _method='PUT'
   update(id, payload) {
     return apiClient.post(`${resource}/${id}`, payload, {
       headers: {
