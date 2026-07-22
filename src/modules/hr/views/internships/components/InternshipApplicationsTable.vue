@@ -1,4 +1,3 @@
-<!---src\modules\hr\views\internships\components\InternshipApplicationsTable.vue---->
 <template>
   <AppCard
     class="overflow-hidden bg-slate-900/20 border border-slate-800/80 shadow-xl rounded-2xl text-right"
@@ -66,6 +65,19 @@
         </div>
       </template>
 
+      <!-- خلية تاريخ التقديم المستحدثة -->
+      <template #cell-created_at="{ item }">
+        <div class="py-1">
+          <span
+            v-if="item.created_at"
+            class="inline-block font-mono text-xs font-extrabold text-amber-300/90 bg-amber-950/30 border border-amber-800/40 px-2.5 py-1 rounded-lg shadow-sm"
+          >
+            {{ formatDate(item.created_at) }}
+          </span>
+          <span v-else class="text-slate-600 font-bold italic text-[11px]">غير محدد</span>
+        </div>
+      </template>
+
       <template #cell-academic_info="{ item }">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-1">
           <span class="font-bold text-xs text-slate-300">
@@ -107,13 +119,10 @@
         <div class="py-1">
           <span
             class="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border flex items-center w-fit gap-1.5 shadow-md"
-            :class="statusClasses(item.status || currentStatus)"
+            :class="statusClasses(item)"
           >
-            <span
-              class="w-1.5 h-1.5 rounded-full"
-              :class="statusDotClasses(item.status || currentStatus)"
-            ></span>
-            {{ statusLabel(item.status || currentStatus) }}
+            <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClasses(item)"></span>
+            {{ statusLabel(item) }}
           </span>
         </div>
       </template>
@@ -158,7 +167,7 @@ import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 
-defineProps({
+const props = defineProps({
   applications: { type: Array, required: true },
   pagination: { type: Object, required: true },
   loading: { type: Boolean, default: false },
@@ -167,43 +176,71 @@ defineProps({
 
 defineEmits(['page-change', 'row-click', 'print-card'])
 
-// ترويسات الجدول المعمارية النظيفة بعد دمج حقل الإجراءات المخصص للبطاقة الاحترافية
+// ترويسات الجدول المعمارية مع إضافة عمود تاريخ التقديم
 const tableHeaders = computed(() => [
   { key: 'applicant_info', label: 'بيانات المتدرب الشخصية', class: 'min-w-[280px]' },
   { key: 'tracking_code', label: 'كود المتابعة', class: 'min-w-[130px]' },
+  { key: 'created_at', label: 'تاريخ التقديم', class: 'min-w-[130px]' },
   { key: 'academic_info', label: 'المنشأة والتخصص الأكاديمي', class: 'min-w-[260px]' },
   { key: 'duration_details', label: 'فترة التدريب المعتمدة', class: 'min-w-[200px]' },
   { key: 'status', label: 'حالة السجل', class: 'min-w-[100px]' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 
-// قواميس الترجمة والتسميات العربية بعد معالجة ثغرة النص الإنجليزي training
-const statusLabel = (status) => {
+// تنسيق التاريخ واستخراج جزء التاريخ YYYY-MM-DD
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  return dateStr.split(' ')[0]
+}
+
+// دالة مساعدة لتحديد مفتاح الحالة الفعلي بناءً على تفاصيل التدريب
+const getEffectiveStatus = (item) => {
+  if (typeof item === 'string') return item
+  if (item?.internship_status) {
+    return item.internship_status
+  }
+  return item?.status || props.currentStatus
+}
+
+// قواميس الترجمة والتسميات العربية
+const statusLabel = (item) => {
+  const status = getEffectiveStatus(item)
   const labels = {
     pending: 'انتظار المراجعة',
     approved: 'متدرب نشط',
     training: 'متدرب نشط',
+    active: 'متدرب نشط',
+    completed: 'منتهي الفترة',
+    converted: 'تم التثبيت',
     rejected: 'طلب مرفوض',
   }
   return labels[status] || status
 }
 
-// التنسيق المطور لبطاقات الحالة ليتناسب مع الثيم المظلم لنظام Panda ERP وضمان تلوين حالة التدريب باللون الأخضر
-const statusClasses = (status) => {
+// التنسيق المطور لبطاقات الحالة
+const statusClasses = (item) => {
+  const status = getEffectiveStatus(item)
   const classes = {
     pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     training: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    completed: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    converted: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
     rejected: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
   }
   return classes[status] || 'bg-slate-800 text-slate-400 border-slate-700'
 }
 
-const statusDotClasses = (status) => {
+const statusDotClasses = (item) => {
+  const status = getEffectiveStatus(item)
   const classes = {
     pending: 'bg-amber-400 shadow-sm shadow-amber-400/50',
     approved: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
     training: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
+    active: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
+    completed: 'bg-rose-400 shadow-sm shadow-rose-400/50',
+    converted: 'bg-indigo-400 shadow-sm shadow-indigo-400/50',
     rejected: 'bg-rose-400 shadow-sm shadow-rose-400/50',
   }
   return classes[status] || 'bg-slate-500'

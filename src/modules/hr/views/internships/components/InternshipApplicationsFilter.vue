@@ -1,3 +1,4 @@
+<!--src\modules\hr\views\internships\components\InternshipApplicationsFilter.vue--->
 <template>
   <div
     class="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/80 shadow-sm transition-all duration-300 text-right"
