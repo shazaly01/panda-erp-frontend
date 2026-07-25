@@ -2,6 +2,20 @@ import apiClient from '@/services/apiClient'
 
 export const internshipService = {
   /**
+   * جلب حالة استقبال طلبات التدريب الخارجية الحالية (مفتوح / مغلق)
+   */
+  getRegistrationStatus() {
+    return apiClient.get('/hr/internship-applications/registration-status')
+  },
+
+  /**
+   * تبديل حالة استقبال طلبات التدريب الخارجية (فتح / قفل)
+   */
+  toggleRegistrationStatus() {
+    return apiClient.post('/hr/internship-applications/toggle-registration-status')
+  },
+
+  /**
    * جلب قائمة طلبات التدريب الخارجية المعلقة مع دعم الفلترة والترقيم
    */
   getPendingApplications(params = {}) {

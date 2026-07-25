@@ -1,6 +1,7 @@
 <template>
   <div class="bg-surface-section p-5 rounded-xl border border-surface-border mb-6 shadow-sm">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+      <!-- البحث -->
       <div class="md:col-span-4">
         <label class="block text-xs font-bold text-slate-400 mb-2">البحث</label>
         <AppInput
@@ -12,6 +13,7 @@
         />
       </div>
 
+      <!-- فئة العمل -->
       <div class="md:col-span-4">
         <label class="block text-xs font-bold text-slate-400 mb-2">فئة العمل (الحصر الفعلي)</label>
         <AppDropdown
@@ -29,6 +31,7 @@
         />
       </div>
 
+      <!-- القسم الإداري -->
       <div class="md:col-span-4">
         <label class="block text-xs font-bold text-slate-400 mb-2">القسم الإداري</label>
         <AppDropdown
@@ -42,7 +45,22 @@
         />
       </div>
 
-      <div class="md:col-span-3">
+      <!-- طريقة / مجموعة الدفع -->
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold text-slate-400 mb-2">طريقة الدفع</label>
+        <AppDropdown
+          id="attendance-pay-group-filter"
+          :model-value="payGroupId"
+          :options="[{ id: '', name: 'كل طرق الدفع' }, ...payGroupOptions]"
+          option-label="name"
+          option-value="id"
+          @update:model-value="$emit('update:payGroupId', $event)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- من تاريخ -->
+      <div class="md:col-span-4">
         <label class="block text-xs font-bold text-slate-400 mb-2">من تاريخ</label>
         <AppInput
           id="attendance-start-date"
@@ -52,7 +70,8 @@
         />
       </div>
 
-      <div class="md:col-span-3">
+      <!-- إلى تاريخ -->
+      <div class="md:col-span-4">
         <label class="block text-xs font-bold text-slate-400 mb-2">إلى تاريخ</label>
         <AppInput
           id="attendance-end-date"
@@ -61,8 +80,6 @@
           @update:model-value="$emit('update:endDate', $event)"
         />
       </div>
-
-      <div class="hidden md:block md:col-span-6"></div>
 
       <div
         class="md:col-span-12 pt-3 border-t border-slate-800/40 mt-1 flex items-center justify-between"
@@ -99,12 +116,14 @@ defineProps({
   endDate: { type: String, default: '' },
   departmentId: { type: [String, Number], default: '' },
   positionId: { type: [String, Number], default: '' },
+  payGroupId: { type: [String, Number], default: '' },
   employmentType: { type: String, default: 'all' },
   presentOnly: { type: Boolean, default: false },
 
   // مصفوفات الخيارات الممررة ديناميكياً من المكون الأب
   departmentOptions: { type: Array, default: () => [] },
   positionOptions: { type: Array, default: () => [] },
+  payGroupOptions: { type: Array, default: () => [] },
 })
 
 defineEmits([
@@ -113,6 +132,7 @@ defineEmits([
   'update:endDate',
   'update:departmentId',
   'update:positionId',
+  'update:payGroupId',
   'update:employmentType',
   'update:presentOnly',
 ])

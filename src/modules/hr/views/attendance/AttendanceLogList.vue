@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\attendance\AttendanceLogList.vue--->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -71,10 +70,12 @@
       v-model:endDate="endDate"
       v-model:departmentId="departmentId"
       v-model:positionId="positionId"
+      v-model:payGroupId="payGroupId"
       v-model:employmentType="employmentType"
       v-model:presentOnly="presentOnly"
       :departmentOptions="departmentOptions"
       :positionOptions="positionOptions"
+      :payGroupOptions="payGroupOptions"
     />
 
     <AttendanceTable
@@ -123,6 +124,7 @@ import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
 import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
+import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
 
 import AppButton from '@/components/ui/AppButton.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
@@ -136,6 +138,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const attendanceStore = useAttendanceLogStore()
 const departmentStore = useDepartmentStore()
+const payGroupStore = usePayGroupStore()
 const toast = useToast()
 
 const { logs, pagination, loading } = storeToRefs(attendanceStore)
@@ -149,6 +152,7 @@ const startDate = ref(new Date().toISOString().split('T')[0])
 const endDate = ref(new Date().toISOString().split('T')[0])
 const departmentId = ref('')
 const positionId = ref('')
+const payGroupId = ref('')
 const employmentType = ref('')
 const presentOnly = ref(false)
 
@@ -165,14 +169,18 @@ const selectedDepartmentName = computed(() => {
 })
 
 const positionOptions = ref([])
+const payGroupOptions = ref([])
 let searchTimeout = null
 
-// مراقبة التغيرات في فلاتر التواريخ والأقسام لإعادة جلب البيانات تلقائياً وبأمان
-watch([startDate, endDate, departmentId, positionId, employmentType, presentOnly], () => {
-  handlePageChange(1)
-})
+// مراقبة التغيرات في فلاتر التواريخ والأقسام وطريقة الدفع لإعادة جلب البيانات تلقائياً
+watch(
+  [startDate, endDate, departmentId, positionId, payGroupId, employmentType, presentOnly],
+  () => {
+    handlePageChange(1)
+  },
+)
 
-// مراقبة حقل البحث بالاسم مع تطبيق تأخير (Debounce 500ms) لحماية السيرفر من كثرة الطلبات أثناء الكتابة
+// مراقبة حقل البحث بالاسم مع تطبيق تأخير (Debounce 500ms)
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -190,10 +198,10 @@ const handlePageChange = async (page = 1) => {
     const filters = {
       page,
       search: searchQuery.value,
-      // 🌟 تم التحديث هنا لإرسال نطاق التواريخ بالكامل مثل الخلاصة التجميعية
       start_date: startDate.value,
       end_date: endDate.value,
       department_id: departmentId.value || null,
+      pay_group_id: payGroupId.value || null,
       employment_type: employmentType.value || 'all',
     }
 
@@ -212,6 +220,7 @@ const handlePageChange = async (page = 1) => {
       search: searchQuery.value,
       department_id: departmentId.value || null,
       position_id: positionId.value || null,
+      pay_group_id: payGroupId.value || null,
       employment_type: employmentType.value || null,
       present_only: presentOnly.value ? 1 : 0,
     }
@@ -229,18 +238,39 @@ const handlePageChange = async (page = 1) => {
 }
 
 const loadFiltersLookupData = async () => {
+  // 1. جلب الأقسام
   try {
     await departmentStore.fetchDepartments()
+  } catch (e) {
+    console.error('فشل تحميل الأقسام:', e)
+  }
+
+  // 2. جلب الوظائف
+  try {
     const posRes = await axios.get('/api/hr/positions').catch(() => ({ data: [] }))
     positionOptions.value = posRes.data?.data || posRes.data || []
   } catch (e) {
-    console.error('فشل تحميل بيانات الفلاتر المساعدة:', e)
+    console.error('فشل تحميل الوظائف:', e)
+  }
+
+  // 3. جلب مجموعات الدفع وتوحيد مسمى الحقل لـ name لضمان مقروءيتها بـ AppDropdown
+  try {
+    await payGroupStore.fetchPayGroups({ is_active: 1 }).catch(() => {})
+    const rawGroups = payGroupStore.groups || payGroupStore.payGroups || []
+    payGroupOptions.value = rawGroups.map((group) => ({
+      id: group.id,
+      name: group.name || group.title || group.label || group.name_ar || `مجموعة #${group.id}`,
+    }))
+  } catch (e) {
+    console.error('فشل تحميل بيانات طرق الدفع:', e)
   }
 }
 
-onMounted(async () => {
-  await loadFiltersLookupData()
+onMounted(() => {
+  // تنفيذ جلب جدول الحضور فوراً لمنع تجمد البيانات
   handlePageChange(1)
+  // تحميل الخيارات المساعدة في الخلفية
+  loadFiltersLookupData()
 })
 
 const goToKiosk = () => {

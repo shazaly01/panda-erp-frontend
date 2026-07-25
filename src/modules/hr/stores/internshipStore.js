@@ -11,6 +11,9 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   const rejectedApplications = ref([])
   const completedInterns = ref([])
 
+  // حالة استقبال طلبات التدريب الخارجية (مفتوح / مغلق)
+  const isRegistrationOpen = ref(true)
+
   // لتخزين بيانات الطلب الحالي الذي يتابعه المتدرب الخارجي
   const currentTrackedApplication = ref(null)
 
@@ -48,6 +51,37 @@ export const useInternshipStore = defineStore('hrInternship', () => {
   // ==========================
   // 2. Actions
   // ==========================
+
+  /**
+   * 🌟 جلب حالة استقبال طلبات التدريب الخارجية (مفتوح / مغلق)
+   */
+  async function fetchRegistrationStatus() {
+    try {
+      const response = await internshipService.getRegistrationStatus()
+      isRegistrationOpen.value = response.data.is_open
+      return response.data
+    } catch (err) {
+      console.error('فشل جلب حالة استقبال طلبات التدريب:', err)
+    }
+  }
+
+  /**
+   * 🌟 تبديل حالة استقبال طلبات التدريب الخارجية (فتح <-> قفل)
+   */
+  async function toggleRegistrationStatus() {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await internshipService.toggleRegistrationStatus()
+      isRegistrationOpen.value = response.data.is_open
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل تغيير حالة استقبال طلبات التدريب'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
 
   /**
    * جلب طلبات التدريب الخارجية المعلقة
@@ -249,6 +283,7 @@ export const useInternshipStore = defineStore('hrInternship', () => {
     activeInterns,
     rejectedApplications,
     completedInterns,
+    isRegistrationOpen,
     currentTrackedApplication,
     applicationsPagination,
     internsPagination,
@@ -257,6 +292,8 @@ export const useInternshipStore = defineStore('hrInternship', () => {
     loading,
     error,
 
+    fetchRegistrationStatus,
+    toggleRegistrationStatus,
     fetchPendingApplications,
     fetchActiveInterns,
     fetchRejectedApplications,

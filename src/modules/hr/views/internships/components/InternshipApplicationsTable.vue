@@ -1,8 +1,16 @@
+<!--src\modules\hr\views\internships\components\InternshipApplicationsTable.vue--->
 <template>
   <AppCard
     class="overflow-hidden bg-slate-900/20 border border-slate-800/80 shadow-xl rounded-2xl text-right"
     dir="rtl"
   >
+    <!-- شريط الترقيم العلوي مع موازنة الهامش العلوي والسفلي -->
+    <AppPagination
+      class="-mt-3 mb-2"
+      :meta="pagination"
+      @page-change="$emit('page-change', $event)"
+    />
+
     <AppTable
       :headers="tableHeaders"
       :items="applications"
@@ -157,6 +165,7 @@
       </template>
     </AppTable>
 
+    <!-- شريط الترقيم السفلي -->
     <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
@@ -179,7 +188,7 @@ defineEmits(['page-change', 'row-click', 'print-card'])
 // ترويسات الجدول المعمارية مع إضافة عمود تاريخ التقديم
 const tableHeaders = computed(() => [
   { key: 'applicant_info', label: 'بيانات المتدرب الشخصية', class: 'min-w-[280px]' },
-  { key: 'tracking_code', label: 'كود المتابعة', class: 'min-w-[130px]' },
+  { key: 'tracking_code', label: 'رقم المتابعة', class: 'min-w-[130px]' },
   { key: 'created_at', label: 'تاريخ التقديم', class: 'min-w-[130px]' },
   { key: 'academic_info', label: 'المنشأة والتخصص الأكاديمي', class: 'min-w-[260px]' },
   { key: 'duration_details', label: 'فترة التدريب المعتمدة', class: 'min-w-[200px]' },

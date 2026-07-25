@@ -1,5 +1,13 @@
+<!--src\modules\hr\views\attendance\components\AttendanceTable.vue--->
 <template>
   <AppCard class="overflow-hidden">
+    <!-- شريط الترقيم العلوي مع ضبط المساحات العلوية والسفلية -->
+    <AppPagination
+      class="-mt-3 mb-2"
+      :meta="pagination"
+      @page-change="$emit('page-change', $event)"
+    />
+
     <AppTable :headers="tableHeaders" :items="logs" :is-loading="loading">
       <template #cell-employee="{ item }">
         <div class="flex flex-col gap-1 py-1 text-right">
@@ -138,6 +146,7 @@
       </template>
     </AppTable>
 
+    <!-- شريط الترقيم السفلي -->
     <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>

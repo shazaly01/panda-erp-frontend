@@ -1,4 +1,4 @@
-<!--src\modules\hr\views\internships\components\InternshipApplicationsFilter.vue--->
+<!--src\modules\hr\views\internships\components\InternshipApplicationsFilter.vue-->
 <template>
   <div
     class="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/80 shadow-sm transition-all duration-300 text-right"
@@ -6,6 +6,7 @@
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
       <div class="md:col-span-4">
         <AppInput
+          id="internship_search_query"
           :model-value="searchQuery"
           placeholder="ابحث باسم المتقدم للتدريب، أو رقم الهاتف الجوال..."
           @update:model-value="$emit('update:searchQuery', $event)"
@@ -16,6 +17,7 @@
 
       <div class="md:col-span-4">
         <AppInput
+          id="internship_institution_filter"
           :model-value="institutionFilter"
           placeholder="ابحث باسم الجامعة، الكلية، أو المعهد التعليمي..."
           @update:model-value="$emit('update:institutionFilter', $event)"
@@ -26,6 +28,7 @@
 
       <div class="md:col-span-2">
         <AppInput
+          id="internship_date_from"
           :model-value="dateFrom"
           type="date"
           placeholder="من تاريخ"
@@ -37,6 +40,7 @@
 
       <div class="md:col-span-2">
         <AppInput
+          id="internship_date_to"
           :model-value="dateTo"
           type="date"
           placeholder="إلى تاريخ"

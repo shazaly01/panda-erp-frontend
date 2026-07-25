@@ -1,4 +1,3 @@
-<!--src\modules\hr\views\internships\InternshipApplicationsList.vue---->
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn p-4 sm:p-6 text-right" dir="rtl">
     <div
@@ -15,6 +14,34 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+        <!-- زر فتح / قفل استقبال طلبات التدريب -->
+        <button
+          v-if="authStore.can('hr.internship_applications.toggle_status')"
+          @click="handleToggleStatus"
+          :disabled="loading"
+          type="button"
+          :class="[
+            'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 border shadow-sm',
+            isRegistrationOpen
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+              : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20',
+            loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+          ]"
+          :title="
+            isRegistrationOpen
+              ? 'استقبال الطلبات مفتوح حالياً - اضغط للإغلاق'
+              : 'استقبال الطلبات مغلق حالياً - اضغط للفتح'
+          "
+        >
+          <span
+            class="w-2 h-2 rounded-full transition-all"
+            :class="isRegistrationOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"
+          ></span>
+          <span>
+            {{ isRegistrationOpen ? 'التقديم مفتوح (اضغط للقفل)' : 'التقديم مغلق (اضغط للفتح)' }}
+          </span>
+        </button>
+
         <div
           class="flex items-center bg-slate-900/60 border border-slate-800 rounded-xl p-1 gap-1 shadow-inner"
         >
@@ -40,8 +67,10 @@
       </div>
     </div>
 
+    <!-- أزرار تبويبات الفلترة حسب الصلاحيات -->
     <div class="flex flex-wrap items-center gap-2 border-b border-slate-900 pb-2">
       <button
+        v-if="authStore.can('hr.internship_applications.view_pending')"
         @click="switchStatusFilter('pending')"
         type="button"
         :class="[
@@ -55,6 +84,7 @@
       </button>
 
       <button
+        v-if="authStore.can('hr.internship_applications.view_active')"
         @click="switchStatusFilter('approved')"
         type="button"
         :class="[
@@ -68,6 +98,7 @@
       </button>
 
       <button
+        v-if="authStore.can('hr.internship_applications.view_completed')"
         @click="switchStatusFilter('completed')"
         type="button"
         :class="[
@@ -81,6 +112,7 @@
       </button>
 
       <button
+        v-if="authStore.can('hr.internship_applications.view_rejected')"
         @click="switchStatusFilter('rejected')"
         type="button"
         :class="[
@@ -159,6 +191,7 @@ import { ref, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useInternshipStore } from '@/modules/hr/stores/internshipStore'
+import { useAuthStore } from '@/stores/authStore'
 
 import SidebarFilter from './components/InternshipApplicationsFilter.vue'
 import InternshipApplicationsTable from './components/InternshipApplicationsTable.vue'
@@ -166,6 +199,7 @@ import InternshipApplicationModal from './components/InternshipApplicationModal.
 import EmployeeIdentityCard from '../employees/components/EmployeeIdentityCard.vue'
 
 const internshipStore = useInternshipStore()
+const authStore = useAuthStore()
 const toast = useToast()
 
 const {
@@ -178,6 +212,7 @@ const {
   rejectedPagination,
   completedPagination,
   loading,
+  isRegistrationOpen,
 } = storeToRefs(internshipStore)
 
 const currentStatus = ref('pending')
@@ -248,8 +283,40 @@ const handlePageChange = async (page = 1) => {
   }
 }
 
+// تبديل حالة استقبال طلبات التدريب مع إظهار إشعار بنتيجة العملية
+const handleToggleStatus = async () => {
+  try {
+    const res = await internshipStore.toggleRegistrationStatus()
+    if (res?.message) {
+      toast.success(res.message)
+    }
+  } catch {
+    toast.error('فشل في تغيير حالة استقبال طلبات التدريب.')
+  }
+}
+
+// تحديد التبويب المتاح الافتراضي عند فتح الشاشة
+const initDefaultTab = () => {
+  const tabPermissions = [
+    { status: 'pending', perm: 'hr.internship_applications.view_pending' },
+    { status: 'approved', perm: 'hr.internship_applications.view_active' },
+    { status: 'completed', perm: 'hr.internship_applications.view_completed' },
+    { status: 'rejected', perm: 'hr.internship_applications.view_rejected' },
+  ]
+
+  const firstAllowedTab = tabPermissions.find((item) => authStore.can(item.perm))
+
+  if (firstAllowedTab) {
+    currentStatus.value = firstAllowedTab.status
+    handlePageChange(1)
+  }
+}
+
 onMounted(() => {
-  handlePageChange(1)
+  initDefaultTab()
+  if (authStore.can('hr.internship_applications.toggle_status')) {
+    internshipStore.fetchRegistrationStatus()
+  }
 })
 
 const isModalOpen = ref(false)
