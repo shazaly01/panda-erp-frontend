@@ -33,7 +33,7 @@
           "
           class="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200"
         >
-          خلاصة تجميعية
+          سجلات تجميعية
         </button>
       </div>
 
