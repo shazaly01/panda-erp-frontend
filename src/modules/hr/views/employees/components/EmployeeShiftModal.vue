@@ -226,7 +226,7 @@ const resetAndFetchData = async () => {
       // يمكنك أيضاً عرض تاريخ البدء الأصلي إذا أردت
       // form.value.start_date = activeShift.start_date
     }
-  } catch (error) {
+  } catch {
     console.error('فشل جلب الوردية الحالية للموظف')
   } finally {
     isLoadingData.value = false

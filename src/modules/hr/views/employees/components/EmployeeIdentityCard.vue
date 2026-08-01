@@ -108,7 +108,7 @@
             {{ employee.full_name }}
           </h2>
 
-          <p
+          <!-- <p
             class="font-black text-xs mt-1.5 uppercase tracking-wider px-3 py-0.5 rounded-full border transition-colors duration-500"
             :class="
               isIntern
@@ -117,7 +117,7 @@
             "
           >
             {{ employee.position?.name || (isIntern ? 'متدرب' : 'موظف') }}
-          </p>
+          </p> -->
 
           <div class="mt-3 flex gap-2 justify-center w-full">
             <div
