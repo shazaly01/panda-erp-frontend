@@ -1,4 +1,3 @@
-//src\modules\accounting\menu.js
 import {
   ClipboardDocumentListIcon,
   ChartPieIcon,
@@ -9,10 +8,11 @@ import {
   BanknotesIcon,
   CurrencyDollarIcon,
   CalendarDaysIcon,
+  PresentationChartLineIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
-  // --- 1. مجموعة العمليات اليومية ---
+  // --- 1. مجموعة العمليات اليومية والتخطيط ---
   {
     name: 'العمليات المالية',
     icon: ClipboardDocumentListIcon,
@@ -32,6 +32,12 @@ export default [
         name: 'قيود اليومية',
         routeName: 'journal-entries.index',
         permission: 'journal_entry.view',
+      },
+      // === إضافة الموازنات التقديرية ===
+      {
+        name: 'الموازنات التقديرية',
+        routeName: 'budgets.index',
+        permission: 'budget.view',
       },
     ],
   },
@@ -110,7 +116,7 @@ export default [
         routeName: 'FiscalYearsList',
         permission: 'fiscal_year.view',
       },
-      // === الإضافات الجديدة الخاصة بالربط والترقيم ===
+      // === الإضافات الخاصة بالربط والترقيم ===
       {
         name: 'الربط المحاسبي',
         routeName: 'AccountMappingsList',

@@ -1,3 +1,4 @@
+<!---src\components\ui\AppInput.vue-->
 <template>
   <div>
     <div v-if="label" class="flex justify-between items-center mb-1">

@@ -1,3 +1,4 @@
+<!---src\modules\accounting\views\vouchers\components\VoucherHeader.vue---->
 <template>
   <div class="bg-surface-section p-5 rounded-xl border border-surface-border mb-6 space-y-6">
     <!-- <div class="flex items-center gap-4 pb-4 border-b border-surface-border">

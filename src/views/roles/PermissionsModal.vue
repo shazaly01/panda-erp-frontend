@@ -1,3 +1,4 @@
+<!---src\views\roles\PermissionsModal.vue--->
 <template>
   <AppDialog
     :model-value="modelValue"

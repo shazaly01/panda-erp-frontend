@@ -1,13 +1,12 @@
 import accountingNav from '@/modules/accounting/menu'
+import inventoryNav from '@/modules/inventory/menu'
 import {
   HomeIcon,
   Cog6ToothIcon,
   UsersIcon,
   ShieldCheckIcon,
-  CubeIcon,
-  ShoppingCartIcon,
-  BriefcaseIcon,
   UserGroupIcon,
+  DocumentTextIcon,
 } from '@heroicons/vue/24/outline'
 
 export const navigationMenu = [
@@ -22,51 +21,21 @@ export const navigationMenu = [
   },
 
   // ============================================
-  // 2. القطاع المالي (مستورد من الموديول)
+  // 2. القطاع المالي
   // ============================================
   { isModuleHeader: true, label: 'الإدارة المالية' },
-
-  // دمج مصفوفة المحاسبة هنا
   ...accountingNav,
 
   // ============================================
-  // 3. سلسلة الإمداد (عناصر نائبة)
+  // 3. سلسلة الإمداد (المخزون)
   // ============================================
   { isModuleHeader: true, label: 'سلسلة الإمداد' },
-
-  {
-    name: 'المخزون',
-    icon: CubeIcon,
-    permission: 'inventory.view',
-    children: [
-      { name: 'تعريف الأصناف', to: { path: '#' } },
-      { name: 'حركات مخزنية', to: { path: '#' } },
-    ],
-  },
-  {
-    name: 'المشتريات',
-    icon: ShoppingCartIcon,
-    permission: 'purchase.view',
-    children: [
-      { name: 'أوامر الشراء', to: { path: '#' } },
-      { name: 'الموردين', to: { path: '#' } },
-    ],
-  },
-  {
-    name: 'المبيعات',
-    icon: BriefcaseIcon,
-    permission: 'sales.view',
-    children: [
-      { name: 'فواتير المبيعات', to: { path: '#' } },
-      { name: 'العملاء', to: { path: '#' } },
-    ],
-  },
+  ...inventoryNav,
 
   // ============================================
   // 4. الموارد البشرية
   // ============================================
   { isModuleHeader: true, label: 'الموارد البشرية' },
-
   {
     name: 'شؤون الموظفين',
     icon: UserGroupIcon,
@@ -81,12 +50,17 @@ export const navigationMenu = [
   // 5. إدارة النظام
   // ============================================
   { isModuleHeader: true, label: 'إعدادات النظام' },
-
   {
     name: 'إدارة النظام',
     icon: Cog6ToothIcon,
-    permission: 'system.manage',
+    // تم حذف شرط system.manage من هنا ليتم فحص صلاحيات الأبناء مباشرة
     children: [
+      {
+        name: 'طلبات الدعم والمنح',
+        routeName: 'GrantRequestsList',
+        permission: 'grant_request.view',
+        icon: DocumentTextIcon,
+      },
       {
         name: 'المستخدمين',
         routeName: 'UsersList',

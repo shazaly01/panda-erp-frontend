@@ -1,3 +1,4 @@
+//src\modules\accounting\stores\accountStore.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import accountService from '../services/account.service'

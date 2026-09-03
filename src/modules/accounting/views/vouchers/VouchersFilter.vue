@@ -4,6 +4,7 @@
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
       <div class="md:col-span-5">
         <AppInput
+          id="voucher-search-input"
           :model-value="searchQuery"
           placeholder="بحث برقم السند، البيان، أو اسم الحساب..."
           @update:model-value="$emit('update:searchQuery', $event)"
@@ -13,6 +14,7 @@
 
       <div class="md:col-span-3">
         <AppDropdown
+          id="voucher-type-filter"
           :model-value="typeFilter"
           :options="[
             { id: '', name: 'كل أنواع السندات' },
@@ -25,6 +27,7 @@
 
       <div class="md:col-span-4">
         <AppDropdown
+          id="voucher-status-filter"
           :model-value="statusFilter"
           :options="[
             { id: '', name: 'كل الحالات' },

@@ -26,6 +26,10 @@ const TrialBalance = () => import('./views/reports/TrialBalance.vue')
 const IncomeStatement = () => import('./views/reports/IncomeStatement.vue')
 const BalanceSheet = () => import('./views/reports/BalanceSheet.vue')
 
+// --- استيراد شاشات الموازنات التقديرية ---
+const BudgetsList = () => import('./views/budgets/BudgetsList.vue')
+const BudgetBuilderView = () => import('./views/budgets/BudgetBuilderView.vue')
+
 export default [
   {
     path: 'accounting',
@@ -91,9 +95,7 @@ export default [
         name: 'account-statement.index',
         component: AccountStatement,
         meta: { permission: 'report.statement.view' },
-        // ملاحظة: لن نستخدم props هنا، لأن الشاشة ستقرأ الفلاتر مباشرة من route.query
       },
-
       {
         path: 'reports/trial-balance',
         name: 'trial-balance.index',
@@ -106,7 +108,6 @@ export default [
         component: IncomeStatement,
         meta: { permission: 'report.income_statement.view' },
       },
-
       {
         path: 'reports/balance-sheet',
         name: 'balance-sheet.index',
@@ -121,7 +122,7 @@ export default [
         path: 'receipts',
         name: 'receipts.index',
         component: VouchersList,
-        props: { type: 'receipt' }, // إرسال النوع للشاشة
+        props: { type: 'receipt' },
         meta: { permission: 'receipt.view' },
       },
       {
@@ -146,7 +147,7 @@ export default [
         path: 'payments',
         name: 'payments.index',
         component: VouchersList,
-        props: { type: 'payment' }, // إرسال النوع للشاشة
+        props: { type: 'payment' },
         meta: { permission: 'payment.view' },
       },
       {
@@ -184,6 +185,28 @@ export default [
         name: 'journal-entries.edit',
         component: JournalEntryFormPage,
         meta: { permission: 'journal_entry.update' },
+      },
+
+      // ==========================================
+      // مسارات الموازنات التقديرية (Budgets)
+      // ==========================================
+      {
+        path: 'budgets',
+        name: 'budgets.index',
+        component: BudgetsList,
+        meta: { permission: 'budget.view' },
+      },
+      {
+        path: 'budgets/create',
+        name: 'budgets.create',
+        component: BudgetBuilderView,
+        meta: { permission: 'budget.create' },
+      },
+      {
+        path: 'budgets/:id/edit',
+        name: 'budgets.edit',
+        component: BudgetBuilderView,
+        meta: { permission: 'budget.update' },
       },
     ],
   },

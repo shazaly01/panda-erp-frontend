@@ -1,3 +1,4 @@
+<!--src\views\roles\RoleForm.vue--->
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="space-y-6">
@@ -59,7 +60,16 @@ const form = ref({
 // 🌟 تزامن أمني شامل لحماية الأدوار الافتراضية من التعديل العشوائي للأسماء
 const isDefaultRole = computed(() => {
   if (!form.value || !form.value.name) return false
-  return ['Super Admin', 'Admin', 'User', 'Employee', 'HR Manager'].includes(form.value.name)
+  return [
+    'Super Admin',
+    'Admin',
+    'User',
+    'Employee',
+    'HR Manager',
+    'Inventory Manager',
+    'Inventory Officer',
+    'Inventory Worker',
+  ].includes(form.value.name)
 })
 
 // مراقبة التغييرات في البيانات الأولية لملء النموذج بدقة متناهية

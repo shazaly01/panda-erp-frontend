@@ -1,6 +1,7 @@
-<!--src\modules\accounting\views\vouchers\VouchersList.vue-->
+<!--src/modules/accounting/views/vouchers/VouchersList.vue-->
 <template>
   <div class="space-y-6">
+    <!-- الشريط العلوي والعنوان -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <h1 class="text-2xl font-bold text-text-primary">{{ pageTitle }}</h1>
@@ -8,11 +9,12 @@
           {{ pageDescription }}
         </p>
       </div>
-      <AppButton v-if="authStore.can(createPermission)" @click="goToCreatePage">
+      <AppButton v-if="authStore.can(createPermission)" @click="openCreateModal">
         إضافة {{ isReceipt ? 'سند قبض' : 'سند صرف' }} جديد
       </AppButton>
     </div>
 
+    <!-- فلاتر البحث والحالة -->
     <VouchersFilter
       v-model:searchQuery="searchQuery"
       v-model:statusFilter="statusFilter"
@@ -20,6 +22,7 @@
       @update:statusFilter="handlePageChange(1)"
     />
 
+    <!-- جدول عرض السندات -->
     <VouchersTable
       :vouchers="vouchers"
       :pagination="pagination"
@@ -27,18 +30,29 @@
       :type="type"
       @page-change="handlePageChange"
       @view="openViewModal"
-      @edit="goToEditPage"
+      @edit="openEditModal"
       @approve="openApproveDialog"
       @post="openPostDialog"
       @delete="openDeleteDialog"
     />
 
+    <!-- نافذة الإنشاء والتعديل المنبثقة المحدثة -->
+    <VoucherModal
+      v-if="isFormModalOpen"
+      v-model="isFormModalOpen"
+      :voucher-id="voucherToEditId"
+      :type="type"
+      @saved="handleVoucherSaved"
+    />
+
+    <!-- نافذة العرض السريع لتفاصيل السند -->
     <VoucherViewModal
       v-if="isViewModalOpen"
       v-model="isViewModalOpen"
       :voucher-id="selectedVoucher?.id"
     />
 
+    <!-- نوافذ التأكيد -->
     <AppConfirmDialog
       v-model="isApproveDialogOpen"
       title="تأكيد اعتماد السند"
@@ -68,7 +82,6 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
@@ -79,24 +92,22 @@ import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
 import VouchersFilter from './VouchersFilter.vue'
 import VouchersTable from './VouchersTable.vue'
 import VoucherViewModal from './components/VoucherViewModal.vue'
+import VoucherModal from './components/VoucherModal.vue'
 
-// -- استقبال المتغير من المسارات (Router) --
+// استقبال النوع من الـ Router (receipt أو payment)
 const props = defineProps({
   type: {
     type: String,
-    required: true, // سيكون إما 'receipt' أو 'payment'
+    required: true,
   },
 })
 
-// -- إدارة الحالة --
-const router = useRouter()
 const authStore = useAuthStore()
 const voucherStore = useVoucherStore()
 const toast = useToast()
 
 const { vouchers, pagination, loading } = storeToRefs(voucherStore)
 
-// -- المتغيرات الديناميكية (التي تتغير حسب نوع الشاشة) --
 const isReceipt = computed(() => props.type === 'receipt')
 
 const pageTitle = computed(() =>
@@ -108,10 +119,8 @@ const pageDescription = computed(() =>
     : 'إدارة المبالغ المدفوعة والمصروفات النقدية والبنكية',
 )
 const createPermission = computed(() => (isReceipt.value ? 'receipt.create' : 'payment.create'))
-const createRouteName = computed(() => (isReceipt.value ? 'receipts.create' : 'payments.create'))
-const editRouteName = computed(() => (isReceipt.value ? 'receipts.edit' : 'payments.edit'))
 
-// -- الفلاتر --
+// الفلاتر والبحث
 const searchQuery = ref('')
 const statusFilter = ref('')
 let searchTimeout = null
@@ -123,13 +132,12 @@ const onSearch = () => {
   }, 500)
 }
 
-// -- جلب البيانات --
 const handlePageChange = async (page = 1) => {
   const filters = {
     page,
     search: searchQuery.value,
     status: statusFilter.value,
-    type: props.type, // إجبار الباك-إند على نوع السند الحالي
+    type: props.type,
   }
 
   try {
@@ -139,7 +147,6 @@ const handlePageChange = async (page = 1) => {
   }
 }
 
-// تحديث البيانات تلقائياً إذا ضغط المستخدم على القائمة الجانبية للانتقال للنوع الآخر
 watch(
   () => props.type,
   () => {
@@ -153,20 +160,29 @@ onMounted(() => {
   handlePageChange()
 })
 
-// -- التنقل لصفحات الإدخال والتعديل --
-const goToCreatePage = () => {
-  router.push({ name: createRouteName.value })
+// إدارة النافذة المنبثقة للإنشاء والتعديل
+const isFormModalOpen = ref(false)
+const voucherToEditId = ref(null)
+
+const openCreateModal = () => {
+  voucherToEditId.value = null
+  isFormModalOpen.value = true
 }
 
-const goToEditPage = (voucher) => {
+const openEditModal = (voucher) => {
   if (voucher.status === 'posted') {
     toast.warning('السندات المُرحلة غير قابلة للتعديل.')
     return
   }
-  router.push({ name: editRouteName.value, params: { id: voucher.id } })
+  voucherToEditId.value = voucher.id
+  isFormModalOpen.value = true
 }
 
-// -- نافذة العرض السريعة --
+const handleVoucherSaved = async () => {
+  await handlePageChange(pagination.value?.current_page || 1)
+}
+
+// نافذة العرض السريع
 const isViewModalOpen = ref(false)
 const selectedVoucher = ref(null)
 
@@ -175,7 +191,7 @@ const openViewModal = (voucher) => {
   isViewModalOpen.value = true
 }
 
-// -- إدارة الاعتماد (Approval) --
+// اعتماد السند
 const isApproveDialogOpen = ref(false)
 const voucherToApprove = ref(null)
 
@@ -189,6 +205,7 @@ const approveSelectedVoucher = async () => {
     try {
       await voucherStore.approveVoucherAction(voucherToApprove.value.id)
       toast.success('تم اعتماد السند بنجاح وهو الآن بانتظار الترحيل.')
+      await handlePageChange(pagination.value?.current_page || 1)
     } catch (error) {
       toast.error(voucherStore.error || 'حدث خطأ أثناء اعتماد السند.')
     } finally {
@@ -198,7 +215,7 @@ const approveSelectedVoucher = async () => {
   }
 }
 
-// -- إدارة الترحيل (Posting) --
+// ترحيل السند
 const isPostDialogOpen = ref(false)
 const voucherToPost = ref(null)
 
@@ -222,7 +239,7 @@ const postSelectedVoucher = async () => {
   }
 }
 
-// -- إدارة الحذف --
+// حذف السند
 const isDeleteDialogOpen = ref(false)
 const voucherToDelete = ref(null)
 

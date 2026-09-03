@@ -1,3 +1,4 @@
+<!---src\views\roles\RoleModal.vue-->
 <template>
   <AppDialog :model-value="modelValue" @update:modelValue="close" :title="dialogTitle">
     <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -48,7 +49,16 @@ const dialogTitle = computed(() => (props.initialData?.id ? 'تعديل اسم �
 // 🌟 تعديل أمني متوافق مع الحماية المركزية في الـ Controller والـ Seeders
 const isDefaultRole = computed(() => {
   if (!form.value || !form.value.name) return false
-  return ['Super Admin', 'Admin', 'User', 'Employee', 'HR Manager'].includes(form.value.name)
+  return [
+    'Super Admin',
+    'Admin',
+    'User',
+    'Employee',
+    'HR Manager',
+    'Inventory Manager',
+    'Inventory Officer',
+    'Inventory Worker',
+  ].includes(form.value.name)
 })
 
 watch(

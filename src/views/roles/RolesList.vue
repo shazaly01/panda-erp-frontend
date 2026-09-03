@@ -1,3 +1,4 @@
+<!--src\views\roles\RolesList.vue---->
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
@@ -119,7 +120,16 @@ const tableHeaders = [
 
 // 🌟 توحيد كامل وشامل لكافة الأدوار المحمية لمنع العبث بالهيكل الأساسي لـ ERP
 const isDefaultRole = (roleName) => {
-  return ['Super Admin', 'Admin', 'User', 'Employee', 'HR Manager'].includes(roleName)
+  return [
+    'Super Admin',
+    'Admin',
+    'User',
+    'Employee',
+    'HR Manager',
+    'Inventory Manager',
+    'Inventory Officer',
+    'Inventory Worker',
+  ].includes(roleName)
 }
 
 const handlePageChange = (page) => {

@@ -10,6 +10,11 @@ const UsersList = () => import('@/views/users/UsersList.vue')
 const RolesList = () => import('@/views/roles/RolesList.vue')
 const BackupsList = () => import('@/views/settings/BackupsList.vue')
 
+// --- استيراد مكونات موديول طلبات الدعم والمنح ---
+const GrantRequestsList = () => import('@/views/grantRequests/GrantRequestsListView.vue')
+const GrantRequestFormView = () => import('@/views/grantRequests/GrantRequestFormView.vue')
+const GrantRequestPrintView = () => import('@/views/grantRequests/GrantRequestPrintView.vue')
+
 // --- استيراد مكونات التوثيق الجديدة المنفصلة مع الحفاظ على الهيكلية العالمية ---
 const RegisterView = () => import('@/views/RegisterView.vue')
 const ForgotPasswordView = () => import('@/views/ForgotPasswordView.vue')
@@ -20,28 +25,36 @@ import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
 
 // ==============================================================
-// 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، إلخ)
+// 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، المخازن)
 // ==============================================================
 import accountingRoutes from '@/modules/accounting/router'
 import { hrDashboardRoutes, hrPublicRoutes } from '@/modules/hr/router'
+import inventoryRoutes from '@/modules/inventory/router'
 
 const routes = [
-  // --- المسارات العامة (لا تتطلب مصادقة وشرطها أن يكون المستخدم ضيفاً لحمايتها) ---
+  // --- المسارات العامة (لا تتطلب مصادقة) ---
   {
     path: '/',
     component: AuthLayout,
-    meta: { requiresGuest: true }, // حماية مركزية تمنع المسجلين من رؤية هذه الشاشات
+    meta: { requiresGuest: true },
     children: [
       { path: 'login', name: 'Login', component: LoginView },
       { path: 'register', name: 'Register', component: RegisterView },
       { path: 'forgot-password', name: 'ForgotPassword', component: ForgotPasswordView },
       { path: 'reset-password', name: 'ResetPassword', component: ResetPasswordView },
-      // إعادة توجيه المسار الجذري إلى صفحة تسجيل الدخول
       { path: '', redirect: '/login' },
     ],
   },
 
-  // --- المسارات المحمية (تتطلب مصادقة تسجيل الدخول) ---
+  // --- مسار الطباعة المستقل (خارج AppLayout ليعمل كصفحة بيور تماماً بدون القوائم) ---
+  {
+    path: '/grant-requests/:id/print',
+    name: 'GrantRequestPrint',
+    component: GrantRequestPrintView,
+    meta: { requiresAuth: true, permission: 'grant_request.print' },
+  },
+
+  // --- المسارات المحمية (تتطلب مصادقة وتعمل داخل AppLayout) ---
   {
     path: '/app',
     component: AppLayout,
@@ -59,6 +72,27 @@ const routes = [
       // ==============================================================
       ...accountingRoutes,
       ...hrDashboardRoutes,
+      ...inventoryRoutes,
+
+      // --- مسارات طلبات الدعم والمنح المؤسسية ---
+      {
+        path: 'grant-requests',
+        name: 'GrantRequestsList',
+        component: GrantRequestsList,
+        meta: { permission: 'grant_request.view' },
+      },
+      {
+        path: 'grant-requests/create',
+        name: 'GrantRequestCreate',
+        component: GrantRequestFormView,
+        meta: { permission: 'grant_request.create' },
+      },
+      {
+        path: 'grant-requests/:id/edit',
+        name: 'GrantRequestEdit',
+        component: GrantRequestFormView,
+        meta: { permission: 'grant_request.update' },
+      },
 
       {
         path: 'users',
@@ -78,13 +112,11 @@ const routes = [
         component: BackupsList,
         meta: { permission: 'backup.view' },
       },
-      // إعادة توجيه المسار الرئيسي للتطبيق إلى لوحة التحكم
       { path: '', redirect: '/app/dashboard' },
     ],
   },
 
   ...hrPublicRoutes,
-  // مسار للتعامل مع الصفحات غير الموجودة (404 Fallback)
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
@@ -93,37 +125,28 @@ const router = createRouter({
   routes,
 })
 
-// --- حارس التنقل العام المحسن (Global Navigation Guard) ---
+// --- حارس التنقل العام (Global Navigation Guard) ---
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  // 1. التحقق من المسارات المحمية التي تتطلب تسجيل الدخول
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      // إذا انتهت الصلاحية أو لم يسجل دخوله، يتم حفظ المسار وطرده تلقائياً لشاشة الدخول
       authStore.returnUrl = to.fullPath
       next({ name: 'Login' })
     } else {
       const requiredPermission = to.meta.permission
-      // التحقق من الصلاحيات والـ Permissions الممررة مع المسار
       if (requiredPermission && !authStore.can(requiredPermission)) {
         console.warn(
           `Access denied: route "${String(to.name)}" requires permission "${requiredPermission}"`,
         )
-        // توجيه المستخدم للوحة التحكم إذا لم تكن لديه الصلاحية الخاصة بالشاشة
         next({ name: 'Dashboard' })
       } else {
-        next() // السماح بالمرور للمسار المحمي
+        next()
       }
     }
-  }
-  // 2. التحقق من صفحات الضيوف (دخول، تسجيل، استعادة)
-  else if (to.matched.some((record) => record.meta.requiresGuest) && authStore.isAuthenticated) {
-    // إذا كان المستخدم يمتلك توكن وجلسة نشطة مسبقاً، يحول تلقائياً للـ Dashboard لمنع التكرار
+  } else if (to.matched.some((record) => record.meta.requiresGuest) && authStore.isAuthenticated) {
     next({ name: 'Dashboard' })
-  }
-  // 3. المسارات العامة المفتوحة بالكامل
-  else {
+  } else {
     next()
   }
 })

@@ -1,16 +1,17 @@
-// src/core/menus/index.js
 import {
   HomeIcon,
   UsersIcon,
   ShieldCheckIcon,
   CircleStackIcon,
   Cog6ToothIcon,
+  DocumentTextIcon,
 } from '@heroicons/vue/24/outline'
 
 import accountingMenu from '@/modules/accounting/menu'
-import hrMenu from '@/modules/hr/menu' // ✅ تم استيرادها بنجاح هنا
+import hrMenu from '@/modules/hr/menu'
+import inventoryMenu from '@/modules/inventory/menu'
 
-// عناصر مشتركة نريد إظهارها في جميع القوائم الجانبية
+// عناصر مشتركة تظهر في جميع القوائم الجانبية
 const commonDashboard = {
   name: 'لوحة التحكم',
   routeName: 'Dashboard',
@@ -21,9 +22,19 @@ const commonDashboard = {
 const systemSettings = {
   name: 'إدارة النظام',
   icon: Cog6ToothIcon,
-  permission: 'user.view',
   children: [
-    { name: 'المستخدمين', routeName: 'UsersList', icon: UsersIcon, permission: 'user.view' },
+    {
+      name: 'طلبات الدعم والمنح',
+      routeName: 'GrantRequestsList',
+      icon: DocumentTextIcon,
+      permission: 'grant_request.view',
+    },
+    {
+      name: 'المستخدمين',
+      routeName: 'UsersList',
+      icon: UsersIcon,
+      permission: 'user.view',
+    },
     {
       name: 'الأدوار والصلاحيات',
       routeName: 'RolesList',
@@ -39,12 +50,9 @@ const systemSettings = {
   ],
 }
 
-// 🌟 هيكلة جديدة: كائن يحتوي على الأنظمة
+// كائن يحتوي على القوائم لكل نظام/موديول
 export const appMenus = {
   accounting: [commonDashboard, ...accountingMenu, systemSettings],
-  hr: [
-    commonDashboard,
-    ...hrMenu, // ✅ إزالة التعليق هنا لتظهر القائمة!
-    systemSettings,
-  ],
+  hr: [commonDashboard, ...hrMenu, systemSettings],
+  inventory: [commonDashboard, ...inventoryMenu, systemSettings],
 }
