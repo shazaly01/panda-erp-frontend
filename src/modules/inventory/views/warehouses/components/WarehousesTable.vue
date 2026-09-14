@@ -1,3 +1,4 @@
+<!--src\modules\inventory\views\warehouses\components\WarehousesTable.vue---->
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="warehouses" :is-loading="loading">

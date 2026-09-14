@@ -2,12 +2,25 @@
 <template>
   <AppCard class="overflow-hidden">
     <AppTable :headers="tableHeaders" :items="products" :is-loading="loading">
-      <!-- الخلية الأولى: بيانات الصنف والـ SKU -->
+      <!-- الخلية الأولى: بيانات الصنف والـ SKU والأسماء البديلة -->
       <template #cell-product_info="{ item }">
-        <div class="py-1">
+        <div class="py-1 space-y-1">
           <div class="font-bold text-sm text-text-primary">
             {{ item.name }}
           </div>
+
+          <!-- عرض الأسماء البديلة إن وجدت -->
+          <div v-if="item.aliases" class="text-xs text-text-muted flex items-center gap-1.5">
+            <span
+              class="px-1.5 py-0.5 rounded bg-surface-border/60 text-text-secondary font-medium text-[10px]"
+            >
+              بدائل:
+            </span>
+            <span class="truncate max-w-[240px]" :title="item.aliases">
+              {{ item.aliases }}
+            </span>
+          </div>
+
           <div class="flex items-center gap-2 mt-0.5">
             <span
               v-if="item.sku"
@@ -112,6 +125,7 @@
 
 <script setup>
 import { computed } from 'vue'
+useAuthStore
 import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
@@ -128,7 +142,7 @@ defineEmits(['page-change', 'edit', 'delete'])
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
-  { key: 'product_info', label: 'اسم الصنف والكود', class: 'min-w-[220px]' },
+  { key: 'product_info', label: 'اسم الصنف والكود', class: 'min-w-[240px]' },
   { key: 'category', label: 'التصنيف', class: 'min-w-[140px]' },
   { key: 'policy', label: 'التقييم والتتبع', class: 'min-w-[150px]' },
   { key: 'cost_price', label: 'التكلفة المعيارية', class: 'min-w-[120px]' },

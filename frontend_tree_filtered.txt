@@ -29,6 +29,7 @@
 │   │   ├── TheHeader.vue
 │   │   ├── TheSidebar.vue
 │   ├── [DIR] ui
+│   │   ├── AccountPartySearchGrid.vue
 │   │   ├── ActionItem.vue
 │   │   ├── ActivationModal.vue
 │   │   ├── ActivityItem.vue
@@ -45,13 +46,23 @@
 │   │   ├── AppPagination.vue
 │   │   ├── AppTable.vue
 │   │   ├── AppTextarea.vue
+│   │   ├── [DIR] dynamic-invoice
+│   │   │   ├── InvoiceDetailTable.vue
+│   │   │   ├── InvoiceHeaderForm.vue
+│   │   │   ├── InvoiceMainTable.vue
+│   │   │   ├── InvoiceSummaryFooter.vue
 │   │   ├── FullScreenLoader.vue
 │   │   ├── ImagePreviewModal.vue
 │   │   ├── QuantityInput.vue
 │   │   ├── RiskOpportunityZone.vue
 │   │   ├── SkeletonCard.vue
+│   │   ├── SmartSearchGrid.vue
 │   │   ├── SparklineChart.vue
 │   │   ├── StatCard.vue
+├── [DIR] composables
+│   ├── useCrud.js
+│   ├── useDynamicDetails.js
+│   ├── useSaleFormLogic.js
 ├── [DIR] core
 │   ├── [DIR] menus
 │   │   ├── index.js
@@ -79,10 +90,12 @@
 │   │   │   ├── accountMapping.service.js
 │   │   │   ├── bankAccount.service.js
 │   │   │   ├── box.service.js
+│   │   │   ├── budget.service.js
 │   │   │   ├── costCenter.service.js
 │   │   │   ├── currency.service.js
 │   │   │   ├── fiscalYear.service.js
 │   │   │   ├── journalEntry.service.js
+│   │   │   ├── partySearch.service.js
 │   │   │   ├── reporting.service.js
 │   │   │   ├── voucher.service.js
 │   │   ├── [DIR] stores
@@ -90,6 +103,7 @@
 │   │   │   ├── accountStore.js
 │   │   │   ├── bankAccountStore.js
 │   │   │   ├── boxStore.js
+│   │   │   ├── budgetStore.js
 │   │   │   ├── costCenterStore.js
 │   │   │   ├── currencyStore.js
 │   │   │   ├── fiscalYearStore.js
@@ -122,6 +136,14 @@
 │   │   │   │   ├── BoxesTable.vue
 │   │   │   │   ├── BoxForm.vue
 │   │   │   │   ├── BoxModal.vue
+│   │   │   ├── [DIR] budgets
+│   │   │   │   ├── BudgetBuilderView.vue
+│   │   │   │   ├── BudgetsFilter.vue
+│   │   │   │   ├── BudgetsList.vue
+│   │   │   │   ├── BudgetsTable.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── BudgetMatrixGrid.vue
+│   │   │   │   │   ├── BudgetVarianceModal.vue
 │   │   │   ├── [DIR] cost-centers
 │   │   │   │   ├── CostCenterForm.vue
 │   │   │   │   ├── CostCenterModal.vue
@@ -163,12 +185,12 @@
 │   │   │   │   ├── TrialBalance.vue
 │   │   │   ├── [DIR] vouchers
 │   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── VoucherForm.vue
 │   │   │   │   │   ├── VoucherHeader.vue
 │   │   │   │   │   ├── VoucherLines.vue
+│   │   │   │   │   ├── VoucherModal.vue
 │   │   │   │   │   ├── VoucherViewModal.vue
-│   │   │   │   ├── VoucherForm.vue
 │   │   │   │   ├── VoucherFormPage.vue
-│   │   │   │   ├── VoucherModal.vue
 │   │   │   │   ├── VouchersFilter.vue
 │   │   │   │   ├── VouchersList.vue
 │   │   │   │   ├── VouchersTable.vue
@@ -202,6 +224,7 @@
 │   │   │   ├── department.service.js
 │   │   │   ├── employee.service.js
 │   │   │   ├── internetVoucher.service.js
+│   │   │   ├── internship.service.js
 │   │   │   ├── leave.service.js
 │   │   │   ├── leavePassService.js
 │   │   │   ├── loan.service.js
@@ -216,6 +239,7 @@
 │   │   │   ├── shift.service.js
 │   │   │   ├── shiftOverride.service.js
 │   │   │   ├── teamAttendance.service.js
+│   │   │   ├── visitor.service.js
 │   │   │   ├── workingSchedule.service.js
 │   │   ├── [DIR] stores
 │   │   │   ├── attendanceLogStore.js
@@ -224,6 +248,7 @@
 │   │   │   ├── departmentStore.js
 │   │   │   ├── employeeStore.js
 │   │   │   ├── internetVoucherStore.js
+│   │   │   ├── internshipStore.js
 │   │   │   ├── leavePassStore.js
 │   │   │   ├── leaveStore.js
 │   │   │   ├── loanStore.js
@@ -238,6 +263,7 @@
 │   │   │   ├── shiftOverrideStore.js
 │   │   │   ├── shiftStore.js
 │   │   │   ├── teamAttendanceStore.js
+│   │   │   ├── visitorStore.js
 │   │   │   ├── workingScheduleStore.js
 │   │   ├── [DIR] views
 │   │   │   ├── [DIR] attendance
@@ -255,6 +281,7 @@
 │   │   │   │   │   ├── KioskClock.vue
 │   │   │   │   │   ├── KioskHeader.vue
 │   │   │   │   │   ├── KioskManualNumpad.vue
+│   │   │   │   │   ├── KioskQrCameraScanner.vue
 │   │   │   │   │   ├── KioskResultCard.vue
 │   │   │   │   ├── TeamAttendancePage.vue
 │   │   │   ├── [DIR] contracts
@@ -288,6 +315,17 @@
 │   │   │   │   │   ├── VouchersFilter.vue
 │   │   │   │   │   ├── VouchersTable.vue
 │   │   │   │   ├── InternetVouchersList.vue
+│   │   │   ├── [DIR] internships
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── InternshipApplicationForm.vue
+│   │   │   │   │   ├── InternshipApplicationModal.vue
+│   │   │   │   │   ├── InternshipApplicationsFilter.vue
+│   │   │   │   │   ├── InternshipApplicationsTable.vue
+│   │   │   │   │   ├── QrPassCard.vue
+│   │   │   │   │   ├── TrackingLogin.vue
+│   │   │   │   │   ├── TraineeApplicationEditor.vue
+│   │   │   │   ├── InternshipApplicationsList.vue
+│   │   │   │   ├── PublicInternshipApply.vue
 │   │   │   ├── [DIR] leave-passes
 │   │   │   │   ├── [DIR] components
 │   │   │   │   │   ├── LeavePassesFilter.vue
@@ -379,6 +417,15 @@
 │   │   │   │   │   ├── ShiftModal.vue
 │   │   │   │   │   ├── ShiftsTable.vue
 │   │   │   │   ├── ShiftsList.vue
+│   │   │   ├── [DIR] visitors
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── VisitorForm.vue
+│   │   │   │   │   ├── VisitorModal.vue
+│   │   │   │   │   ├── VisitorsFilter.vue
+│   │   │   │   │   ├── VisitorsTable.vue
+│   │   │   │   ├── PublicVisitorRegister.vue
+│   │   │   │   ├── VerifyVisitor.vue
+│   │   │   │   ├── VisitorsList.vue
 │   │   │   ├── [DIR] working-schedules
 │   │   │   │   ├── [DIR] components
 │   │   │   │   │   ├── WorkingScheduleLinesGrid.vue
@@ -386,6 +433,118 @@
 │   │   │   │   │   ├── WorkingSchedulesTable.vue
 │   │   │   │   ├── WorkingScheduleFormPage.vue
 │   │   │   │   ├── WorkingSchedulesList.vue
+│   ├── [DIR] inventory
+│   │   ├── [DIR] forms
+│   │   │   ├── WarehouseDropdown.vue
+│   │   ├── menu.js
+│   │   ├── router.js
+│   │   ├── [DIR] services
+│   │   │   ├── adjustment.service.js
+│   │   │   ├── category.service.js
+│   │   │   ├── inventory-report.service.js
+│   │   │   ├── priceList.service.js
+│   │   │   ├── product.service.js
+│   │   │   ├── transfer.service.js
+│   │   │   ├── unit.service.js
+│   │   │   ├── warehouse.service.js
+│   │   │   ├── warehouseLocation.service.js
+│   │   ├── [DIR] stores
+│   │   │   ├── adjustmentStore.js
+│   │   │   ├── categoryStore.js
+│   │   │   ├── priceListStore.js
+│   │   │   ├── productStore.js
+│   │   │   ├── transferStore.js
+│   │   │   ├── unitStore.js
+│   │   │   ├── warehouseLocationStore.js
+│   │   │   ├── warehouseStore.js
+│   │   ├── [DIR] views
+│   │   │   ├── [DIR] adjustments
+│   │   │   │   ├── AdjustmentForm.vue
+│   │   │   │   ├── AdjustmentsList.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── AdjustmentFilters.vue
+│   │   │   │   │   ├── AdjustmentFooter.vue
+│   │   │   │   │   ├── AdjustmentHeader.vue
+│   │   │   │   │   ├── AdjustmentItemsTable.vue
+│   │   │   │   │   ├── AdjustmentTable.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── useAdjustmentFormLogic.js
+│   │   │   ├── [DIR] categories
+│   │   │   │   ├── CategoriesList.vue
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── CategoriesTreeView.vue
+│   │   │   │   │   ├── CategoryForm.vue
+│   │   │   │   │   ├── CategoryModal.vue
+│   │   │   ├── [DIR] products
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── ProductForm.vue
+│   │   │   │   │   ├── ProductsFilter.vue
+│   │   │   │   │   ├── ProductsTable.vue
+│   │   │   │   ├── ProductCreateView.vue
+│   │   │   │   ├── ProductEditView.vue
+│   │   │   │   ├── ProductsListView.vue
+│   │   │   ├── [DIR] reports
+│   │   │   │   ├── BatchExpiryReport.vue
+│   │   │   │   ├── InventoryIntegrityAuditReport.vue
+│   │   │   │   ├── ItemStockCardReport.vue
+│   │   │   │   ├── ProductionVarianceReport.vue
+│   │   │   │   ├── ReorderAlertReport.vue
+│   │   │   │   ├── SerialTrackingReport.vue
+│   │   │   │   ├── StockBalanceReport.vue
+│   │   │   │   ├── StockDiscrepancyReport.vue
+│   │   │   │   ├── TransferTrackingReport.vue
+│   │   │   ├── [DIR] transfers
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── TransferFilters.vue
+│   │   │   │   │   ├── TransferFooter.vue
+│   │   │   │   │   ├── TransferHeader.vue
+│   │   │   │   │   ├── TransferItemsTable.vue
+│   │   │   │   │   ├── TransferTable.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── useTransferFormLogic.js
+│   │   │   │   ├── TransferForm.vue
+│   │   │   │   ├── TransfersList.vue
+│   │   │   ├── [DIR] units
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── UnitForm.vue
+│   │   │   │   │   ├── UnitModal.vue
+│   │   │   │   │   ├── UnitsFilter.vue
+│   │   │   │   │   ├── UnitsTable.vue
+│   │   │   │   ├── UnitsList.vue
+│   │   │   ├── [DIR] warehouse-locations
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── WarehouseLocationForm.vue
+│   │   │   │   │   ├── WarehouseLocationModal.vue
+│   │   │   │   │   ├── WarehouseLocationsFilter.vue
+│   │   │   │   │   ├── WarehouseLocationsTable.vue
+│   │   │   │   ├── WarehouseLocationsList.vue
+│   │   │   ├── [DIR] warehouses
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── WarehouseForm.vue
+│   │   │   │   │   ├── WarehouseModal.vue
+│   │   │   │   │   ├── WarehousesFilter.vue
+│   │   │   │   │   ├── WarehousesTable.vue
+│   │   │   │   ├── WarehousesList.vue
+│   ├── [DIR] purchasing
+│   │   ├── menu.js
+│   │   ├── router.js
+│   │   ├── [DIR] services
+│   │   │   ├── purchaseBill.service.js
+│   │   ├── [DIR] stores
+│   │   │   ├── purchaseBillStore.js
+│   │   ├── [DIR] views
+│   │   │   ├── [DIR] bills
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── BillHeaderForm.vue
+│   │   │   │   │   ├── BillItemsTable.vue
+│   │   │   │   │   ├── BillPaymentModal.vue
+│   │   │   │   │   ├── BillsFilter.vue
+│   │   │   │   │   ├── BillsTable.vue
+│   │   │   │   │   ├── BillSummaryFooter.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── usePurchaseBillFormLogic.js
+│   │   │   │   ├── PurchaseBillFormPage.vue
+│   │   │   │   ├── PurchaseBillsList.vue
 ├── [DIR] router
 │   ├── index.js
 │   ├── navigation.js
@@ -395,6 +554,7 @@
 │   ├── backupService.js
 │   ├── companyService.js
 │   ├── documentService.js
+│   ├── grantRequestService.js
 │   ├── reportService.js
 │   ├── roleService.js
 │   ├── userService.js
@@ -405,6 +565,7 @@
 │   ├── brandingStore.js
 │   ├── companyStore.js
 │   ├── documentStore.js
+│   ├── grantRequestStore.js
 │   ├── reportStore.js
 │   ├── roleStore.js
 │   ├── themeStore.js
@@ -426,6 +587,10 @@
 │   │   ├── DocumentsList.vue
 │   │   ├── DocumentsManagerModal.vue
 │   ├── ForgotPasswordView.vue
+│   ├── [DIR] grantRequests
+│   │   ├── GrantRequestFormView.vue
+│   │   ├── GrantRequestPrintView.vue
+│   │   ├── GrantRequestsListView.vue
 │   ├── LoginView.vue
 │   ├── [DIR] owners
 │   │   ├── OwnerForm.vue

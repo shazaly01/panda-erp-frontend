@@ -51,6 +51,17 @@
           </div>
         </div>
 
+        <div>
+          <AppInput
+            id="product-aliases"
+            type="text"
+            label="الأسماء البديلة / الشائعة (Aliases)"
+            :model-value="modelValue.aliases"
+            @update:model-value="updateField('aliases', $event)"
+            placeholder="أسماء تجارية بديلة، مرادفات، أو أسماء عامية لتسهيل وسرعة البحث..."
+          />
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div>
             <AppDropdown

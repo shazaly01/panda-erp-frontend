@@ -25,11 +25,12 @@ import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
 
 // ==============================================================
-// 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، المخازن)
+// 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، المخازن، المشتريات)
 // ==============================================================
 import accountingRoutes from '@/modules/accounting/router'
 import { hrDashboardRoutes, hrPublicRoutes } from '@/modules/hr/router'
 import inventoryRoutes from '@/modules/inventory/router'
+import purchasingRoutes from '@/modules/purchasing/router'
 
 const routes = [
   // --- المسارات العامة (لا تتطلب مصادقة) ---
@@ -73,6 +74,7 @@ const routes = [
       ...accountingRoutes,
       ...hrDashboardRoutes,
       ...inventoryRoutes,
+      ...purchasingRoutes,
 
       // --- مسارات طلبات الدعم والمنح المؤسسية ---
       {

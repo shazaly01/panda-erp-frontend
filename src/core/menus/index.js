@@ -10,6 +10,7 @@ import {
 import accountingMenu from '@/modules/accounting/menu'
 import hrMenu from '@/modules/hr/menu'
 import inventoryMenu from '@/modules/inventory/menu'
+import purchasingMenu from '@/modules/purchasing/menu'
 
 // عناصر مشتركة تظهر في جميع القوائم الجانبية
 const commonDashboard = {
@@ -55,4 +56,5 @@ export const appMenus = {
   accounting: [commonDashboard, ...accountingMenu, systemSettings],
   hr: [commonDashboard, ...hrMenu, systemSettings],
   inventory: [commonDashboard, ...inventoryMenu, systemSettings],
+  purchasing: [commonDashboard, ...purchasingMenu, systemSettings],
 }

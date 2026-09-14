@@ -1,3 +1,4 @@
+<!---src\modules\inventory\views\warehouses\components\WarehouseModal.vue--->
 <template>
   <AppDialog
     :model-value="modelValue"

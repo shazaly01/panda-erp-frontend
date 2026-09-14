@@ -1,3 +1,4 @@
+//src\modules\accounting\router.js
 // --- استيراد شاشات المحاسبة (Lazy Loading) ---
 // تأكد أن المسارات هنا تطابق تماماً أسماء المجلدات التي أنشأتها على جهازك
 const AccountsList = () => import('./views/accounts/AccountsList.vue')

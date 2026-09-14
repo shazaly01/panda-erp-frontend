@@ -54,6 +54,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: false },
   voucherId: { type: [Number, String], default: null },
   type: { type: String, required: true }, // 'receipt' أو 'payment'
+  prefillData: { type: Object, default: null }, // بيانات التعبئة المسبقة من الفاتورة المرجعية
 })
 
 const emit = defineEmits(['update:modelValue', 'close', 'saved'])
@@ -81,7 +82,10 @@ const dialogTitle = computed(() => {
   const typeText = isReceipt.value ? 'سند قبض' : 'سند صرف'
   const numberText =
     isEditMode.value && initialData.value?.number ? ` #${initialData.value.number}` : ''
-  return `${actionText} ${typeText}${numberText}`
+  const refText = props.prefillData?.reference_label
+    ? ` (${props.prefillData.reference_label})`
+    : ''
+  return `${actionText} ${typeText}${numberText}${refText}`
 })
 
 const dialogBorderColor = computed(() =>
@@ -113,7 +117,7 @@ const fetchDependencies = async () => {
   await Promise.all(promises)
 }
 
-// تهيئة البيانات سواء في وضع الإنشاء أو التعديل
+// تهيئة البيانات سواء في وضع الإنشاء أو التعديل مع دعم التعبئة المسبقة
 const initFormData = async () => {
   if (isEditMode.value) {
     await voucherStore.fetchVoucher(props.voucherId)
@@ -134,6 +138,10 @@ const initFormData = async () => {
       branch_id: '',
       box_id: '',
       bank_account_id: null,
+      payee_name: '',
+      description: '',
+      amount: 0,
+      exchange_rate: 1,
       details: [],
     }
 
@@ -152,7 +160,18 @@ const initFormData = async () => {
       }
     }
 
-    initialData.value = defaultData
+    // دمج بيانات الفاتورة المرجعية إذا تم فتح النافذة لغرض سداد فاتورة
+    if (props.prefillData) {
+      initialData.value = {
+        ...defaultData,
+        ...props.prefillData,
+        details: props.prefillData.details?.length
+          ? props.prefillData.details
+          : defaultData.details,
+      }
+    } else {
+      initialData.value = defaultData
+    }
   }
 }
 
@@ -182,14 +201,23 @@ watch(
 const saveVoucher = async (formData) => {
   isSubmitting.value = true
   try {
+    let result = null
     if (isEditMode.value) {
-      await voucherStore.updateVoucher(props.voucherId, formData)
+      result = await voucherStore.updateVoucher(props.voucherId, formData)
       toast.success('تم تحديث السند بنجاح.')
     } else {
-      await voucherStore.createVoucher(formData)
+      result = await voucherStore.createVoucher(formData)
       toast.success('تم حفظ السند بنجاح كمسودة.')
     }
-    emit('saved')
+
+    // في حال تفعيل خيار الحفظ والترحيل المباشر
+    const createdId = result?.data?.id || result?.id || voucherStore.currentVoucher?.id
+    if (formData.post_after_save && createdId) {
+      await voucherStore.postVoucherAction(createdId)
+      toast.success('تم ترحيل السند وتسوية الفاتورة بنجاح.')
+    }
+
+    emit('saved', result)
     handleClose(true)
   } catch (error) {
     toast.error(error.response?.data?.message || voucherStore.error || 'حدث خطأ أثناء حفظ السند.')

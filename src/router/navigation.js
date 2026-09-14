@@ -1,5 +1,6 @@
 import accountingNav from '@/modules/accounting/menu'
 import inventoryNav from '@/modules/inventory/menu'
+import purchasingNav from '@/modules/purchasing/menu'
 import {
   HomeIcon,
   Cog6ToothIcon,
@@ -27,13 +28,19 @@ export const navigationMenu = [
   ...accountingNav,
 
   // ============================================
-  // 3. سلسلة الإمداد (المخزون)
+  // 3. إدارة المشتريات والتوريد
+  // ============================================
+  { isModuleHeader: true, label: 'إدارة المشتريات' },
+  ...purchasingNav,
+
+  // ============================================
+  // 4. سلسلة الإمداد (المخزون)
   // ============================================
   { isModuleHeader: true, label: 'سلسلة الإمداد' },
   ...inventoryNav,
 
   // ============================================
-  // 4. الموارد البشرية
+  // 5. الموارد البشرية
   // ============================================
   { isModuleHeader: true, label: 'الموارد البشرية' },
   {
@@ -47,13 +54,12 @@ export const navigationMenu = [
   },
 
   // ============================================
-  // 5. إدارة النظام
+  // 6. إدارة النظام
   // ============================================
   { isModuleHeader: true, label: 'إعدادات النظام' },
   {
     name: 'إدارة النظام',
     icon: Cog6ToothIcon,
-    // تم حذف شرط system.manage من هنا ليتم فحص صلاحيات الأبناء مباشرة
     children: [
       {
         name: 'طلبات الدعم والمنح',

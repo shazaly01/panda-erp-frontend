@@ -1,7 +1,7 @@
 <!--src/modules/accounting/views/vouchers/components/VoucherForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-4">
-    <!-- 1. ترويسة السند المدمجة (مساحات مريحة وواسعة) -->
+  <form @submit.prevent="handleSubmit(false)" class="space-y-4">
+    <!-- 1. ترويسة السند المدمجة -->
     <div class="bg-surface-card/40 border border-surface-border p-4 rounded-xl space-y-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- طريقة الدفع -->
@@ -161,14 +161,22 @@
 
           <!-- حالة الحساب المختار -->
           <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
-            <!-- تفاصيل الحساب -->
+            <!-- تفاصيل الحساب والوسم المرجعي -->
             <div
-              class="lg:col-span-4 flex items-center justify-between p-2 bg-surface-card rounded-lg border border-surface-border"
+              class="lg:col-span-4 flex items-center justify-between p-2 bg-surface-card rounded-lg border border-surface-border gap-2"
             >
               <div class="flex flex-col min-w-0">
-                <span class="text-[11px] font-mono font-bold text-primary">{{
-                  line.account_code
-                }}</span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[11px] font-mono font-bold text-primary">{{
+                    line.account_code
+                  }}</span>
+                  <span
+                    v-if="line.reference_label"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 truncate"
+                  >
+                    {{ line.reference_label }}
+                  </span>
+                </div>
                 <span
                   class="text-xs font-bold text-text-primary truncate"
                   :title="line.account_name"
@@ -273,9 +281,23 @@
         <AppButton type="button" variant="secondary" @click="$emit('cancel')" :disabled="isSaving">
           إلغاء
         </AppButton>
-        <AppButton type="submit" :disabled="isSaving || computedTotalAmount <= 0">
+        <AppButton
+          v-if="!isEditMode"
+          type="button"
+          @click="handleSubmit(true)"
+          :disabled="isSaving || computedTotalAmount <= 0"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+        >
           <span v-if="isSaving">جاري الحفظ...</span>
-          <span v-else>{{ isEditMode ? 'تحديث السند' : 'حفظ السند' }}</span>
+          <span v-else>حفظ وترحيل مباشر</span>
+        </AppButton>
+        <AppButton
+          type="button"
+          @click="handleSubmit(false)"
+          :disabled="isSaving || computedTotalAmount <= 0"
+        >
+          <span v-if="isSaving">جاري الحفظ...</span>
+          <span v-else>{{ isEditMode ? 'تحديث السند' : 'حفظ كمسودة' }}</span>
         </AppButton>
       </div>
     </div>
@@ -324,6 +346,11 @@ const createEmptyLine = () => ({
   cost_center_id: props.branches.length > 0 ? props.branches[0].id : '',
   amount: '',
   description: '',
+  party_type: null,
+  party_id: null,
+  reference_type: null,
+  reference_id: null,
+  reference_label: null,
 })
 
 const form = ref({
@@ -381,11 +408,17 @@ watch(
             ? newVal.details.map((d, i) => ({
                 _key: Date.now() + i,
                 account_id: d.account?.id || d.account_id,
-                account_code: d.account?.code || '',
-                account_name: d.account?.name || '',
-                cost_center_id: d.cost_center?.id || d.cost_center_id || '',
+                account_code: d.account?.code || d.account_code || '',
+                account_name: d.account?.name || d.account_name || '',
+                cost_center_id:
+                  d.cost_center?.id || d.cost_center_id || (props.branches[0]?.id ?? ''),
                 amount: Number(d.amount) || '',
                 description: d.description || '',
+                party_type: d.party_type || null,
+                party_id: d.party_id ? String(d.party_id) : null,
+                reference_type: d.reference_type || null,
+                reference_id: d.reference_id ? Number(d.reference_id) : null,
+                reference_label: d.reference_label || null,
               }))
             : [createEmptyLine()],
       }
@@ -413,6 +446,9 @@ const handleSelectAccount = (index, item) => {
   line.account_id = item.account_id || item.id
   line.account_code = item.code
   line.account_name = item.name
+  line.party_type = item.party_type || item.type || null
+  line.party_id = item.party_id || item.id ? String(item.party_id || item.id) : null
+
   if (!line.cost_center_id) {
     line.cost_center_id = form.value.branch_id || ''
   }
@@ -432,6 +468,11 @@ const resetLineAccount = (index) => {
     line.account_id = null
     line.account_code = ''
     line.account_name = ''
+    line.party_type = null
+    line.party_id = null
+    line.reference_type = null
+    line.reference_id = null
+    line.reference_label = null
   }
 }
 
@@ -458,7 +499,7 @@ const focusInput = (elementId) => {
   }
 }
 
-const handleSubmit = () => {
+const handleSubmit = (postAfterSave = false) => {
   if (props.fiscalYearError) {
     return toast.error('لا يمكن الحفظ: ' + props.fiscalYearError)
   }
@@ -492,6 +533,10 @@ const handleSubmit = () => {
     cost_center_id: line.cost_center_id || null,
     amount: Number(line.amount),
     description: line.description || null,
+    party_type: line.party_type || null,
+    party_id: line.party_id ? String(line.party_id) : null,
+    reference_type: line.reference_type || null,
+    reference_id: line.reference_id ? Number(line.reference_id) : null,
   }))
 
   const payload = {
@@ -506,6 +551,7 @@ const handleSubmit = () => {
     exchange_rate: exchangeRate,
     amount: computedTotalAmount.value,
     details: cleanDetails,
+    post_after_save: postAfterSave,
   }
 
   emit('submit', payload)

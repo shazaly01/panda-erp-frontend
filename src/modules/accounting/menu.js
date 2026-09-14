@@ -1,3 +1,4 @@
+//src\modules\accounting\menu.js
 import {
   ClipboardDocumentListIcon,
   ChartPieIcon,
