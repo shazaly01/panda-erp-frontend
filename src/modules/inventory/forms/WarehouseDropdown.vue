@@ -1,6 +1,6 @@
 <!--src\modules\inventory\forms\WarehouseDropdown.vue--->
 <template>
-  <div>
+  <div class="w-full">
     <AppDropdown
       :id="id"
       :label="label"
@@ -15,7 +15,7 @@
       show-clear
     />
 
-    <p v-if="error" class="text-sm text-danger mt-1">{{ error }}</p>
+    <p v-if="error" class="text-xs font-bold text-rose-400 mt-1">{{ error }}</p>
   </div>
 </template>
 

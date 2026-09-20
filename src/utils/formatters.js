@@ -3,11 +3,12 @@
  */
 
 /**
- * يقوم بتنسيق القيمة الرقمية وإضافة "د.ل" يدوياً.
+ * يقوم بتنسيق القيمة الرقمية وإضافة رمز العملة (الافتراضي: "ج.س").
  * @param {number | string | null | undefined} value - القيمة الرقمية.
- * @returns {string} - السلسلة المنسقة، مثال: "1,500 د.ل"
+ * @param {string} currency - رمز العملة الملحق بالقيمة (القيمة الافتراضية "ج.س").
+ * @returns {string} - السلسلة المنسقة، مثال: "1,500 ج.س"
  */
-export function formatCurrency(value) {
+export function formatCurrency(value, currency = 'ج.س') {
   // التحقق من القيم الفارغة
   if (value === null || value === undefined || value === '') {
     return 'N/A'
@@ -18,7 +19,7 @@ export function formatCurrency(value) {
 
   // إذا لم يكن رقماً صحيحاً (NaN)، نعيد القيمة كما هي أو صفر
   if (isNaN(numValue)) {
-    return '0 د.ل'
+    return `0 ${currency}`
   }
 
   // إعدادات التنسيق (أرقام إنجليزية، فواصل آلاف)
@@ -38,7 +39,7 @@ export function formatCurrency(value) {
   const formattedNumber = new Intl.NumberFormat('en-US', options).format(numValue)
 
   // إرجاع الرقم مع رمز العملة
-  return `${formattedNumber} د.ل`
+  return `${formattedNumber} ${currency}`
 }
 
 /**

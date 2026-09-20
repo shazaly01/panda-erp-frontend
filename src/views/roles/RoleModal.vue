@@ -58,6 +58,9 @@ const isDefaultRole = computed(() => {
     'Inventory Manager',
     'Inventory Officer',
     'Inventory Worker',
+    'Purchasing Manager',
+    'Purchasing Officer',
+    'Purchasing Requester',
   ].includes(form.value.name)
 })
 

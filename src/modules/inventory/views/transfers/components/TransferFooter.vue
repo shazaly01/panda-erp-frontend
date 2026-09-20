@@ -1,96 +1,105 @@
-<!--src/modules/inventory/views/transfers/components/TransferFooter.vue-->
+<!-- src/modules/inventory/views/transfers/components/TransferFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة ملخص الكميات والقيمة الإجمالية للتحويل -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-right font-sans" dir="rtl">
+    <!-- 1. بطاقة ملخص الكميات والقيمة الإجمالية للتحويل (4 أعمدة - مركزة وملمومة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="md:col-span-4 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-3"
     >
-      <div class="space-y-2 text-xs font-semibold text-gray-400">
-        <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-          ملخص البنود والقيمة المحولة
+      <div class="space-y-2.5 text-xs font-semibold text-gray-400">
+        <h3
+          class="text-xs font-black text-gray-200 border-b border-[#3b3f4f]/60 pb-2 flex justify-between items-center"
+        >
+          <span class="flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-[#e05e2b]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            <span>ملخص البنود والقيمة المحولة</span>
+          </span>
+          <span
+            class="text-[10px] text-gray-400 font-mono bg-[#16171b] px-2 py-0.5 rounded-md border border-[#3e414c]"
+          >
+            {{ totalItemsCount }} صنف مسجل
+          </span>
         </h3>
 
-        <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-sky-400">
-          <span>إجمالي الكميات المحولة:</span>
-          <span class="font-mono font-bold">{{ formatNumber(totalTransferQuantity) }} وحدة</span>
+        <div class="flex items-baseline justify-between text-sky-400">
+          <span class="shrink-0">إجمالي الكميات المحولة:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-sky-500/20"></span>
+          <span class="font-mono font-bold shrink-0"
+            >{{ formatNumber(totalTransferQuantity) }} وحدة</span
+          >
         </div>
 
-        <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-gray-400">
-          <span>إجمالي عدد البنود المسجلة:</span>
-          <span class="font-mono font-bold text-white">{{ totalItemsCount }} صنف</span>
+        <div class="flex items-baseline justify-between text-gray-400 pt-1">
+          <span class="shrink-0">عدد البنود المنقولة:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-[#3e414c]"></span>
+          <span class="font-mono font-bold text-white shrink-0">{{ totalItemsCount }} صنف</span>
         </div>
       </div>
 
       <div class="pt-2">
         <div
-          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-lg shadow-[inner_0_0_10px_rgba(0,0,0,0.5)] text-emerald-400"
+          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-xl shadow-inner text-emerald-400"
         >
-          <span class="font-black text-[11px]">إجمالي تقييم البضاعة المحولة:</span>
-          <span class="text-xl font-mono font-black tracking-wide">
+          <span class="font-black text-xs">إجمالي تقييم البضاعة:</span>
+          <span class="text-base font-mono font-black tracking-wide">
             {{ formatCurrency(totalTransferCost) }}
           </span>
         </div>
 
         <p
           v-if="getFieldError('total_cost')"
-          class="text-rose-500 text-[10px] text-center font-bold mt-1"
+          class="text-rose-400 text-[10px] text-center font-bold mt-1 pr-1"
         >
           {{ getFieldError('total_cost') }}
         </p>
       </div>
     </div>
 
-    <!-- 2. بطاقة ملخص الحالة والتوجيه المحاسبي والمخزني -->
-    <div class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4">
-      <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-        الحالة والتوجيه المخزني
-      </h3>
-
-      <div class="flex flex-col space-y-3 pt-1">
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center justify-between"
-        >
-          <span class="text-xs font-bold text-gray-400">حالة المستند:</span>
-          <span
-            class="font-mono text-xs font-black px-2 py-0.5 rounded"
-            :class="[
-              statusModel === 'approved' || statusModel === 'completed'
-                ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-500/30'
-                : 'bg-amber-950/50 text-amber-400 border border-amber-500/30',
-            ]"
-          >
-            {{
-              statusModel === 'approved' || statusModel === 'completed'
-                ? 'معتمد ومرحل مخزنياً'
-                : 'مسودة قيد المراجعة'
-            }}
-          </span>
-        </div>
-
-        <div class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex flex-col space-y-1">
-          <span class="text-[11px] font-bold text-gray-400">الأثر المباشر للتحويل:</span>
-          <p class="text-[10px] text-gray-500 font-medium leading-relaxed">
-            عند الاعتماد، سيتم خصم الكميات من رصيد المستودع المصدر وإضافتها لرصيد المستودع الوجهة مع
-            توليد قيد نقل تكلفة المخزون.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. بطاقة ملاحظات وبيانات وسيلة النقل والتوثيق -->
+    <!-- 2. بطاقة ملاحظات وبيانات وسيلة النقل والتوثيق (8 أعمدة - مساحة عملية ومريحة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col space-y-1.5"
+      class="md:col-span-8 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-2"
     >
-      <label class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 mb-1">
-        ملاحظات وتفاصيل أمر التحويل
-      </label>
-      <textarea
-        v-model="notesModel"
-        rows="3"
-        placeholder="سجل أسباب التحويل، اسم السائق، رقم وسيلة النقل، أو أي تعليمات استلام إضافية..."
-        class="block w-full h-full min-h-[96px] p-3 border border-[#3e414c] rounded-lg bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] outline-none transition-all resize-none"
-      ></textarea>
-      <p v-if="getFieldError('notes')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <div class="flex flex-col flex-1">
+        <div class="flex items-center justify-between border-b border-[#3b3f4f]/60 pb-2 mb-2">
+          <label class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <span>ملاحظات وتفاصيل وسيلة النقل</span>
+          </label>
+          <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
+        </div>
+
+        <textarea
+          v-model="notesModel"
+          rows="4"
+          placeholder="سجل أسباب التحويل، اسم السائق، رقم وسيلة النقل، أو أي تعليمات استلام إضافية..."
+          class="w-full flex-1 p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
+        ></textarea>
+      </div>
+
+      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
         {{ getFieldError('notes') }}
       </p>
     </div>
@@ -100,9 +109,7 @@
 <script setup>
 import { formatCurrency } from '@/utils/formatters'
 
-// الربط ثنائي الاتجاه للبيانات
 const notesModel = defineModel('notes', { type: String, default: '' })
-const statusModel = defineModel('status', { type: String, default: 'draft' })
 
 const props = defineProps({
   totalTransferCost: { type: Number, required: true },

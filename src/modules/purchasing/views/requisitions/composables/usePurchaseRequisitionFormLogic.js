@@ -18,7 +18,15 @@ export function usePurchaseRequisitionFormLogic() {
 
   const isEdit = computed(() => !!route.params.id)
   const isFormLoaded = ref(false)
+  const isSubmitting = ref(false)
   const departmentsList = ref([])
+
+  // دالة مساعدة لضبط تاريخ الاحتياج الافتراضي بعد 4 أيام من تاريخ اليوم
+  const getDefaultRequiredDate = () => {
+    const targetDate = new Date()
+    targetDate.setDate(targetDate.getDate() + 4)
+    return targetDate.toISOString().substring(0, 10)
+  }
 
   // =========================================================
   // 1. نموذج بيانات رأس طلب الشراء
@@ -27,7 +35,7 @@ export function usePurchaseRequisitionFormLogic() {
     requisition_number: '',
     department_id: '',
     request_date: new Date().toISOString().substring(0, 10),
-    required_date: new Date().toISOString().substring(0, 10),
+    required_date: getDefaultRequiredDate(),
     priority: 'medium',
     status: 'draft',
     notes: '',
@@ -37,7 +45,7 @@ export function usePurchaseRequisitionFormLogic() {
   const items = ref([])
 
   // =========================================================
-  // 2. إدارة سطور البنود الديناميكية
+  // 2. إدارة سطور البنود
   // =========================================================
   const createEmptyRow = (isCustom = false) => {
     return {
@@ -55,52 +63,83 @@ export function usePurchaseRequisitionFormLogic() {
     }
   }
 
-  // إضافة سطر حر يدوي
+  // إضافة سطر جديد جاهز للإدخال
   const triggerAddNewEmptyLine = () => {
-    items.value.push(createEmptyRow(true))
+    items.value.push(createEmptyRow(false))
   }
 
   // حذف سطر
   const removeRow = (index) => {
+    if (items.value.length === 1) {
+      items.value[0] = createEmptyRow(false)
+      return
+    }
     items.value.splice(index, 1)
   }
 
-  // إضافة صنف من البحث السريع الذكي للمنتجات المخزنية
-  const handleGlobalItemSelect = (selectedProduct) => {
-    if (!selectedProduct) return
+  // اختيار صنف من قائمة الإكمال التلقائي مع منع التكرار تماماً
+  const selectProductForRow = (row, selectedProduct, currentRowIndex = null) => {
+    if (!selectedProduct) return false
 
+    // فحص ما إذا كان الصنف مضافاً مسبقاً في أي سطر آخر داخل الطلب
     const existingIndex = items.value.findIndex(
-      (row) => !row.is_custom && row.product_id === selectedProduct.id,
+      (it, idx) =>
+        it.product_id === selectedProduct.id &&
+        (currentRowIndex !== null ? idx !== currentRowIndex : it !== row),
     )
 
-    if (existingIndex > -1) {
-      items.value[existingIndex].quantity_requested =
-        (parseFloat(items.value[existingIndex].quantity_requested) || 0) + 1
-      toast.info(`تم زيادة كمية الصنف (${selectedProduct.name}) إلى البند الحالي.`)
-      return
+    if (existingIndex !== -1) {
+      toast.warning(
+        `الصنف "${selectedProduct.name}" مضاف مسبقاً في السطر رقم (${existingIndex + 1}).`,
+      )
+      // تفريغ الحقل لإلغاء الازدواجية وإتاحة الاختيار مجدداً
+      row.item_name = ''
+      row.product_id = null
+      row.product_unit_id = null
+      row.unit_name = ''
+      row.available_units = []
+      row.estimated_unit_cost = 0
+      return false
     }
 
-    const defaultUnit = selectedProduct.units?.[0] || null
-    const defaultCost = defaultUnit
-      ? parseFloat(defaultUnit.cost_price || defaultUnit.price || 0)
-      : parseFloat(selectedProduct.cost_price || 0)
+    const matchedUnit = selectedProduct.unit || selectedProduct.units?.[0] || null
+    const resolvedPrice =
+      selectedProduct.price !== undefined
+        ? parseFloat(selectedProduct.price)
+        : parseFloat(
+            matchedUnit?.cost_price || matchedUnit?.price || selectedProduct.cost_price || 0,
+          )
 
-    items.value.push({
-      id: undefined,
-      is_custom: false,
-      product_id: selectedProduct.id,
-      item_name: selectedProduct.name || '',
-      product_unit_id: defaultUnit?.id || null,
-      unit_name: defaultUnit?.name || defaultUnit?.unit_name || '',
-      quantity_requested: 1,
-      estimated_unit_cost: defaultCost,
-      specifications: selectedProduct.description || '',
-      notes: '',
-      available_units: selectedProduct.units || [],
-    })
+    row.is_custom = false
+    row.product_id = selectedProduct.id
+    row.item_name = selectedProduct.name || ''
+    row.product_unit_id = matchedUnit?.id || null
+    row.unit_name = matchedUnit?.name || matchedUnit?.unit_name || ''
+    row.estimated_unit_cost = resolvedPrice
+    row.available_units = selectedProduct.available_units || selectedProduct.units || []
+
+    if (selectedProduct.scanned_quantity) {
+      row.quantity_requested = parseFloat(selectedProduct.scanned_quantity)
+    }
+
+    if (!row.specifications && selectedProduct.description) {
+      row.specifications = selectedProduct.description
+    }
+
+    return true
   }
 
-  // مزامنة التكلفة عند تغيير وحدة القياس للمنتجات المسجلة
+  // فك ارتباط الصنف المخزني عند تعديل الاسم يدوياً ليصبح بنداً مخصصاً
+  const handleItemNameInput = (row) => {
+    if (row.product_id) {
+      row.product_id = null
+      row.is_custom = true
+      row.available_units = []
+      row.product_unit_id = null
+    }
+  }
+
+  // مزامنة التكلفة والاسم عند تغيير وحدة القياس للأصناف المسجلة
   const syncUnitDetails = (row) => {
     if (row.is_custom) return
     const matchedUnit = row.available_units?.find((u) => u.id === row.product_unit_id)
@@ -108,7 +147,22 @@ export function usePurchaseRequisitionFormLogic() {
       row.unit_name = matchedUnit.unit_name || matchedUnit.name || ''
       if (matchedUnit.cost_price !== undefined && matchedUnit.cost_price !== null) {
         row.estimated_unit_cost = parseFloat(matchedUnit.cost_price) || 0
+      } else if (matchedUnit.price !== undefined && matchedUnit.price !== null) {
+        row.estimated_unit_cost = parseFloat(matchedUnit.price) || 0
       }
+    }
+  }
+
+  // زيادة ونقصان الكمية بسرعة
+  const incrementQuantity = (row) => {
+    const current = parseFloat(row.quantity_requested) || 0
+    row.quantity_requested = current + 1
+  }
+
+  const decrementQuantity = (row) => {
+    const current = parseFloat(row.quantity_requested) || 0
+    if (current > 1) {
+      row.quantity_requested = current - 1
     }
   }
 
@@ -126,7 +180,8 @@ export function usePurchaseRequisitionFormLogic() {
   const totalItemsCount = computed(() => {
     return items.value.filter(
       (row) =>
-        (row.product_id || (row.item_name && row.item_name.trim())) && row.quantity_requested > 0,
+        (row.product_id || (row.item_name && row.item_name.trim())) &&
+        parseFloat(row.quantity_requested) > 0,
     ).length
   })
 
@@ -157,7 +212,7 @@ export function usePurchaseRequisitionFormLogic() {
   }
 
   // =========================================================
-  // 5. تحميل البيانات المرجعية وبيانات الطلب في التعديل
+  // 5. تحميل البيانات المرجعية وبيانات التعديل بالتوازي التام
   // =========================================================
   const loadDepartments = async () => {
     try {
@@ -169,11 +224,16 @@ export function usePurchaseRequisitionFormLogic() {
   }
 
   onMounted(async () => {
-    await Promise.all([loadDepartments(), productStore.fetchProducts({ is_active: 1, all: true })])
+    isFormLoaded.value = false
+    try {
+      const startupRequests = [loadDepartments()]
+      if (isEdit.value) {
+        startupRequests.push(requisitionStore.fetchRequisition(route.params.id))
+      }
 
-    if (isEdit.value) {
-      await requisitionStore.fetchRequisition(route.params.id)
-      if (requisitionStore.currentRequisition) {
+      await Promise.all(startupRequests)
+
+      if (isEdit.value && requisitionStore.currentRequisition) {
         const cur = requisitionStore.currentRequisition
 
         form.value = {
@@ -184,7 +244,7 @@ export function usePurchaseRequisitionFormLogic() {
             : new Date().toISOString().substring(0, 10),
           required_date: cur.required_date
             ? cur.required_date.substring(0, 10)
-            : new Date().toISOString().substring(0, 10),
+            : getDefaultRequiredDate(),
           priority: cur.priority?.value || cur.priority || 'medium',
           status: cur.status?.value || cur.status || 'draft',
           notes: cur.notes || '',
@@ -206,43 +266,47 @@ export function usePurchaseRequisitionFormLogic() {
             available_units: it.product?.units || [],
           }
         })
+      } else if (!isEdit.value) {
+        if (authStore.user?.department_id) {
+          form.value.department_id = authStore.user.department_id
+        }
+        items.value = [createEmptyRow(false)]
       }
-    } else {
-      if (authStore.user?.department_id) {
-        form.value.department_id = authStore.user.department_id
-      }
-      // إضافة سطر افتراضي أولي
-      items.value.push(createEmptyRow(false))
+    } finally {
+      isFormLoaded.value = true
     }
-
-    isFormLoaded.value = true
   })
 
   // =========================================================
-  // 6. الحفظ والتقديم
+  // 6. الحفظ والإرسال
   // =========================================================
   const handleSubmit = async (submitDirectly = false) => {
-    // تصفية وتجهيز بنود الطلب
     const sanitizedItems = items.value
       .filter((row) => {
-        const hasIdentity = row.product_id || (row.item_name && row.item_name.trim())
+        const hasName = row.item_name && row.item_name.trim().length > 0
+        const hasProduct = !!row.product_id
         const qty = parseFloat(row.quantity_requested) || 0
-        return hasIdentity && qty > 0
+        return (hasName || hasProduct) && qty > 0
       })
       .map((row) => ({
         id: row.id || undefined,
         product_id: row.is_custom ? null : row.product_id || null,
-        item_name: row.is_custom || !row.product_id ? row.item_name : null,
+        item_name: row.is_custom || !row.product_id ? row.item_name.trim() : null,
         product_unit_id: row.is_custom ? null : row.product_unit_id || null,
-        unit_name: row.is_custom || !row.product_unit_id ? row.unit_name : null,
+        unit_name:
+          row.is_custom || !row.product_unit_id
+            ? row.unit_name
+              ? row.unit_name.trim()
+              : 'حبة'
+            : null,
         quantity_requested: parseFloat(row.quantity_requested),
         estimated_unit_cost: parseFloat(row.estimated_unit_cost) || 0,
-        specifications: row.specifications || null,
-        notes: row.notes || null,
+        specifications: row.specifications ? row.specifications.trim() : null,
+        notes: row.notes ? row.notes.trim() : null,
       }))
 
     if (sanitizedItems.length === 0) {
-      toast.error('يجب إضافة بند واحد على الأقل مع تحديد اسمه والكمية المطلوبة.')
+      toast.error('يرجى كتابة بيان صنف واحد على الأقل وتحديد الكمية المطلوبة.')
       return
     }
 
@@ -251,31 +315,35 @@ export function usePurchaseRequisitionFormLogic() {
       request_date: form.value.request_date || null,
       required_date: form.value.required_date || null,
       priority: form.value.priority,
-      notes: form.value.notes || null,
+      notes: form.value.notes ? form.value.notes.trim() : null,
       items: sanitizedItems,
     }
+
+    isSubmitting.value = true
 
     try {
       let savedRequisitionId = route.params.id
 
       if (isEdit.value) {
         await requisitionStore.updateRequisition(route.params.id, payload)
-        toast.success('تم تحديث مسودة طلب الشراء بنجاح.')
+        toast.success('تم تحديث مسودة طلب الاحتياج بنجاح.')
       } else {
         const res = await requisitionStore.createRequisition(payload)
         const resData = res?.data || requisitionStore.currentRequisition
         savedRequisitionId = resData?.id
-        toast.success('تم إنشاء طلب الشراء بنجاح.')
+        toast.success('تم حفظ طلب الاحتياج بنجاح.')
       }
 
       if (submitDirectly && savedRequisitionId) {
         await requisitionStore.submitRequisition(savedRequisitionId)
-        toast.success('تم تقديم طلب الشراء للاعتماد بنجاح.')
+        toast.success('تم إرسال الطلب للاعتماد بنجاح.')
       }
 
       router.push('/app/purchasing/requisitions')
     } catch {
-      toast.error(requisitionStore.error || 'فشلت عملية حفظ طلب الشراء.')
+      toast.error(requisitionStore.error || 'فشلت عملية حفظ طلب الاحتياج.')
+    } finally {
+      isSubmitting.value = false
     }
   }
 
@@ -285,6 +353,7 @@ export function usePurchaseRequisitionFormLogic() {
 
   return {
     isFormLoaded,
+    isSubmitting,
     isEdit,
     form,
     items,
@@ -297,11 +366,15 @@ export function usePurchaseRequisitionFormLogic() {
     createEmptyRow,
     triggerAddNewEmptyLine,
     removeRow,
-    handleGlobalItemSelect,
+    selectProductForRow,
+    handleItemNameInput,
     syncUnitDetails,
+    incrementQuantity,
+    decrementQuantity,
     handleSubmit,
     handleCancel,
     requisitionStore,
     productStore,
+    authStore,
   }
 }

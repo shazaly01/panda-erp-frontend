@@ -1,119 +1,52 @@
 <!-- src/modules/purchasing/views/requisitions/components/RequisitionSummaryFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة ملخص التكاليف التقديرية وإجمالي البنود -->
+  <div class="space-y-3 text-right font-sans" dir="rtl">
+    <!-- تنبيه في حال وجود سبب رفض مسجل مسبقاً للطلب -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      v-if="formData.rejection_reason"
+      class="p-4 bg-rose-950/30 border border-rose-900/50 rounded-2xl space-y-1 text-rose-300 text-xs shadow-sm"
     >
-      <div class="space-y-2 text-xs font-semibold text-gray-400">
-        <h3
-          class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 flex justify-between items-center"
-        >
-          <span>ملخص التقدير المالي للطلب</span>
-          <span class="text-[10px] text-gray-400 font-mono">{{ totalItemsCount }} بند مسجل</span>
-        </h3>
-
-        <!-- عدد البنود الفعلية المدخلة -->
-        <div class="flex justify-between border-b border-gray-700/30 pb-1 text-gray-300">
-          <span>إجمالي البنود الصالحة:</span>
-          <span class="font-mono font-bold">{{ totalItemsCount }} أصناف</span>
-        </div>
-
-        <!-- توضيح حول طبيعة التسعير التقديري -->
-        <div
-          class="p-2 bg-[#16171b] border border-[#3e414c] rounded-lg text-[10px] text-gray-400 leading-relaxed"
-        >
-          <p>
-            الأسعار المدونة هي تقديرية لأغراض الدراسة الميزانية وصلاحيات الاعتماد، وتحدد الأسعار
-            النهائية رسمياً عند طرح عروض الأسعار وإصدار أمر الشراء.
-          </p>
-        </div>
+      <div class="flex items-center gap-2 text-rose-400 font-bold text-xs">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <span>سبب الرفض المسجل من الإدارة:</span>
       </div>
-
-      <div class="pt-1 space-y-2">
-        <!-- الإجمالي التقديري الصافي -->
-        <div
-          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-lg shadow-[inner_0_0_10px_rgba(0,0,0,0.5)] text-emerald-400"
-        >
-          <span class="font-black text-xs">إجمالي التكلفة التقديرية:</span>
-          <span class="text-xl font-mono font-black tracking-wide">
-            {{ formatCurrency(calculatedEstimatedTotal) }}
-          </span>
-        </div>
-      </div>
+      <p class="text-xs text-rose-200/90 leading-relaxed pr-6">
+        {{ formData.rejection_reason }}
+      </p>
     </div>
 
-    <!-- 2. بطاقة دورة الاعتماد ومتابعة مسار الطلب -->
-    <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
-    >
-      <div class="space-y-3">
-        <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-          مسار الاعتماد الداخلي
-        </h3>
-
-        <!-- حالة المستند الحالية -->
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center justify-between"
-        >
-          <span class="text-xs font-bold text-gray-400">حالة الطلب:</span>
-          <span
-            class="font-mono text-xs font-black px-2.5 py-0.5 rounded border"
-            :class="statusBadgeClass"
-          >
-            {{ statusBadgeText }}
-          </span>
-        </div>
-
-        <!-- شرح مسار سير العمل -->
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex flex-col space-y-1.5"
-        >
-          <div class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-[#e05e2b]"></span>
-            <span class="text-[11px] font-bold text-gray-300">سير الإجراءات:</span>
-          </div>
-          <p class="text-[10px] text-gray-400 font-medium leading-relaxed">
-            مسودة &larr; تقديم للاعتماد &larr; مراجعة مدير القسم والمشتريات &larr; اعتماد &larr;
-            إصدار أمر شراء.
-          </p>
-        </div>
-
-        <!-- إظهار سبب الرفض في حال كان الطلب مرفوضاً -->
-        <div
-          v-if="formData.rejection_reason"
-          class="p-2.5 bg-rose-950/30 border border-rose-900/50 rounded-lg space-y-1 text-rose-300 text-xs"
-        >
-          <span class="font-bold block text-[11px] text-rose-400">سبب الرفض المسجل:</span>
-          <p class="text-[10px] leading-relaxed">{{ formData.rejection_reason }}</p>
-        </div>
+    <!-- بطاقة مبررات الاحتياج والملاحظات فقط (مبسطة ونظيفة بصرياً) -->
+    <div class="p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-lg space-y-2.5">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-bold text-gray-200 flex items-center gap-2">
+          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          <span>مبررات الاحتياج أو ملاحظات عامة</span>
+        </label>
+        <span class="text-[11px] text-gray-500 font-normal">اختياري</span>
       </div>
 
-      <div
-        class="p-2 bg-[#16171b]/60 border border-gray-800 rounded-lg text-[10px] text-gray-400 flex justify-between font-mono"
-      >
-        <span>الأولوية المحددة:</span>
-        <span class="font-bold text-amber-400">{{ priorityLabel }}</span>
-      </div>
-    </div>
-
-    <!-- 3. بطاقة الشروط والملاحظات وتبرير الشراء -->
-    <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col space-y-1.5"
-    >
-      <label
-        class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 mb-1 flex justify-between items-center"
-      >
-        <span>مبررات الشراء والملاحظات العامة</span>
-        <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
-      </label>
       <textarea
         v-model="formData.notes"
-        rows="4"
-        placeholder="سجل أسباب ومبررات طلب الشراء، القسم المستفيد، أو أي تعليمات خاصة بالمشتريات..."
-        class="block w-full h-full min-h-[140px] p-3 border border-[#3e414c] rounded-lg bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] outline-none transition-all resize-none"
+        rows="3"
+        placeholder="سجل هنا أي تفاصيل توضح سبب الاحتياج، الموقع أو القسم المستفيد، أو أي تعليمات خاصة لمسؤول المشتريات..."
+        class="w-full p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
       ></textarea>
-      <p v-if="getFieldError('notes')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+
+      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
         {{ getFieldError('notes') }}
       </p>
     </div>
@@ -121,56 +54,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { formatCurrency } from '@/utils/formatters'
-
 const formData = defineModel({ type: Object, required: true })
 
 const props = defineProps({
-  calculatedEstimatedTotal: { type: Number, required: true },
-  totalItemsCount: { type: Number, required: true },
+  calculatedEstimatedTotal: { type: Number, default: 0 },
+  totalItemsCount: { type: Number, default: 0 },
   validationErrors: { type: Object, default: () => null },
-})
-
-const statusBadgeText = computed(() => {
-  switch (formData.value.status) {
-    case 'pending':
-    case 'submitted':
-      return 'بانتظار الاعتماد'
-    case 'approved':
-      return 'طلب معتمد'
-    case 'rejected':
-      return 'طلب مرفوض'
-    default:
-      return 'مسودة قيد الإعداد'
-  }
-})
-
-const statusBadgeClass = computed(() => {
-  switch (formData.value.status) {
-    case 'pending':
-    case 'submitted':
-      return 'bg-sky-950/50 text-sky-400 border-sky-500/30'
-    case 'approved':
-      return 'bg-emerald-950/50 text-emerald-400 border-emerald-500/30'
-    case 'rejected':
-      return 'bg-rose-950/50 text-rose-400 border-rose-500/30'
-    default:
-      return 'bg-amber-950/50 text-amber-400 border-amber-500/30'
-  }
-})
-
-const priorityLabel = computed(() => {
-  switch (formData.value.priority) {
-    case 'low':
-      return 'منخفضة'
-    case 'high':
-      return 'عاجلة'
-    case 'urgent':
-      return 'طارئة جداً'
-    default:
-      return 'متوسطة'
-  }
 })
 
 const getFieldError = (path) => {

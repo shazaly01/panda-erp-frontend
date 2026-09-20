@@ -1,25 +1,46 @@
-<!--src/modules/purchasing/views/bills/PurchaseBillFormPage.vue-->
+<!-- src/modules/purchasing/views/bills/PurchaseBillFormPage.vue -->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
-    <!-- شريط عنوان الصفحة المتكيف -->
-    <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
-      <div>
+    <!-- مؤشر التحميل لكامل الشاشة أثناء جلب البيانات -->
+    <FullScreenLoader :show="!isFormLoaded" message="جاري تحميل بيانات فاتورة المشتريات..." />
+
+    <!-- شريط عنوان الصفحة المتكيف مع رقم الفاتورة وحالتها -->
+    <div
+      class="flex flex-wrap justify-between items-center py-1 border-b border-surface-border/60 gap-3"
+    >
+      <div class="flex items-center gap-3">
         <h1 class="text-base font-black text-text-primary flex items-center gap-2">
           <span class="inline-block w-1.5 h-3 bg-[#e05e2b] rounded-full"></span>
           {{ formPageTitle }}
         </h1>
+
+        <span
+          v-if="form.bill_number"
+          class="px-2.5 py-0.5 text-xs font-mono font-bold rounded-lg bg-[#e05e2b]/15 text-[#e05e2b] border border-[#e05e2b]/30"
+        >
+          {{ form.bill_number }}
+        </span>
+      </div>
+
+      <div v-if="form.status" class="flex items-center gap-2 text-xs">
+        <span
+          class="px-2.5 py-0.5 rounded-lg border text-[11px] font-bold"
+          :class="getStatusBadgeClass(form.status)"
+        >
+          {{ getStatusLabel(form.status) }}
+        </span>
       </div>
     </div>
 
-    <!-- رسالة الخطأ العام من المتجر -->
+    <!-- رسالة الخطأ العام من المتجر إن وجدت -->
     <div
       v-if="billStore.error"
-      class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-bold shadow-sm"
+      class="p-3 bg-rose-950/40 border border-rose-900/50 text-rose-400 rounded-xl text-xs font-bold shadow-sm"
     >
       {{ billStore.error }}
     </div>
 
-    <!-- منطقة الترويسة الذكية -->
+    <!-- 1. منطقة الترويسة الذكية -->
     <BillHeaderForm
       v-model="form"
       :validation-errors="billStore.validationErrors"
@@ -29,7 +50,7 @@
       :route-badge-class="routeBadgeClass"
     />
 
-    <!-- منطقة جدول الأصناف والإدخال الفوري -->
+    <!-- 2. منطقة جدول الأصناف والإدخال الفوري والذكي -->
     <AppCard>
       <BillItemsTable
         :items="items"
@@ -39,14 +60,18 @@
         :format-number="formatNumber"
         :unformat-number="unformatNumber"
         :sync-unit-details="syncUnitDetails"
+        :recalculate-line="recalculateLine"
+        :increment-quantity="incrementQuantity"
+        :decrement-quantity="decrementQuantity"
         :remove-row="removeRow"
         :trigger-add-new-empty-line="triggerAddNewEmptyLine"
+        :select-product-for-row="selectProductForRow"
         :handle-global-item-select="handleGlobalItemSelect"
         :is-form-loaded="isFormLoaded"
       />
     </AppCard>
 
-    <!-- منطقة التذييل والإجماليات والتوجيه المحاسبي -->
+    <!-- 3. منطقة التذييل والإجماليات والتوجيه المحاسبي -->
     <BillSummaryFooter
       v-model="form"
       :calculated-subtotal="calculatedSubtotal"
@@ -61,7 +86,7 @@
       :validation-errors="billStore.validationErrors"
     />
 
-    <!-- بطاقة استعراض سندات الصرف وسجل السداد المرتبط بالفاتورة -->
+    <!-- 4. بطاقة استعراض سندات الصرف وسجل السداد المرتبط بالفاتورة -->
     <AppCard
       v-if="billStore.currentBill?.voucher_details?.length > 0"
       class="border border-surface-border/80 bg-surface-card/40 p-4 rounded-xl space-y-3"
@@ -86,9 +111,9 @@
             <span class="font-mono font-black text-primary"
               >#{{ item.voucher?.number || item.voucher_id }}</span
             >
-            <span class="font-mono font-bold text-emerald-400">{{
-              formatNumber(item.amount)
-            }}</span>
+            <span class="font-mono font-bold text-emerald-400">
+              {{ formatNumber(item.amount) }}
+            </span>
           </div>
           <div class="flex items-center justify-between text-text-muted text-[11px]">
             <span>
@@ -121,9 +146,9 @@
       @close="closeVoucherModal"
     />
 
-    <!-- شريط الإجراءات السفلي العائم الثابت -->
+    <!-- 5. شريط الإجراءات السفلي العائم الثابت -->
     <div
-      class="fixed bottom-0 right-0 left-0 bg-[#23252e] border-t border-[#5d6170]/60 p-3 shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-40 flex justify-between items-center px-6"
+      class="fixed bottom-0 right-0 left-0 bg-[#1e2027] border-t border-[#3b3f4f] p-3.5 shadow-[0_-4px_25px_rgba(0,0,0,0.5)] z-40 flex flex-col sm:flex-row justify-between items-center px-4 sm:px-8 gap-3"
     >
       <div class="text-xs text-gray-400 font-medium flex items-center gap-2">
         <span
@@ -139,7 +164,7 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
         <!-- زر إلغاء وتراجع -->
         <AppButton type="button" variant="secondary" size="sm" @click="handleCancel">
           إلغاء وتراجع
@@ -165,7 +190,7 @@
           type="button"
           variant="outline"
           size="sm"
-          :disabled="billStore.loading"
+          :disabled="billStore.loading || !isFormLoaded"
           @click="handleSubmit(false)"
           class="text-gray-300 border-gray-600 hover:bg-gray-800"
         >
@@ -178,9 +203,9 @@
           v-if="form.status === 'draft'"
           type="button"
           size="sm"
-          :disabled="billStore.loading"
+          :disabled="billStore.loading || !isFormLoaded"
           @click="handleSubmit(true)"
-          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_10px_rgba(224,94,43,0.3)]"
+          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
         >
           <span v-if="billStore.loading">جاري الترحيل وتوليد القيد...</span>
           <span v-else>حفظ وترحيل الفاتورة فوراً</span>
@@ -196,6 +221,7 @@ import { usePurchaseBillFormLogic } from './composables/usePurchaseBillFormLogic
 
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
+import FullScreenLoader from '@/components/ui/FullScreenLoader.vue'
 
 import BillHeaderForm from './components/BillHeaderForm.vue'
 import BillItemsTable from './components/BillItemsTable.vue'
@@ -230,8 +256,12 @@ const {
   formatNumber,
   unformatNumber,
   syncUnitDetails,
+  recalculateLine,
+  incrementQuantity,
+  decrementQuantity,
   removeRow,
   triggerAddNewEmptyLine,
+  selectProductForRow,
   handleGlobalItemSelect,
   billStore,
 } = usePurchaseBillFormLogic()
@@ -245,4 +275,26 @@ const formPageTitle = computed(() => {
   }
   return 'إصدار فاتورة مشتريات وشراء مباشر للمخزن'
 })
+
+const getStatusLabel = (status) => {
+  const map = {
+    draft: 'مسودة قيد المراجعة',
+    posted: 'فاتورة مرحلة',
+    partially_paid: 'مدفوعة جزئياً',
+    paid: 'مدفوعة بالكامل',
+    cancelled: 'فاتورة ملغاة',
+  }
+  return map[status] || status || 'مسودة جديدة'
+}
+
+const getStatusBadgeClass = (status) => {
+  const map = {
+    draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
+    posted: 'bg-blue-950/40 text-blue-400 border-blue-500/30',
+    partially_paid: 'bg-indigo-950/40 text-indigo-400 border-indigo-500/30',
+    paid: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
+    cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
+  }
+  return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'
+}
 </script>

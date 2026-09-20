@@ -1,11 +1,13 @@
-<!--src/modules/purchasing/views/issues/components/IssueHeaderForm.vue-->
+<!-- src/modules/purchasing/views/issues/components/IssueHeaderForm.vue -->
 <template>
   <div
-    class="p-5 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4 text-right font-sans"
+    class="p-4 sm:p-5 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl space-y-4 text-right font-sans"
     dir="rtl"
   >
     <!-- شريط التوجيه الذكي ومسار الصرف المخزني -->
-    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-700/40">
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-surface-border/60"
+    >
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-gray-300">مسار إذن الصرف:</span>
         <span
@@ -25,7 +27,7 @@
         class="flex items-center gap-4 text-xs font-mono text-gray-400"
       >
         <div
-          class="flex items-center gap-1 bg-[#16171b] px-2.5 py-1 rounded border border-[#3e414c]"
+          class="flex items-center gap-1.5 bg-[#16171b] px-3 py-1 rounded-lg border border-[#3e414c]"
         >
           <span class="text-gray-400 text-[11px]">طلب الاحتياج الداخلي:</span>
           <span class="text-sky-400 font-bold">#{{ formData.requisition_id }}</span>
@@ -36,13 +38,13 @@
     <!-- شبكة الحقول الأساسية: 4 أعمدة متناسقة -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <!-- 1. رقم إذن الصرف التسلسلي (issue_number) - مقفل ومولّد تلقائياً -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1">رقم الإذن</label>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">رقم الإذن</label>
         <div
-          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-lg flex items-center shadow-inner cursor-not-allowed"
+          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed"
         >
           <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -60,24 +62,23 @@
             class="block w-full h-full pr-10 pl-4 bg-transparent text-gray-400 font-mono font-bold text-xs focus:outline-none cursor-not-allowed select-none"
           />
         </div>
-        <p
-          v-if="getFieldError('issue_number')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('issue_number')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('issue_number') }}
         </p>
       </div>
 
       <!-- 2. المستودع المصروف منه (warehouse_id) - إلزامي -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1"
-          >مستودع الصرف <span class="text-rose-500">*</span></label
-        >
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          مستودع الصرف <span class="text-rose-500">*</span>
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
-          <span class="absolute right-3 text-emerald-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span
+            class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -86,39 +87,34 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-10 pl-2 flex items-center">
+          <div class="w-full h-full pr-9 pl-1 flex items-center">
             <WarehouseDropdown
               id="issue-warehouse-id"
               v-model="formData.warehouse_id"
               label=""
-              class="w-full bg-transparent"
+              class="w-full bg-transparent header-dropdown"
             />
           </div>
         </div>
-        <p
-          v-if="getFieldError('warehouse_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('warehouse_id')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('warehouse_id') }}
         </p>
       </div>
 
       <!-- 3. تاريخ الصرف (issue_date) - إلزامي -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1"
-          >تاريخ الصرف <span class="text-rose-500">*</span></label
-        >
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          تاريخ الصرف <span class="text-rose-500">*</span>
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <input
             type="date"
             v-model="formData.issue_date"
             class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
           />
-          <span
-            class="absolute left-3 text-gray-400 pointer-events-none flex items-center text-xs z-10"
-          >
+          <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -129,21 +125,19 @@
             </svg>
           </span>
         </div>
-        <p v-if="getFieldError('issue_date')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+        <p v-if="getFieldError('issue_date')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('issue_date') }}
         </p>
       </div>
 
       <!-- 4. رقم طلب الاحتياج المرتبط (اختياري) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1"
-          >رقم طلب الاحتياج (Requisition)</label
-        >
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300"> رقم طلب الاحتياج </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span class="absolute right-3 text-sky-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -159,10 +153,7 @@
             class="block w-full h-full pr-10 pl-4 bg-transparent text-white text-xs font-mono font-bold focus:outline-none placeholder-gray-500"
           />
         </div>
-        <p
-          v-if="getFieldError('requisition_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('requisition_id')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('requisition_id') }}
         </p>
       </div>
@@ -198,5 +189,30 @@ input[type='date']::-webkit-calendar-picker-indicator {
 select option {
   background-color: #16171b !important;
   color: #f8fafc !important;
+}
+
+/* إلغاء الإطار والخلفية للقائمة المنسدلة المدمجة داخل الحاوية المخصصة */
+:deep(.header-dropdown .p-dropdown),
+:deep(.header-dropdown [data-pc-name='dropdown']),
+:deep(.header-dropdown [data-pc-section='root']),
+:deep(.header-dropdown div.inline-flex) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:deep(.header-dropdown .p-dropdown-label),
+:deep(.header-dropdown [data-pc-section='input']) {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  padding-right: 0.25rem !important;
+}
+
+:deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
+  box-shadow: none !important;
+  border: none !important;
 }
 </style>

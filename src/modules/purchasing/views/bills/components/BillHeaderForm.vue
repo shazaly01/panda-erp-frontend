@@ -75,9 +75,9 @@
       <!-- 2. المورد (supplier_id) - قائمة منسدلة لاختيار المورد -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-gray-400 pointer-events-none z-10 flex items-center">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -88,13 +88,13 @@
             </svg>
           </span>
 
-          <div class="w-full h-full pr-10 pl-2 flex items-center">
+          <div class="w-full h-full pr-9 pl-1 flex items-center">
             <SupplierDropdown
               id="bill-supplier-id"
               v-model="formData.supplier_id"
               label=""
               placeholder="اختر المورد..."
-              class="w-full bg-transparent"
+              class="w-full bg-transparent header-dropdown"
             />
           </div>
         </div>
@@ -111,9 +111,11 @@
         <!-- في حالة الشراء المباشر: يظهر حقل المستودع إلزامياً ونشطاً -->
         <div
           v-if="isDirectInventoryPurchase"
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
-          <span class="absolute right-3 text-emerald-400 pointer-events-none z-10">
+          <span
+            class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
+          >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -123,12 +125,12 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-10 pl-2 flex items-center">
+          <div class="w-full h-full pr-9 pl-1 flex items-center">
             <WarehouseDropdown
               id="bill-warehouse-id"
               v-model="formData.warehouse_id"
               label=""
-              class="w-full bg-transparent"
+              class="w-full bg-transparent header-dropdown"
             />
           </div>
         </div>
@@ -164,7 +166,7 @@
       <!-- 4. رقم فاتورة المورد الضريبية (supplier_bill_number) -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +200,7 @@
       <!-- 5. تاريخ الفاتورة (bill_date) -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <input
             type="date"
@@ -228,7 +230,7 @@
       <!-- 6. تاريخ الاستحقاق (due_date) -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <input
             type="date"
@@ -258,7 +260,7 @@
       <!-- 7. عملة الفاتورة (currency_id) -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +295,7 @@
       <!-- 8. سعر الصرف (exchange_rate) -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span
             class="absolute right-3 text-gray-400 pointer-events-none z-10 text-[11px] font-bold"
@@ -350,5 +352,30 @@ input[type='date']::-webkit-calendar-picker-indicator {
 select option {
   background-color: #16171b !important;
   color: #f8fafc !important;
+}
+
+/* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
+:deep(.header-dropdown .p-dropdown),
+:deep(.header-dropdown [data-pc-name='dropdown']),
+:deep(.header-dropdown [data-pc-section='root']),
+:deep(.header-dropdown div.inline-flex) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:deep(.header-dropdown .p-dropdown-label),
+:deep(.header-dropdown [data-pc-section='input']) {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  padding-right: 0.25rem !important;
+}
+
+:deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
+  box-shadow: none !important;
+  border: none !important;
 }
 </style>

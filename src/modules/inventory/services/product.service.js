@@ -1,8 +1,14 @@
+// src/modules/inventory/services/product.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/inventory/products'
 
 export default {
+  // بحث فائق السرعة لنقاط البيع، الكاشير، الباركود والميزان
+  fastSearch(params = {}) {
+    return apiClient.get(`${resource}/fast-search`, { params })
+  },
+
   // جلب كافة الأصناف مع دعم معلمات البحث والتصفية (مثل Category ID، Keyword، Status)
   get(params = {}) {
     return apiClient.get(resource, { params })

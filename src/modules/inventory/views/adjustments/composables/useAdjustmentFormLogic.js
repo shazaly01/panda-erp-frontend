@@ -4,7 +4,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAdjustmentStore } from '@/modules/inventory/stores/adjustmentStore'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
 import { useAuthStore } from '@/stores/authStore'
-import { useDynamicDetails } from '@/composables/useDynamicDetails'
 import { useToast } from 'vue-toastification'
 
 export function useAdjustmentFormLogic() {
@@ -18,17 +17,18 @@ export function useAdjustmentFormLogic() {
 
   const isEdit = computed(() => !!route.params.id)
   const isFormLoaded = ref(false)
+  const isSubmitting = ref(false)
 
   // تحديد النوع الافتراضي من بيانات المسار الوصفية (Route Meta)
   const routeDefaultType = computed(() => {
-    return route.meta.defaultType || route.query.type || 'physical_count'
+    return route.meta?.defaultType || route.query?.type || 'physical_count'
   })
 
   // نموذج بيانات رأس وثيقة التسوية الجردية
   const form = ref({
     adjustment_number: `ADJ-${Date.now().toString().slice(-6)}`,
     warehouse_id: '',
-    adjustment_date: new Date().toISOString().substr(0, 10),
+    adjustment_date: new Date().toISOString().substring(0, 10),
     type: routeDefaultType.value,
     status: 'draft',
     auto_approve: false,
@@ -64,32 +64,29 @@ export function useAdjustmentFormLogic() {
     }
   })
 
-  // سكيما تفاصيل بنود التسوية الجردية المتكيفة ديناميكياً مع نوع العملية
+  // سكيما تفاصيل بنود التسوية الجردية المتكيفة ديناميكياً (للتوافق المستمر)
   const detailSchema = computed(() => [
-    // أعمدة تقنية مخفية
     {
       key: 'product_id',
-      extractFromItem: (item) => item.id,
+      extractFromItem: (item) => item.product_id || item.id,
     },
     {
       key: 'available_units',
       defaultValue: [],
-      extractFromItem: (item) => item.units || [],
+      extractFromItem: (item) => item.available_units || item.units || [],
     },
     {
       key: 'batch_id',
       defaultValue: null,
       extractFromItem: (item) => item.batch_id || null,
     },
-
-    // الأعمدة المرئية
     {
       key: 'product_id_display',
       label: 'رقم الصنف',
       widthClass: 'w-[10%]',
       readonly: true,
       type: 'text',
-      extractFromItem: (item) => (item.id ? `PRD-${item.id}` : ''),
+      extractFromItem: (item) => (item.product_id ? `PRD-${item.product_id}` : ''),
     },
     {
       key: 'product_name',
@@ -97,7 +94,7 @@ export function useAdjustmentFormLogic() {
       widthClass: form.value.type === 'opening_balance' ? 'w-[35%]' : 'w-[25%]',
       readonly: true,
       type: 'text',
-      extractFromItem: (item) => item.name || '',
+      extractFromItem: (item) => item.product_name || item.name || '',
     },
     {
       key: 'product_unit_id',
@@ -105,18 +102,18 @@ export function useAdjustmentFormLogic() {
       slot: 'cell-product_unit_id',
       widthClass: 'w-[13%]',
       type: 'text',
-      extractFromItem: (item) => item.units?.[0]?.id || '',
+      extractFromItem: (item) => item.product_unit_id || item.units?.[0]?.id || '',
     },
     {
       key: 'current_quantity',
-      label: 'الرصيد الدفتري',
+      label: 'الكمية الحالية',
       type: 'number',
       readonly: true,
       defaultValue: 0,
       widthClass: 'w-[11%]',
       slot: 'cell-current_quantity',
       hidden: form.value.type === 'opening_balance',
-      extractFromItem: (item) => parseFloat(item.current_stock ?? item.stock ?? 0),
+      extractFromItem: (item) => parseFloat(item.current_quantity ?? 0),
     },
     {
       key: 'actual_quantity',
@@ -125,12 +122,7 @@ export function useAdjustmentFormLogic() {
       defaultValue: 0,
       widthClass: 'w-[12%]',
       slot: 'cell-actual_quantity',
-      extractFromItem: (item) => {
-        if (form.value.type === 'damage' || form.value.type === 'loss') {
-          return 0
-        }
-        return parseFloat(item.current_stock ?? item.stock ?? 0)
-      },
+      extractFromItem: (item) => parseFloat(item.actual_quantity ?? 0),
     },
     {
       key: 'quantity_difference',
@@ -142,18 +134,7 @@ export function useAdjustmentFormLogic() {
         form.value.type === 'opening_balance' ||
         form.value.type === 'damage' ||
         form.value.type === 'loss',
-      formula: (row) => {
-        const actual = parseFloat(row.actual_quantity) || 0
-        const current = parseFloat(row.current_quantity) || 0
-
-        if (form.value.type === 'damage' || form.value.type === 'loss') {
-          return parseFloat((-1 * actual).toFixed(4))
-        }
-        if (form.value.type === 'opening_balance') {
-          return parseFloat(actual.toFixed(4))
-        }
-        return parseFloat((actual - current).toFixed(4))
-      },
+      formula: (row) => row.quantity_difference,
       slot: 'cell-quantity_difference',
     },
     {
@@ -163,10 +144,7 @@ export function useAdjustmentFormLogic() {
       defaultValue: 0,
       widthClass: 'w-[11%]',
       slot: 'cell-unit_cost',
-      extractFromItem: (item) => {
-        const defaultUnit = item.units?.[0]
-        return parseFloat(defaultUnit?.cost_price || item.cost_price || defaultUnit?.price || 0)
-      },
+      extractFromItem: (item) => parseFloat(item.unit_cost ?? 0),
     },
     {
       key: 'total_cost',
@@ -175,20 +153,7 @@ export function useAdjustmentFormLogic() {
       readonly: true,
       summary: true,
       widthClass: 'w-[14%]',
-      formula: (row) => {
-        const qty = parseFloat(row.actual_quantity) || 0
-        const current = parseFloat(row.current_quantity) || 0
-        const cost = parseFloat(row.unit_cost) || 0
-
-        if (form.value.type === 'damage' || form.value.type === 'loss') {
-          return parseFloat((qty * cost).toFixed(4))
-        }
-        if (form.value.type === 'opening_balance') {
-          return parseFloat((qty * cost).toFixed(4))
-        }
-        const diff = qty - current
-        return parseFloat((diff * cost).toFixed(4))
-      },
+      formula: (row) => row.total_cost,
       slot: 'cell-total_cost',
     },
   ])
@@ -197,36 +162,167 @@ export function useAdjustmentFormLogic() {
     return detailSchema.value.filter((col) => col.label && !col.hidden)
   })
 
-  // إدارة تفاصيل البنود ومنع التكرار
-  const { createEmptyRow, handleItemSelected, removeRow } = useDynamicDetails(
-    items,
-    detailSchema.value,
-    {
-      uniqueKeys: ['product_id', 'product_unit_id'],
-      mergeQtyKey: null,
-    },
-  )
+  // =========================================================
+  // 1. إعادة الاحتساب المالي والكمي التلقائي للبند
+  // =========================================================
+  const recalculateLine = (row) => {
+    const actual = parseFloat(row.actual_quantity) || 0
+    const current = parseFloat(row.current_quantity) || 0
+    const cost = parseFloat(row.unit_cost) || 0
+
+    let diff = 0
+    let lineTotal = 0
+
+    if (form.value.type === 'damage' || form.value.type === 'loss') {
+      diff = -1 * actual
+      lineTotal = actual * cost
+    } else if (form.value.type === 'opening_balance') {
+      diff = actual
+      lineTotal = actual * cost
+    } else {
+      diff = actual - current
+      lineTotal = diff * cost
+    }
+
+    row.quantity_difference = parseFloat(diff.toFixed(4))
+    row.total_cost = parseFloat(lineTotal.toFixed(4))
+  }
+
+  // =========================================================
+  // 2. إدارة سطور البنود
+  // =========================================================
+  const createEmptyRow = () => {
+    return {
+      id: undefined,
+      product_id_display: '',
+      product_name: '',
+      product_id: null,
+      product_unit_id: null,
+      unit_name: '',
+      batch_id: null,
+      current_quantity: 0,
+      actual_quantity: 0,
+      quantity_difference: 0,
+      unit_cost: 0,
+      total_cost: 0,
+      available_units: [],
+      notes: '',
+    }
+  }
 
   const triggerAddNewEmptyLine = () => {
     items.value.push(createEmptyRow())
   }
 
-  const handleGlobalItemSelect = (selectedItem) => {
-    if (!selectedItem) return
-    handleItemSelected(selectedItem)
+  const removeRow = (index) => {
+    if (items.value.length === 1) {
+      items.value[0] = createEmptyRow()
+      return
+    }
+    items.value.splice(index, 1)
   }
 
-  // مزامنة التكلفة والرصيد الدفتري عند تغيير الوحدة
+  // اختيار صنف مع منع تكرار نفس الصنف في أكثر من سطر
+  const selectProductForRow = (row, selectedProduct, currentRowIndex = null) => {
+    if (!selectedProduct) return false
+
+    const existingIndex = items.value.findIndex(
+      (it, idx) =>
+        it.product_id === selectedProduct.id &&
+        (currentRowIndex !== null ? idx !== currentRowIndex : it !== row),
+    )
+
+    if (existingIndex !== -1) {
+      toast.warning(
+        `الصنف "${selectedProduct.name}" مضاف مسبقاً في السطر رقم (${existingIndex + 1}).`,
+      )
+      return false
+    }
+
+    const matchedUnit = selectedProduct.unit || selectedProduct.units?.[0] || null
+    const resolvedCost =
+      matchedUnit?.cost_price !== undefined && matchedUnit?.cost_price !== null
+        ? parseFloat(matchedUnit.cost_price)
+        : parseFloat(selectedProduct.cost_price || selectedProduct.price || 0)
+
+    // استخراج رصيد الصنف المتوفر بدقة مع دعم كافة أسماء الحقول المرتجعة من البحث أو المتجر
+    const rawStock =
+      selectedProduct.available_quantity !== undefined &&
+      selectedProduct.available_quantity !== null
+        ? selectedProduct.available_quantity
+        : selectedProduct.current_stock !== undefined && selectedProduct.current_stock !== null
+          ? selectedProduct.current_stock
+          : selectedProduct.stock !== undefined && selectedProduct.stock !== null
+            ? selectedProduct.stock
+            : selectedProduct.quantity !== undefined && selectedProduct.quantity !== null
+              ? selectedProduct.quantity
+              : selectedProduct.current_quantity !== undefined &&
+                  selectedProduct.current_quantity !== null
+                ? selectedProduct.current_quantity
+                : 0
+
+    const resolvedStock = parseFloat(rawStock) || 0
+
+    row.product_id = selectedProduct.id
+    row.product_id_display = `PRD-${selectedProduct.id}`
+    row.product_name = selectedProduct.name || ''
+    row.product_unit_id = matchedUnit?.id || null
+    row.unit_name = matchedUnit?.unit_name || matchedUnit?.name || ''
+    row.available_units = selectedProduct.units || selectedProduct.available_units || []
+    row.current_quantity = resolvedStock
+    row.unit_cost = resolvedCost
+
+    if (form.value.type === 'damage' || form.value.type === 'loss') {
+      row.actual_quantity = 0
+    } else if (form.value.type === 'opening_balance') {
+      row.actual_quantity = row.actual_quantity || 1
+    } else {
+      row.actual_quantity = resolvedStock
+    }
+
+    recalculateLine(row)
+    return true
+  }
+
+  const handleGlobalItemSelect = (selectedItem) => {
+    if (!selectedItem) return
+    let targetRow = items.value[items.value.length - 1]
+    if (!targetRow || targetRow.product_id) {
+      targetRow = createEmptyRow()
+      items.value.push(targetRow)
+    }
+    const targetIndex = items.value.indexOf(targetRow)
+    selectProductForRow(targetRow, selectedItem, targetIndex)
+  }
+
   const syncUnitDetails = (row) => {
     const matchedUnit = row.available_units?.find((u) => u.id === row.product_unit_id)
     if (matchedUnit) {
+      row.unit_name = matchedUnit.unit_name || matchedUnit.name || ''
       if (matchedUnit.cost_price !== undefined && matchedUnit.cost_price !== null) {
         row.unit_cost = parseFloat(matchedUnit.cost_price) || 0
       }
     }
+    recalculateLine(row)
   }
 
-  // مراقبة المستودع لتحديث قائمة الأصناف والأرصدة
+  const incrementQuantity = (row) => {
+    const current = parseFloat(row.actual_quantity) || 0
+    row.actual_quantity = current + 1
+    recalculateLine(row)
+  }
+
+  const decrementQuantity = (row) => {
+    const current = parseFloat(row.actual_quantity) || 0
+    if (current > 0) {
+      row.actual_quantity = current - 1
+      recalculateLine(row)
+    }
+  }
+
+  // =========================================================
+  // 3. مراقبة المستودع لتحديث قائمة الأصناف والأرصدة الدفترية
+  // =========================================================
   watch(
     () => form.value.warehouse_id,
     async (newWarehouseId) => {
@@ -249,6 +345,7 @@ export function useAdjustmentFormLogic() {
           items.value.forEach((row) => {
             if (row.product_id && stockMap[row.product_id] !== undefined) {
               row.current_quantity = parseFloat(stockMap[row.product_id]) || 0
+              recalculateLine(row)
             }
           })
         } catch (err) {
@@ -258,7 +355,9 @@ export function useAdjustmentFormLogic() {
     },
   )
 
-  // الإجماليات الحسابية
+  // =========================================================
+  // 4. الإجماليات الحسابية
+  // =========================================================
   const totalDifferenceCost = computed(() => {
     return items.value.reduce((sum, row) => sum + (parseFloat(row.total_cost) || 0), 0)
   })
@@ -309,64 +408,112 @@ export function useAdjustmentFormLogic() {
     }
   }
 
+  // =========================================================
+  // 5. تحميل البيانات عند الفتح
+  // =========================================================
   onMounted(async () => {
-    if (isEdit.value) {
-      await adjustmentStore.fetchAdjustment(route.params.id)
-      if (adjustmentStore.currentAdjustment) {
-        const cur = adjustmentStore.currentAdjustment
+    isFormLoaded.value = false
+    try {
+      if (isEdit.value) {
+        await adjustmentStore.fetchAdjustment(route.params.id)
+        if (adjustmentStore.currentAdjustment) {
+          const cur = adjustmentStore.currentAdjustment
 
-        form.value = {
-          adjustment_number: cur.adjustment_number,
-          warehouse_id: cur.warehouse_id || '',
-          adjustment_date: cur.adjustment_date
-            ? cur.adjustment_date.substr(0, 10)
-            : new Date().toISOString().substr(0, 10),
-          type: cur.type || routeDefaultType.value,
-          status: cur.status || 'draft',
-          auto_approve: false,
-          notes: cur.notes || '',
-        }
-
-        items.value = (cur.items || []).map((it) => {
-          return {
-            product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
-            product_name: it.product?.name || it.product_name || '',
-            product_id: it.product_id,
-            product_unit_id: it.product_unit_id,
-            batch_id: it.batch_id || null,
-            current_quantity: parseFloat(it.current_quantity) || 0,
-            actual_quantity: parseFloat(it.actual_quantity) || 0,
-            quantity_difference: parseFloat(it.quantity_difference) || 0,
-            unit_cost: parseFloat(it.unit_cost) || 0,
-            total_cost: parseFloat(it.total_cost) || 0,
-            available_units: it.product?.units || it.available_units || [],
-            notes: it.notes || '',
-            _flashing: false,
+          form.value = {
+            adjustment_number: cur.adjustment_number,
+            warehouse_id: cur.warehouse_id || '',
+            adjustment_date: cur.adjustment_date
+              ? cur.adjustment_date.substring(0, 10)
+              : new Date().toISOString().substring(0, 10),
+            type: cur.type || routeDefaultType.value,
+            status: cur.status || 'draft',
+            auto_approve: false,
+            notes: cur.notes || '',
           }
-        })
 
-        if (cur.warehouse_id) {
-          await productStore.fetchProducts({ is_active: 1, store_id: cur.warehouse_id, all: true })
+          items.value = (cur.items || []).map((it) => {
+            const actual = parseFloat(it.actual_quantity) || 0
+            const current = parseFloat(it.current_quantity) || 0
+            const cost = parseFloat(it.unit_cost) || 0
+            let diff = parseFloat(it.quantity_difference) || 0
+            let total = parseFloat(it.total_cost) || 0
 
-          items.value.forEach((row) => {
-            const matchedStoreItem = productStore.products?.find((it) => it.id === row.product_id)
-            if (matchedStoreItem) {
-              row.available_units = matchedStoreItem.units || []
+            if (it.quantity_difference === undefined || it.total_cost === undefined) {
+              if (cur.type === 'damage' || cur.type === 'loss') {
+                diff = -1 * actual
+                total = actual * cost
+              } else if (cur.type === 'opening_balance') {
+                diff = actual
+                total = actual * cost
+              } else {
+                diff = actual - current
+                total = diff * cost
+              }
+            }
+
+            return {
+              id: it.id,
+              product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
+              product_name: it.product?.name || it.product_name || '',
+              product_id: it.product_id,
+              product_unit_id: it.product_unit_id,
+              unit_name: it.product_unit?.unit?.name || it.unit_name || '',
+              batch_id: it.batch_id || null,
+              current_quantity: current,
+              actual_quantity: actual,
+              quantity_difference: diff,
+              unit_cost: cost,
+              total_cost: total,
+              available_units: it.product?.units || it.available_units || [],
+              notes: it.notes || '',
             }
           })
-        }
-      }
-    } else {
-      if (authStore.user) {
-        form.value.warehouse_id = authStore.user.warehouse_id || authStore.user.store_id || ''
-      }
-    }
 
-    isFormLoaded.value = true
+          if (cur.warehouse_id) {
+            await productStore.fetchProducts({
+              is_active: 1,
+              store_id: cur.warehouse_id,
+              all: true,
+            })
+
+            items.value.forEach((row) => {
+              const matchedStoreItem = productStore.products?.find((p) => p.id === row.product_id)
+              if (matchedStoreItem) {
+                row.available_units = matchedStoreItem.units || []
+              }
+            })
+          }
+        }
+      } else {
+        if (authStore.user) {
+          form.value.warehouse_id = authStore.user.warehouse_id || authStore.user.store_id || ''
+        }
+        if (form.value.warehouse_id) {
+          await productStore.fetchProducts({
+            is_active: 1,
+            store_id: form.value.warehouse_id,
+            all: true,
+          })
+        }
+        items.value = [createEmptyRow()]
+      }
+    } catch (err) {
+      console.error('فشل في تحميل بيانات وثيقة التسوية:', err)
+      toast.error('حدث خطأ أثناء تحميل بيانات وثيقة التسوية.')
+    } finally {
+      isFormLoaded.value = true
+    }
   })
 
-  // تجهيز وحفظ البيانات
+  // =========================================================
+  // 6. تجهيز وحفظ البيانات
+  // =========================================================
   const handleSubmit = async (approveDirectly = false) => {
+    if (!form.value.warehouse_id) {
+      toast.error('يجب اختيار المستودع أولاً.')
+      return
+    }
+
     const dynamicItemsPayload = items.value
       .filter((row) => row.product_id && row.product_unit_id)
       .map((row) => {
@@ -381,9 +528,10 @@ export function useAdjustmentFormLogic() {
         }
 
         return {
-          product_id: row.product_id,
-          product_unit_id: row.product_unit_id,
-          batch_id: row.batch_id || null,
+          id: row.id || undefined,
+          product_id: Number(row.product_id),
+          product_unit_id: Number(row.product_unit_id),
+          batch_id: row.batch_id ? Number(row.batch_id) : null,
           current_quantity: current,
           actual_quantity: actual,
           quantity_difference: diff,
@@ -404,6 +552,8 @@ export function useAdjustmentFormLogic() {
       items: dynamicItemsPayload,
     }
 
+    isSubmitting.value = true
+
     try {
       if (isEdit.value) {
         await adjustmentStore.updateAdjustment(route.params.id, finalPayload)
@@ -419,6 +569,8 @@ export function useAdjustmentFormLogic() {
       router.push(getRedirectRoute())
     } catch {
       toast.error('فشلت عملية حفظ وثيقة التسوية، يرجى مراجعة الحقول المطلوبة والأخطاء.')
+    } finally {
+      isSubmitting.value = false
     }
   }
 
@@ -426,6 +578,9 @@ export function useAdjustmentFormLogic() {
     router.push(getRedirectRoute())
   }
 
+  // =========================================================
+  // 7. دوال التنسيق
+  // =========================================================
   const formatNumber = (value) => {
     if (value === null || value === undefined || value === '') return ''
     const num = Number(value)
@@ -447,6 +602,7 @@ export function useAdjustmentFormLogic() {
 
   return {
     isFormLoaded,
+    isSubmitting,
     isEdit,
     form,
     items,
@@ -464,8 +620,13 @@ export function useAdjustmentFormLogic() {
     formatNumber,
     unformatNumber,
     syncUnitDetails,
+    recalculateLine,
+    incrementQuantity,
+    decrementQuantity,
+    createEmptyRow,
     removeRow,
     triggerAddNewEmptyLine,
+    selectProductForRow,
     handleGlobalItemSelect,
     adjustmentStore,
     productStore,

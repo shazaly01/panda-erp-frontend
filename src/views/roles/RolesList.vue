@@ -129,6 +129,9 @@ const isDefaultRole = (roleName) => {
     'Inventory Manager',
     'Inventory Officer',
     'Inventory Worker',
+    'Purchasing Manager',
+    'Purchasing Officer',
+    'Purchasing Requester',
   ].includes(roleName)
 }
 
@@ -178,7 +181,6 @@ const handleNameSubmit = async (formData) => {
 const handlePermissionsSubmit = async (rolePayload) => {
   if (!selectedRole.value) return
   try {
-    // 🌟 إصلاح جوهري: نمرر الـ payload الكامل (اسم الدور + مصفوفة مسميات الصلاحيات) المتوقع من دالة الـ Service
     await roleStore.updateRole(selectedRole.value.id, rolePayload)
     toast.success('تم تحديث وصيانة مصفوفة الصلاحيات للدور المختار بنجاح.')
     isPermissionsDialogVisible.value = false

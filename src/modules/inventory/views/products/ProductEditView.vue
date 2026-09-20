@@ -1,23 +1,16 @@
 <!--src\modules\inventory\views\products\ProductEditView.vue-->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <!-- الشريط العلوي لشاشة التعديل -->
-    <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-section p-6 rounded-2xl border border-surface-border shadow-sm"
-    >
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">تعديل الصنف: {{ form.name || '...' }}</h1>
-        <p class="text-sm text-text-muted mt-1">
-          تحديث بيانات الصنف، تغيير أسعار الوحدات، أو تعديل قواعد إعادة الطلب والباركود.
-        </p>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <AppButton variant="secondary" @click="cancel" :disabled="isSaving"> إلغاء </AppButton>
-        <AppButton @click="submit" :disabled="isSaving || isLoading">
-          <span v-if="isSaving">جاري الحفظ...</span>
-          <span v-else>حفظ التعديلات</span>
-        </AppButton>
+  <div class="space-y-4 max-w-7xl mx-auto pb-28">
+    <!-- ترويسة بسيطة مدمجة في سطر واحد -->
+    <div class="flex items-center justify-between px-1 py-1">
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-xl font-bold text-text-primary">
+          تعديل الصنف:
+          <span class="text-blue-600 dark:text-sky-400 font-semibold">{{
+            form.name || '...'
+          }}</span>
+        </h1>
+        <span class="text-xs text-text-muted hidden sm:inline">• وحدة إدارة المخازن</span>
       </div>
     </div>
 
@@ -57,11 +50,40 @@
         :warehouses="warehouses"
       />
     </div>
+
+    <!-- شريط الإجراءات السفلي العائم (مطابق لشاشة الإضافة تماماً) -->
+    <div
+      class="fixed bottom-0 left-0 right-0 z-30 bg-surface-section/95 backdrop-blur-md border-t border-surface-border py-3.5 px-6 shadow-lg"
+    >
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="text-xs text-text-muted hidden sm:block">
+          تلميح: يمكنك الضغط على
+          <kbd
+            class="px-1.5 py-0.5 bg-surface-ground border border-surface-border rounded font-mono font-bold text-text-primary"
+            >Ctrl</kbd
+          >
+          +
+          <kbd
+            class="px-1.5 py-0.5 bg-surface-ground border border-surface-border rounded font-mono font-bold text-text-primary"
+            >Enter</kbd
+          >
+          للحفظ السريع.
+        </div>
+
+        <div class="flex items-center gap-3 ms-auto">
+          <AppButton variant="secondary" @click="cancel" :disabled="isSaving"> إلغاء </AppButton>
+          <AppButton @click="submit" :disabled="isSaving || isLoading">
+            <span v-if="isSaving">جاري الحفظ...</span>
+            <span v-else>حفظ التعديلات</span>
+          </AppButton>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
@@ -152,7 +174,19 @@ const mapProductToForm = (p) => {
   }
 }
 
+// اختصار الحفظ السريع عبر لوحة المفاتيح
+const handleGlobalKeydown = (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault()
+    if (!isSaving.value && !isLoading.value) {
+      submit()
+    }
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener('keydown', handleGlobalKeydown)
+
   try {
     const [categoriesRes, unitsRes, priceListsRes, warehousesRes, productData] = await Promise.all([
       axios.get('/inventory/categories?is_active=1'),
@@ -175,6 +209,10 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
 })
 
 const cancel = () => {

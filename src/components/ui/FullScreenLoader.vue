@@ -1,3 +1,4 @@
+<!---src\components\ui\FullScreenLoader.vue--->
 <template>
   <!--
     استخدمنا Transition لجعل ظهور واختفاء شاشة التحميل أكثر سلاسة.

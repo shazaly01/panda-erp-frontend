@@ -477,6 +477,7 @@
 │   │   │   │   │   ├── CategoryModal.vue
 │   │   │   ├── [DIR] products
 │   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── ProductAdvancedDetails.vue
 │   │   │   │   │   ├── ProductForm.vue
 │   │   │   │   │   ├── ProductsFilter.vue
 │   │   │   │   │   ├── ProductsTable.vue
@@ -526,12 +527,24 @@
 │   │   │   │   │   ├── WarehousesTable.vue
 │   │   │   │   ├── WarehousesList.vue
 │   ├── [DIR] purchasing
+│   │   ├── [DIR] forms
+│   │   │   ├── SupplierDropdown.vue
 │   │   ├── menu.js
 │   │   ├── router.js
 │   │   ├── [DIR] services
 │   │   │   ├── purchaseBill.service.js
+│   │   │   ├── purchaseIssue.service.js
+│   │   │   ├── purchaseOrder.service.js
+│   │   │   ├── purchaseReceipt.service.js
+│   │   │   ├── purchaseRequisition.service.js
+│   │   │   ├── supplier.service.js
 │   │   ├── [DIR] stores
 │   │   │   ├── purchaseBillStore.js
+│   │   │   ├── purchaseIssueStore.js
+│   │   │   ├── purchaseOrderStore.js
+│   │   │   ├── purchaseReceiptStore.js
+│   │   │   ├── purchaseRequisitionStore.js
+│   │   │   ├── supplierStore.js
 │   │   ├── [DIR] views
 │   │   │   ├── [DIR] bills
 │   │   │   │   ├── [DIR] components
@@ -545,6 +558,74 @@
 │   │   │   │   │   ├── usePurchaseBillFormLogic.js
 │   │   │   │   ├── PurchaseBillFormPage.vue
 │   │   │   │   ├── PurchaseBillsList.vue
+│   │   │   ├── [DIR] issues
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── IssueHeaderForm.vue
+│   │   │   │   │   ├── IssueItemsTable.vue
+│   │   │   │   │   ├── IssuesFilter.vue
+│   │   │   │   │   ├── IssuesTable.vue
+│   │   │   │   │   ├── IssueSummaryFooter.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── usePurchaseIssueFormLogic.js
+│   │   │   │   ├── PurchaseIssueFormPage.vue
+│   │   │   │   ├── PurchaseIssuesList.vue
+│   │   │   ├── [DIR] orders
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── OrderHeaderForm.vue
+│   │   │   │   │   ├── OrderItemsTable.vue
+│   │   │   │   │   ├── OrdersFilter.vue
+│   │   │   │   │   ├── OrdersTable.vue
+│   │   │   │   │   ├── OrderSummaryFooter.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── usePurchaseOrderFormLogic.js
+│   │   │   │   ├── PurchaseOrderFormPage.vue
+│   │   │   │   ├── PurchaseOrdersList.vue
+│   │   │   ├── [DIR] receipts
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── ReceiptHeaderForm.vue
+│   │   │   │   │   ├── ReceiptItemsTable.vue
+│   │   │   │   │   ├── ReceiptsFilter.vue
+│   │   │   │   │   ├── ReceiptsTable.vue
+│   │   │   │   │   ├── ReceiptSummaryFooter.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── usePurchaseReceiptFormLogic.js
+│   │   │   │   ├── PurchaseReceiptFormPage.vue
+│   │   │   │   ├── PurchaseReceiptsList.vue
+│   │   │   ├── [DIR] requisitions
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── RejectRequisitionModal.vue
+│   │   │   │   │   ├── RequisitionHeaderForm.vue
+│   │   │   │   │   ├── RequisitionItemsTable.vue
+│   │   │   │   │   ├── RequisitionsFilter.vue
+│   │   │   │   │   ├── RequisitionsTable.vue
+│   │   │   │   │   ├── RequisitionSummaryFooter.vue
+│   │   │   │   │   ├── TriageRequisitionModal.vue
+│   │   │   │   ├── [DIR] composables
+│   │   │   │   │   ├── usePurchaseRequisitionFormLogic.js
+│   │   │   │   ├── PurchaseRequisitionFormPage.vue
+│   │   │   │   ├── PurchaseRequisitionsList.vue
+│   │   │   ├── [DIR] suppliers
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── SupplierForm.vue
+│   │   │   │   │   ├── SupplierModal.vue
+│   │   │   │   │   ├── SuppliersFilter.vue
+│   │   │   │   │   ├── SuppliersTable.vue
+│   │   │   │   ├── SuppliersList.vue
+│   ├── [DIR] sales
+│   │   ├── [DIR] forms
+│   │   │   ├── CustomerDropdown.vue
+│   │   ├── [DIR] services
+│   │   │   ├── customer.service.js
+│   │   ├── [DIR] stores
+│   │   │   ├── customerStore.js
+│   │   ├── [DIR] views
+│   │   │   ├── [DIR] customers
+│   │   │   │   ├── [DIR] components
+│   │   │   │   │   ├── CustomerForm.vue
+│   │   │   │   │   ├── CustomerModal.vue
+│   │   │   │   │   ├── CustomersFilter.vue
+│   │   │   │   │   ├── CustomersTable.vue
+│   │   │   │   ├── CustomersList.vue
 ├── [DIR] router
 │   ├── index.js
 │   ├── navigation.js

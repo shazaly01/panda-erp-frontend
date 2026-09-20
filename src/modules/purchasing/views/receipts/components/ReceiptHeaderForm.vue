@@ -1,11 +1,13 @@
-<!--src/modules/purchasing/views/receipts/components/ReceiptHeaderForm.vue-->
+<!-- src/modules/purchasing/views/receipts/components/ReceiptHeaderForm.vue -->
 <template>
   <div
-    class="p-5 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4 text-right font-sans"
+    class="p-4 sm:p-5 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl space-y-4 text-right font-sans"
     dir="rtl"
   >
     <!-- شريط التوجيه الذكي ومسار الاستلام المخزني -->
-    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-700/40">
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-surface-border/60"
+    >
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-gray-300">مسار الاستلام:</span>
         <span
@@ -37,13 +39,13 @@
     <!-- الشبكة الأساسية للحقول اللوجستية -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <!-- 1. رقم سند الاستلام التسلسلي (receipt_number) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1"> رقم سند الاستلام </label>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300"> رقم سند الاستلام </label>
         <div
-          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-lg flex items-center shadow-inner cursor-not-allowed"
+          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed"
         >
           <span class="absolute right-3 text-sky-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -61,24 +63,23 @@
             class="block w-full h-full pr-10 pl-4 bg-transparent text-gray-400 font-mono font-bold text-xs focus:outline-none cursor-not-allowed select-none"
           />
         </div>
-        <p
-          v-if="getFieldError('receipt_number')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('receipt_number')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('receipt_number') }}
         </p>
       </div>
 
       <!-- 2. المستودع المستلم (warehouse_id) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1">
-          المستودع المستلم <span class="text-rose-400">*</span>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          المستودع المستلم <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
-          <span class="absolute right-3 text-emerald-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span
+            class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -87,33 +88,30 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-10 pl-2 flex items-center">
+          <div class="w-full h-full pr-9 pl-1 flex items-center">
             <WarehouseDropdown
               id="receipt-warehouse-id"
               v-model="formData.warehouse_id"
               label=""
-              class="w-full bg-transparent"
+              class="w-full bg-transparent header-dropdown"
             />
           </div>
         </div>
-        <p
-          v-if="getFieldError('warehouse_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('warehouse_id')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('warehouse_id') }}
         </p>
       </div>
 
       <!-- 3. المورد التجاري (supplier_id) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1">
-          المورد / جهة التوريد <span class="text-rose-400">*</span>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          المورد / جهة التوريد <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span class="absolute right-3 text-gray-400 pointer-events-none z-10 flex items-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -122,31 +120,28 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-10 pl-2 flex items-center">
+          <div class="w-full h-full pr-9 pl-1 flex items-center">
             <SupplierDropdown
               id="receipt-supplier-id"
               v-model="formData.supplier_id"
               label=""
               placeholder="اختر المورد..."
-              class="w-full bg-transparent"
+              class="w-full bg-transparent header-dropdown"
             />
           </div>
         </div>
-        <p
-          v-if="getFieldError('supplier_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('supplier_id')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('supplier_id') }}
         </p>
       </div>
 
       <!-- 4. تاريخ الاستلام المخزني (receipt_date) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1">
-          تاريخ الاستلام <span class="text-rose-400">*</span>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          تاريخ الاستلام <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <input
             type="date"
@@ -164,22 +159,19 @@
             </svg>
           </span>
         </div>
-        <p
-          v-if="getFieldError('receipt_date')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('receipt_date')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('receipt_date') }}
         </p>
       </div>
 
       <!-- 5. رقم إذن تسليم المورد (supplier_delivery_note) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1"> رقم إذن تسليم المورد </label>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300"> رقم إذن تسليم المورد </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -198,22 +190,20 @@
         </div>
         <p
           v-if="getFieldError('supplier_delivery_note')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-rose-400 text-[10px] font-bold pr-1"
         >
           {{ getFieldError('supplier_delivery_note') }}
         </p>
       </div>
 
       <!-- 6. رقم بوليصة الشحن (waybill_number) -->
-      <div class="relative w-full">
-        <label class="block text-[11px] font-bold text-gray-400 mb-1">
-          رقم بوليصة الشحن / الناقل
-        </label>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300"> رقم بوليصة الشحن / الناقل </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -230,10 +220,7 @@
             class="block w-full h-full pr-10 pl-4 bg-transparent text-white text-xs font-mono font-bold focus:outline-none placeholder-gray-500"
           />
         </div>
-        <p
-          v-if="getFieldError('waybill_number')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('waybill_number')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('waybill_number') }}
         </p>
       </div>
@@ -265,5 +252,35 @@ input[type='date']::-webkit-calendar-picker-indicator {
   filter: invert(1);
   cursor: pointer;
   opacity: 0.6;
+}
+
+select option {
+  background-color: #16171b !important;
+  color: #f8fafc !important;
+}
+
+/* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
+:deep(.header-dropdown .p-dropdown),
+:deep(.header-dropdown [data-pc-name='dropdown']),
+:deep(.header-dropdown [data-pc-section='root']),
+:deep(.header-dropdown div.inline-flex) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:deep(.header-dropdown .p-dropdown-label),
+:deep(.header-dropdown [data-pc-section='input']) {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  padding-right: 0.25rem !important;
+}
+
+:deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
+  box-shadow: none !important;
+  border: none !important;
 }
 </style>

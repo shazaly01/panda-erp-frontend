@@ -1,117 +1,112 @@
-<!--src/modules/purchasing/views/receipts/components/ReceiptSummaryFooter.vue-->
+<!-- src/modules/purchasing/views/receipts/components/ReceiptSummaryFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة ملخص الكميات والتكلفة التقديرية -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-right font-sans" dir="rtl">
+    <!-- 1. بطاقة ملخص الكميات والتكلفة التقديرية (4 أعمدة - مركزة وملمومة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="md:col-span-4 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-3"
     >
-      <div class="space-y-2 text-xs font-semibold text-gray-400">
+      <div class="space-y-2.5 text-xs font-semibold text-gray-400">
         <h3
-          class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 flex justify-between items-center"
+          class="text-xs font-black text-gray-200 border-b border-[#3b3f4f]/60 pb-2 flex justify-between items-center"
         >
-          <span>إحصائيات الفحص والاستلام</span>
-          <span class="text-[10px] text-gray-400 font-mono">{{ totalItemsCount }} بند مسجل</span>
+          <span class="flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-[#e05e2b]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              />
+            </svg>
+            <span>إحصائيات الفحص والاستلام</span>
+          </span>
+          <span
+            class="text-[10px] text-gray-400 font-mono bg-[#16171b] px-2 py-0.5 rounded-md border border-[#3e414c]"
+          >
+            {{ totalItemsCount }} بند مسجل
+          </span>
         </h3>
 
         <!-- إجمالي الكميات المستلمة فعلياً -->
-        <div class="flex justify-between border-b border-gray-700/30 pb-1 text-sky-300">
-          <span>إجمالي الكميات المستلمة:</span>
-          <span class="font-mono font-bold">{{ formatNumber(totalReceivedQuantity) }}</span>
+        <div class="flex items-baseline justify-between text-sky-300">
+          <span class="shrink-0">إجمالي الكميات المستلمة:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-sky-500/20"></span>
+          <span class="font-mono font-bold shrink-0">{{
+            formatNumber(totalReceivedQuantity)
+          }}</span>
         </div>
 
         <!-- إجمالي الكميات المقبولة لإدخالها المخزن -->
-        <div class="flex justify-between border-b border-gray-700/30 pb-1 text-emerald-400">
-          <span>الكميات المقبولة (للمخزن):</span>
-          <span class="font-mono font-bold">{{ formatNumber(totalAcceptedQuantity) }}</span>
+        <div class="flex items-baseline justify-between text-emerald-400">
+          <span class="shrink-0">الكميات المقبولة (للمخزن):</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-emerald-500/20"></span>
+          <span class="font-mono font-bold shrink-0">{{
+            formatNumber(totalAcceptedQuantity)
+          }}</span>
         </div>
 
         <!-- إجمالي الكميات المرفوضة في الفحص -->
-        <div class="flex justify-between border-b border-gray-700/30 pb-1 text-rose-400">
-          <span>الكميات المرفوضة (تالف/غير مطابق):</span>
-          <span class="font-mono font-bold">{{ formatNumber(totalRejectedQuantity) }}</span>
+        <div class="flex items-baseline justify-between text-rose-400">
+          <span class="shrink-0">الكميات المرفوضة:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-rose-500/20"></span>
+          <span class="font-mono font-bold shrink-0">{{
+            formatNumber(totalRejectedQuantity)
+          }}</span>
         </div>
       </div>
 
       <!-- إجمالي التكلفة التقديرية للبضاعة المقبولة -->
-      <div class="pt-1">
+      <div class="pt-2">
         <div
-          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-lg shadow-[inner_0_0_10px_rgba(0,0,0,0.5)] text-emerald-400"
+          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-xl shadow-inner text-emerald-400"
         >
           <span class="font-black text-xs">إجمالي التكلفة التقديرية:</span>
-          <span class="text-lg font-mono font-black tracking-wide">
+          <span class="text-base font-mono font-black tracking-wide">
             {{ formatCurrency(totalEstimatedCost) }}
           </span>
         </div>
       </div>
     </div>
 
-    <!-- 2. بطاقة الحالة التشغيلية والأثر المخزني -->
+    <!-- 2. بطاقة الملاحظات وتقرير المعاينة (8 أعمدة - مساحة عملية ومريحة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="md:col-span-8 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-2"
     >
-      <div class="space-y-3">
-        <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-          الحالة والأثر المخزني
-        </h3>
-
-        <!-- حالة السند الحالية -->
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center justify-between"
-        >
-          <span class="text-xs font-bold text-gray-400">حالة السند:</span>
-          <span
-            class="font-mono text-xs font-black px-2.5 py-0.5 rounded"
-            :class="statusBadgeClass"
-          >
-            {{ statusBadgeText }}
-          </span>
+      <div class="flex flex-col flex-1">
+        <div class="flex items-center justify-between border-b border-[#3b3f4f]/60 pb-2 mb-2">
+          <label class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <span>ملاحظات الاستلام والمعاينة</span>
+          </label>
+          <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
         </div>
 
-        <!-- توضيح الأثر اللوجستي والمخزني -->
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex flex-col space-y-1.5"
-        >
-          <div class="flex items-center gap-1.5">
-            <span
-              class="w-2 h-2 rounded-full"
-              :class="formData.status === 'received' ? 'bg-emerald-400' : 'bg-amber-400'"
-            ></span>
-            <span class="text-[11px] font-bold text-gray-300">الأثر المخزني المباشر:</span>
-          </div>
-          <p class="text-[10px] text-gray-400 font-medium leading-relaxed">
-            {{ inventoryImpactDescription }}
-          </p>
-        </div>
+        <textarea
+          v-model="formData.notes"
+          rows="4"
+          placeholder="سجل حالة الصناديق، سلامة التغليف، ملاحظات السائق والناقل، أو تفاصيل الفحص الظاهري..."
+          class="w-full flex-1 p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
+        ></textarea>
       </div>
 
-      <!-- إشعار الربط المرجعي -->
-      <div
-        class="p-2 bg-[#16171b]/60 border border-gray-800 rounded-lg text-[10px] text-gray-400 flex justify-between font-mono"
-      >
-        <span
-          >نوع العملية:
-          {{ isOrderLinked ? 'توريد وفق أمر شراء معتمد' : 'إدخال مخزني حر ومباشر' }}</span
-        >
-      </div>
-    </div>
-
-    <!-- 3. بطاقة الملاحظات وتقرير المعاينة -->
-    <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col space-y-1.5"
-    >
-      <label
-        class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 mb-1 flex justify-between items-center"
-      >
-        <span>ملاحظات الاستلام وتقرير المعاينة</span>
-        <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
-      </label>
-      <textarea
-        v-model="formData.notes"
-        rows="4"
-        placeholder="سجل حالة الصناديق، سلامة التغليف، ملاحظات السائق والناقل، أو تفاصيل الفحص الظاهري..."
-        class="block w-full h-full min-h-[140px] p-3 border border-[#3e414c] rounded-lg bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] outline-none transition-all resize-none"
-      ></textarea>
-      <p v-if="getFieldError('notes')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
         {{ getFieldError('notes') }}
       </p>
     </div>
@@ -119,7 +114,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { formatCurrency } from '@/utils/formatters'
 
 const formData = defineModel({ type: Object, required: true })
@@ -132,38 +126,6 @@ const props = defineProps({
   totalEstimatedCost: { type: Number, required: true },
   isOrderLinked: { type: Boolean, default: false },
   validationErrors: { type: Object, default: () => null },
-})
-
-const statusBadgeText = computed(() => {
-  switch (formData.value.status) {
-    case 'received':
-      return 'تم الاستلام وإثبات المخزون'
-    case 'cancelled':
-      return 'سند استلام ملغي'
-    default:
-      return 'مسودة قيد الفحص والمراجعة'
-  }
-})
-
-const statusBadgeClass = computed(() => {
-  switch (formData.value.status) {
-    case 'received':
-      return 'bg-emerald-950/50 text-emerald-400 border border-emerald-500/30'
-    case 'cancelled':
-      return 'bg-rose-950/50 text-rose-400 border border-rose-500/30'
-    default:
-      return 'bg-amber-950/50 text-amber-400 border border-amber-500/30'
-  }
-})
-
-const inventoryImpactDescription = computed(() => {
-  if (formData.value.status === 'received') {
-    return 'تم ترحيل الكميات المقبولة فعلياً إلى رصيد المستودع، وتم إنشاء حركات المخزون ذات الصلة بنجاح.'
-  }
-  if (formData.value.status === 'cancelled') {
-    return 'السند ملغي ولا يوجد له أي تأثير على أرصدة المستودع أو حركة المخزون.'
-  }
-  return 'المسودة الحالية لا تؤثر على أرصدة المستودع. عند الضغط على تأكيد الاستلام، سيتم إدخال الكميات المقبولة فقط إلى المخزن.'
 })
 
 const formatNumber = (value) => {

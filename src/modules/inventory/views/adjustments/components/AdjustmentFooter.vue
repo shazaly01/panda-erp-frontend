@@ -1,67 +1,94 @@
-<!--src/modules/inventory/views/adjustments/components/AdjustmentFooter.vue-->
+<!-- src/modules/inventory/views/adjustments/components/AdjustmentFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة الأثر المالي والإجماليات النهائية -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-right font-sans" dir="rtl">
+    <!-- 1. بطاقة الأثر المالي والإجماليات النهائية (5 أعمدة - ملمومة ومركزة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="md:col-span-5 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-3"
     >
-      <div class="space-y-2 text-xs font-semibold text-gray-400">
-        <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-          {{ summaryHeaderTitle }}
+      <div class="space-y-2.5 text-xs font-semibold text-gray-400">
+        <h3
+          class="text-xs font-black text-gray-200 border-b border-[#3b3f4f]/60 pb-2 flex justify-between items-center"
+        >
+          <span class="flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-[#e05e2b]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+            <span>{{ summaryHeaderTitle }}</span>
+          </span>
+          <span
+            class="text-[10px] text-gray-400 font-mono bg-[#16171b] px-2 py-0.5 rounded-md border border-[#3e414c]"
+          >
+            {{ totalItemsCount }} بند مسجل
+          </span>
         </h3>
 
-        <!-- في حالة الجرد الدوري والتسوية العامة: عرض الفائض والعجز بشكل مقارن -->
+        <!-- في حالة الجرد الدوري والتسوية العامة: عرض الفائض والعجز بشكل مقارن مع خط نقطي رابط -->
         <template v-if="isComparisonType">
-          <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-emerald-400">
-            <span>إجمالي قيمة الزيادة والوفر (+):</span>
-            <span class="font-mono font-bold">{{ formatCurrency(totalSurplusCost) }}</span>
+          <div class="flex items-baseline justify-between text-emerald-400">
+            <span class="shrink-0">إجمالي قيمة الزيادة والوفر (+):</span>
+            <span class="flex-1 mx-2 border-b border-dotted border-emerald-500/20"></span>
+            <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalSurplusCost) }}</span>
           </div>
 
-          <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-rose-400">
-            <span>إجمالي قيمة العجز والتالف (-):</span>
-            <span class="font-mono font-bold">{{ formatCurrency(totalDeficitCost) }}</span>
+          <div class="flex items-baseline justify-between text-rose-400">
+            <span class="shrink-0">إجمالي قيمة العجز والتالف (-):</span>
+            <span class="flex-1 mx-2 border-b border-dotted border-rose-500/20"></span>
+            <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalDeficitCost) }}</span>
           </div>
         </template>
 
         <!-- في حالة البضاعة التالفة أو الفاقد -->
         <template v-else-if="type === 'damage' || type === 'loss'">
-          <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-rose-400">
-            <span>إجمالي القيمة التقديرية للخسارة:</span>
-            <span class="font-mono font-bold">{{ formatCurrency(totalDeficitCost) }}</span>
+          <div class="flex items-baseline justify-between text-rose-400">
+            <span class="shrink-0">إجمالي القيمة التقديرية للخسارة:</span>
+            <span class="flex-1 mx-2 border-b border-dotted border-rose-500/20"></span>
+            <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalDeficitCost) }}</span>
           </div>
         </template>
 
         <!-- في حالة الرصيد الافتتاحي -->
         <template v-else-if="type === 'opening_balance'">
-          <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-emerald-400">
-            <span>إجمالي تقييم بضاعة أول المدة:</span>
-            <span class="font-mono font-bold">{{ formatCurrency(totalSurplusCost) }}</span>
+          <div class="flex items-baseline justify-between text-emerald-400">
+            <span class="shrink-0">إجمالي تقييم بضاعة أول المدة:</span>
+            <span class="flex-1 mx-2 border-b border-dotted border-emerald-500/20"></span>
+            <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalSurplusCost) }}</span>
           </div>
         </template>
 
-        <div class="flex justify-between border-b border-gray-700/30 pb-1.5 text-gray-400">
-          <span>إجمالي عدد البنود المسجلة:</span>
-          <span class="font-mono font-bold text-white">{{ totalItemsCount }} بند</span>
+        <div class="flex items-baseline justify-between text-gray-400 pt-1">
+          <span class="shrink-0">إجمالي عدد البنود المسجلة:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-[#3e414c]"></span>
+          <span class="font-mono font-bold text-white shrink-0">{{ totalItemsCount }} بند</span>
         </div>
       </div>
 
       <div class="pt-2">
         <div
-          class="flex justify-between items-center bg-[#16171b] border border-gray-700/50 p-2.5 rounded-lg shadow-[inner_0_0_10px_rgba(0,0,0,0.5)]"
+          class="flex justify-between items-center bg-[#16171b] border p-2.5 rounded-xl shadow-inner"
           :class="[
             isComparisonType
               ? totalDifferenceCost > 0
                 ? 'text-emerald-400 border-emerald-500/30'
                 : totalDifferenceCost < 0
-                  ? 'text-rose-500 border-rose-500/30'
-                  : 'text-[#e05e2b] border-gray-700/50'
+                  ? 'text-rose-400 border-rose-500/30'
+                  : 'text-[#e05e2b] border-[#3e414c]'
               : type === 'opening_balance'
                 ? 'text-emerald-400 border-emerald-500/30'
                 : 'text-rose-400 border-rose-500/30',
           ]"
         >
-          <span class="font-black text-[11px]">{{ mainCostMetricLabel }}:</span>
-          <span class="text-xl font-mono font-black tracking-wide">
+          <span class="font-black text-xs">{{ mainCostMetricLabel }}:</span>
+          <span class="text-base font-mono font-black tracking-wide">
             {{ isComparisonType && totalDifferenceCost > 0 ? '+' : ''
             }}{{ formatCurrency(displayedMainCost) }}
           </span>
@@ -69,59 +96,47 @@
 
         <p
           v-if="getFieldError('total_cost')"
-          class="text-rose-500 text-[10px] text-center font-bold mt-1"
+          class="text-rose-400 text-[10px] text-center font-bold mt-1 pr-1"
         >
           {{ getFieldError('total_cost') }}
         </p>
       </div>
     </div>
 
-    <!-- 2. بطاقة ملخص الحالة والتوجيه المحاسبي -->
-    <div class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4">
-      <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-        الحالة والتوجيه المحاسبي
-      </h3>
-
-      <div class="flex flex-col space-y-3 pt-1">
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center justify-between"
-        >
-          <span class="text-xs font-bold text-gray-400">حالة المستند:</span>
-          <span
-            class="font-mono text-xs font-black px-2 py-0.5 rounded"
-            :class="[
-              statusModel === 'approved'
-                ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-500/30'
-                : 'bg-amber-950/50 text-amber-400 border border-amber-500/30',
-            ]"
-          >
-            {{ statusModel === 'approved' ? 'معتمد ومرحل دفترياً' : 'مسودة قيد المراجعة' }}
-          </span>
-        </div>
-
-        <div class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex flex-col space-y-1">
-          <span class="text-[11px] font-bold text-gray-400">الأثر المالي المباشر:</span>
-          <p class="text-[10px] text-gray-500 font-medium leading-relaxed">
-            {{ accountingImpactDescription }}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. بطاقة أسباب ومبررات التسوية -->
+    <!-- 2. بطاقة أسباب ومبررات التسوية (7 أعمدة - متناسبة وعملية) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col space-y-1.5"
+      class="md:col-span-7 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-2"
     >
-      <label class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 mb-1">
-        {{ notesFieldLabel }}
-      </label>
-      <textarea
-        v-model="notesModel"
-        rows="3"
-        :placeholder="notesPlaceholder"
-        class="block w-full h-full min-h-[96px] p-3 border border-[#3e414c] rounded-lg bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] outline-none transition-all resize-none"
-      ></textarea>
-      <p v-if="getFieldError('notes')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <div class="flex flex-col flex-1">
+        <div class="flex items-center justify-between border-b border-[#3b3f4f]/60 pb-2 mb-2">
+          <label class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <span>{{ notesFieldLabel }}</span>
+          </label>
+          <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
+        </div>
+
+        <textarea
+          v-model="notesModel"
+          rows="4"
+          :placeholder="notesPlaceholder"
+          class="w-full flex-1 p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
+        ></textarea>
+      </div>
+
+      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
         {{ getFieldError('notes') }}
       </p>
     </div>
@@ -134,7 +149,6 @@ import { formatCurrency } from '@/utils/formatters'
 
 // الربط ثنائي الاتجاه للبيانات
 const notesModel = defineModel('notes', { type: String, default: '' })
-const statusModel = defineModel('status', { type: String, default: 'draft' })
 
 const props = defineProps({
   type: { type: String, default: 'physical_count' },
@@ -183,19 +197,6 @@ const displayedMainCost = computed(() => {
     return props.totalSurplusCost
   }
   return props.totalDifferenceCost
-})
-
-const accountingImpactDescription = computed(() => {
-  switch (props.type) {
-    case 'damage':
-      return 'عند الاعتماد، سيتم توليد قيد من حساب خسائر بضاعة تالفة إلى حساب المخزون وتخفيض الأرصدة فورياً.'
-    case 'loss':
-      return 'عند الاعتماد، سيتم توليد قيد من حساب خسائر فاقد وعجز المخزون إلى حساب المخزون وخصم الكميات.'
-    case 'opening_balance':
-      return 'عند الاعتماد، سيتم إثبات زيادة أصل المخزون مقابل حقوق الملكية (الأرباح المبقاة) كبضاعة أول المدة.'
-    default:
-      return 'عند الاعتماد، سيتم توليد قيد تسوية فروقات الجرد وضبط أرصدة المخزون اللحظية في المستودع المعتمد.'
-  }
 })
 
 const notesFieldLabel = computed(() => {

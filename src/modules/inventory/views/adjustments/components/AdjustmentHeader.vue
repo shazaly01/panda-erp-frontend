@@ -1,18 +1,19 @@
-<!--src/modules/inventory/views/adjustments/components/AdjustmentHeader.vue-->
+<!-- src/modules/inventory/views/adjustments/components/AdjustmentHeader.vue -->
 <template>
   <div
-    class="p-5 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4 text-right font-sans"
+    class="p-4 sm:p-5 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl space-y-4 text-right font-sans"
     dir="rtl"
   >
-    <!-- الصف الأول: 4 أعمدة (رقم التسوية + المستودع + تاريخ التسوية + نوع التسوية) -->
+    <!-- شبكة الحقول الأساسية: 4 أعمدة متناسقة -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- adjustment_number (رقم مستند التسوية) -->
-      <div class="relative w-full">
+      <!-- 1. رقم مستند التسوية (adjustment_number) -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300"> رقم وثيقة التسوية </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center shadow-[0_0_10px_rgba(224,94,43,0.15)] focus-within:ring-1 focus-within:ring-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -31,19 +32,24 @@
         </div>
         <p
           v-if="getFieldError('adjustment_number')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-rose-400 text-[10px] font-bold pr-1"
         >
           {{ getFieldError('adjustment_number') }}
         </p>
       </div>
 
-      <!-- warehouse_id (المستودع الخاضع للجرد) -->
-      <div class="relative w-full">
+      <!-- 2. المستودع الخاضع للجرد (warehouse_id) -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          المستودع الخاضع للجرد <span class="text-rose-500">*</span>
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span
+            class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -52,38 +58,35 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-10 pl-2 flex items-center">
+          <div class="w-full h-full pr-9 pl-1 flex items-center">
             <WarehouseDropdown
               id="adjustment-warehouse-id"
               v-model="formData.warehouse_id"
               label=""
-              class="w-full bg-transparent"
+              class="w-full bg-transparent header-dropdown"
             />
           </div>
         </div>
-        <p
-          v-if="getFieldError('warehouse_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('warehouse_id')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('warehouse_id') }}
         </p>
       </div>
 
-      <!-- adjustment_date (تاريخ التسوية) -->
-      <div class="relative w-full">
+      <!-- 3. تاريخ التسوية (adjustment_date) -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300">
+          تاريخ التسوية <span class="text-rose-500">*</span>
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
         >
           <input
             type="date"
             v-model="formData.adjustment_date"
-            class="block w-full h-full pr-4 pl-20 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
           />
 
-          <span
-            class="absolute left-3 text-gray-400 pointer-events-none flex items-center gap-1.5 text-xs z-10"
-          >
-            <span class="text-gray-400 font-medium text-[11px]">تاريخ</span>
+          <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -94,29 +97,27 @@
             </svg>
           </span>
         </div>
-        <p
-          v-if="getFieldError('adjustment_date')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('adjustment_date')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('adjustment_date') }}
         </p>
       </div>
 
-      <!-- type (نوع حركة التسوية المخزنية) -->
-      <div class="relative w-full">
+      <!-- 4. نوع حركة التسوية المخزنية (type) -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-300"> نوع حركة التسوية </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border rounded-lg flex items-center transition-all duration-200"
+          class="relative w-full h-11 bg-[#16171b] border rounded-xl flex items-center transition-all duration-200"
           :class="[
             isTypeLocked
               ? 'border-emerald-600/50 bg-[#121316] opacity-90'
-              : 'border-[#3e414c] hover:border-[#e05e2b]',
+              : 'border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30',
           ]"
         >
           <span
             class="absolute right-3 pointer-events-none z-10"
             :class="isTypeLocked ? 'text-emerald-400' : 'text-gray-400'"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -158,7 +159,7 @@
             محدد تلقائياً
           </span>
         </div>
-        <p v-if="getFieldError('type')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+        <p v-if="getFieldError('type')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('type') }}
         </p>
       </div>
@@ -178,7 +179,6 @@ const props = defineProps({
   validationErrors: { type: Object, default: () => null },
 })
 
-// قفل نوع التسوية إذا تم الدخول من مسار يحمل نوعاً افتراضياً محدداً مسبقاً
 const isTypeLocked = computed(() => {
   return Boolean(route?.meta?.defaultType)
 })
@@ -199,5 +199,30 @@ input[type='date']::-webkit-calendar-picker-indicator {
 select option {
   background-color: #16171b !important;
   color: #f8fafc !important;
+}
+
+/* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
+:deep(.header-dropdown .p-dropdown),
+:deep(.header-dropdown [data-pc-name='dropdown']),
+:deep(.header-dropdown [data-pc-section='root']),
+:deep(.header-dropdown div.inline-flex) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:deep(.header-dropdown .p-dropdown-label),
+:deep(.header-dropdown [data-pc-section='input']) {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  padding-right: 0.25rem !important;
+}
+
+:deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
+  box-shadow: none !important;
+  border: none !important;
 }
 </style>

@@ -1,110 +1,103 @@
-<!--src/modules/purchasing/views/issues/components/IssueSummaryFooter.vue-->
+<!-- src/modules/purchasing/views/issues/components/IssueSummaryFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة ملخص الكميات وتكلفة الصرف الإجمالية -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-right font-sans" dir="rtl">
+    <!-- 1. بطاقة ملخص الكميات وتكلفة الصرف الإجمالية (4 أعمدة - مركزة وملمومة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="md:col-span-4 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-3"
     >
-      <div class="space-y-2 text-xs font-semibold text-gray-400">
+      <div class="space-y-2.5 text-xs font-semibold text-gray-400">
         <h3
-          class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 flex justify-between items-center"
+          class="text-xs font-black text-gray-200 border-b border-[#3b3f4f]/60 pb-2 flex justify-between items-center"
         >
-          <span>ملخص بنود وكميات الصرف</span>
-          <span class="text-[10px] text-gray-400 font-mono">{{ totalItemsCount }} بند مسجل</span>
+          <span class="flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-[#e05e2b]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              />
+            </svg>
+            <span>ملخص بنود وكميات الصرف</span>
+          </span>
+          <span
+            class="text-[10px] text-gray-400 font-mono bg-[#16171b] px-2 py-0.5 rounded-md border border-[#3e414c]"
+          >
+            {{ totalItemsCount }} بند مسجل
+          </span>
         </h3>
 
         <!-- إجمالي عدد القطع والوحدات المنصرفة -->
-        <div class="flex justify-between border-b border-gray-700/30 pb-1 text-gray-300">
-          <span>إجمالي الكميات المنصرفة:</span>
-          <span class="font-mono font-bold text-sky-400">{{ formatNumber(totalQuantitySum) }}</span>
+        <div class="flex items-baseline justify-between text-gray-300">
+          <span class="shrink-0">إجمالي الكميات المنصرفة:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-sky-500/20"></span>
+          <span class="font-mono font-bold text-sky-400 shrink-0">{{
+            formatNumber(totalQuantitySum)
+          }}</span>
         </div>
 
         <!-- متوسط تكلفة البند -->
-        <div class="flex justify-between border-b border-gray-700/30 pb-1 text-gray-300">
-          <span>متوسط تكلفة البند:</span>
-          <span class="font-mono font-bold">
+        <div class="flex items-baseline justify-between text-gray-300 pt-1">
+          <span class="shrink-0">متوسط تكلفة البند:</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-[#3e414c]"></span>
+          <span class="font-mono font-bold shrink-0">
             {{ formatCurrency(totalItemsCount > 0 ? calculatedTotalCost / totalItemsCount : 0) }}
           </span>
         </div>
       </div>
 
-      <div class="pt-1 space-y-2">
+      <div class="pt-2">
         <!-- إجمالي تكلفة البضاعة المنصرفة -->
         <div
-          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-lg shadow-[inner_0_0_10px_rgba(0,0,0,0.5)] text-emerald-400"
+          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-xl shadow-inner text-emerald-400"
         >
           <span class="font-black text-xs">إجمالي تكلفة الصرف:</span>
-          <span class="text-xl font-mono font-black tracking-wide">
+          <span class="text-base font-mono font-black tracking-wide">
             {{ formatCurrency(calculatedTotalCost) }}
           </span>
         </div>
       </div>
     </div>
 
-    <!-- 2. بطاقة الأثر المخزني والتوجيه -->
+    <!-- 2. بطاقة أسباب الصرف والملاحظات (8 أعمدة - مساحة عملية ومريحة) -->
     <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="md:col-span-8 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-2"
     >
-      <div class="space-y-3">
-        <h3 class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5">
-          الحالة والأثر المخزني
-        </h3>
-
-        <!-- حالة المستند -->
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center justify-between"
-        >
-          <span class="text-xs font-bold text-gray-400">حالة الإذن:</span>
-          <span
-            class="font-mono text-xs font-black px-2.5 py-0.5 rounded"
-            :class="statusBadgeClass"
-          >
-            {{ statusBadgeText }}
-          </span>
+      <div class="flex flex-col flex-1">
+        <div class="flex items-center justify-between border-b border-[#3b3f4f]/60 pb-2 mb-2">
+          <label class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <span>سبب الصرف والملاحظات الإدارية</span>
+          </label>
+          <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
         </div>
 
-        <!-- الأثر المخزني المباشر -->
-        <div
-          class="p-2.5 bg-[#16171b] border border-[#3e414c] rounded-lg flex flex-col space-y-1.5"
-        >
-          <div class="flex items-center gap-1.5">
-            <span
-              class="w-2 h-2 rounded-full"
-              :class="formData.status === 'confirmed' ? 'bg-emerald-400' : 'bg-amber-400'"
-            ></span>
-            <span class="text-[11px] font-bold text-gray-300">الأثر على أرصدة المستودع:</span>
-          </div>
-          <p class="text-[10px] text-gray-400 font-medium leading-relaxed">
-            {{ inventoryImpactDescription }}
-          </p>
-        </div>
+        <textarea
+          v-model="formData.notes"
+          rows="4"
+          placeholder="سجل أسباب ومبررات الصرف، رقم أمر العمل، أو أي ملاحظات تخص تسليم المواد للجهة الطالبة..."
+          class="w-full flex-1 p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
+        ></textarea>
       </div>
 
-      <div
-        class="p-2 bg-[#16171b]/60 border border-gray-800 rounded-lg text-[10px] text-gray-400 flex justify-between font-mono"
-      >
-        <span>نوع الحركة: إذن صرف بضاعة ومواد</span>
-        <span>العملة: SAR (ر.س)</span>
-      </div>
-    </div>
-
-    <!-- 3. بطاقة أسباب الصرف والملاحظات -->
-    <div
-      class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col space-y-1.5"
-    >
-      <label
-        class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 mb-1 flex justify-between items-center"
-      >
-        <span>سبب الصرف والملاحظات الإدارية</span>
-        <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
-      </label>
-      <textarea
-        v-model="formData.notes"
-        rows="4"
-        placeholder="سجل أسباب ومبررات الصرف، رقم أمر العمل، أو أي ملاحظات تخص تسليم المواد للجهة الطالبة..."
-        class="block w-full h-full min-h-[140px] p-3 border border-[#3e414c] rounded-lg bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] outline-none transition-all resize-none"
-      ></textarea>
-      <p v-if="getFieldError('notes')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
         {{ getFieldError('notes') }}
       </p>
     </div>
@@ -112,7 +105,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { formatCurrency } from '@/utils/formatters'
 
 const formData = defineModel({ type: Object, required: true })
@@ -123,35 +115,6 @@ const props = defineProps({
   totalQuantitySum: { type: Number, required: true },
   isRequisitionLinked: { type: Boolean, default: false },
   validationErrors: { type: Object, default: () => null },
-})
-
-const statusBadgeText = computed(() => {
-  switch (formData.value.status) {
-    case 'confirmed':
-      return 'تم الصرف والخصم من المستودع'
-    case 'cancelled':
-      return 'إذن صرف ملغي'
-    default:
-      return 'مسودة قيد التجهيز والمراجعة'
-  }
-})
-
-const statusBadgeClass = computed(() => {
-  switch (formData.value.status) {
-    case 'confirmed':
-      return 'bg-emerald-950/50 text-emerald-400 border border-emerald-500/30'
-    case 'cancelled':
-      return 'bg-rose-950/50 text-rose-400 border border-rose-500/30'
-    default:
-      return 'bg-amber-950/50 text-amber-400 border border-amber-500/30'
-  }
-})
-
-const inventoryImpactDescription = computed(() => {
-  if (formData.value.status === 'confirmed') {
-    return 'تم إثبات حركة الصرف وخصم الكميات فعلياً من أرصدة المستودع مع توليد حركات المخزون المرتبطة.'
-  }
-  return 'حفظ الإذن كمسودة لا يؤثر على أرصدة المستودع. سيتم خصم الكميات المنصرفة لحظياً وتحديث بطاقة الصنف بمجرد الضغط على تأكيد وترحيل الصرف.'
 })
 
 const formatNumber = (value) => {
