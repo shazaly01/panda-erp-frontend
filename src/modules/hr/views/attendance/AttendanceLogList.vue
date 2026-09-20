@@ -37,7 +37,23 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- 🌟 زر استعلام حضور لفتح الصفحة العامة في تبويب جديد -->
+        <AppButton
+          @click="goToPublicReport"
+          class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-sm transition-all duration-200"
+        >
+          <svg class="w-5 h-5 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+          استعلام حضور
+        </AppButton>
+
         <AppButton
           v-if="authStore.can('hr.attendance.manage')"
           @click="goToKiosk"
@@ -275,6 +291,12 @@ onMounted(() => {
 
 const goToKiosk = () => {
   const routeData = router.resolve({ name: 'attendance.kiosk' })
+  window.open(routeData.href, '_blank')
+}
+
+// 🌟 فتح صفحة استعلام الحضور العامة في تبويب جديد
+const goToPublicReport = () => {
+  const routeData = router.resolve({ name: 'PublicEmployeeAttendanceReport' })
   window.open(routeData.href, '_blank')
 }
 
