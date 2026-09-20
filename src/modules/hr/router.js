@@ -35,7 +35,6 @@ const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
 
 // 🌟 إضافات الجدولة الذكية (التجاوزات الفردية والطوارئ)
-// 🌟 إضافات الجدولة الذكية (التجاوزات الفردية والطوارئ)
 const ShiftOverridesList = () => import('./views/schedules/ShiftOverridesList.vue')
 const CalendarExceptionsList = () => import('./views/schedules/CalendarExceptionsList.vue')
 
@@ -46,9 +45,6 @@ const LeavePassesList = () => import('./views/leave-passes/LeavePassesList.vue')
 const EmergencyMuster = () => import('./views/leave-passes/EmergencyMuster.vue')
 // 🌟 إضافة منظومة إدارة سجلات الزوار والبوابات الأمنية
 const VisitorsList = () => import('./views/visitors/VisitorsList.vue')
-
-// ==========================================
-// 4. الرواتب والأجور
 
 // ==========================================
 // 4. الرواتب والأجور
@@ -137,7 +133,6 @@ export const hrDashboardRoutes = [
         component: () => import('@/modules/hr/views/attendance/AttendanceKiosk.vue'),
         meta: {
           title: 'شاشة الاستقبال - الباركود',
-          // layout: 'blank' // قم بتفعيلها إذا كان نظامك يدعم تخطيطاً فارغاً للشاشات الكاملة
         },
       },
       {
@@ -153,7 +148,7 @@ export const hrDashboardRoutes = [
         component: AttendanceSummaryPrint,
         meta: {
           title: 'طباعة الحضور',
-          layout: 'blank', // لضمان تحميل الصفحة بيضاء بالكامل بدون القوائم الجانبية للمشروع
+          layout: 'blank',
         },
       },
 
@@ -216,6 +211,7 @@ export const hrDashboardRoutes = [
         component: VisitorsList,
         meta: { permission: 'hr_visitors.view' },
       },
+
       // --- الرواتب والمدخلات ---
       {
         path: 'payroll-inputs',
@@ -251,7 +247,6 @@ export const hrDashboardRoutes = [
         component: ShiftsList,
         meta: { permission: 'hr.shifts.view' },
       },
-      // 🚀 مسارات قوالب الجدولة (Working Schedules)
       {
         path: 'working-schedules',
         name: 'WorkingSchedulesList',
@@ -335,7 +330,7 @@ export const hrPublicRoutes = [
     path: '/register-visit',
     name: 'PublicVisitorRegister',
     component: () => import('@/modules/hr/views/visitors/PublicVisitorRegister.vue'),
-    meta: { layout: 'blank' }, // لا تحتوي على requiresAuth ولا requiresGuest لتصبح عامة تماماً
+    meta: { layout: 'blank' },
   },
   {
     path: '/verify-visitor/:token',
@@ -348,6 +343,13 @@ export const hrPublicRoutes = [
     path: '/internship/apply',
     name: 'PublicInternshipApply',
     component: () => import('@/modules/hr/views/internships/PublicInternshipApply.vue'),
+    meta: { layout: 'blank' },
+  },
+  // 🌟 الرابط الخارجي العام لكشف وتفاصيل حضور وانصراف الموظف (أسبوعي / شهري)
+  {
+    path: '/employee/attendance-report',
+    name: 'PublicEmployeeAttendanceReport',
+    component: () => import('@/modules/hr/views/attendance/PublicEmployeeAttendanceReport.vue'),
     meta: { layout: 'blank' },
   },
 ]
