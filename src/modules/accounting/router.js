@@ -15,7 +15,7 @@ const SequencesList = () => import('@/modules/core/views/sequences/SequencesList
 
 // --- استيراد شاشات السندات ---
 const VouchersList = () => import('./views/vouchers/VouchersList.vue')
-const VoucherFormPage = () => import('./views/vouchers/VoucherFormPage.vue')
+// const VoucherFormPage = () => import('./views/vouchers/VoucherFormPage.vue')
 
 // --- استيراد شاشات القيود اليومية ---
 const JournalEntriesList = () => import('./views/journal-entries/JournalEntriesList.vue')
@@ -126,20 +126,20 @@ export default [
         props: { type: 'receipt' },
         meta: { permission: 'receipt.view' },
       },
-      {
-        path: 'receipts/create',
-        name: 'receipts.create',
-        component: VoucherFormPage,
-        props: { type: 'receipt' },
-        meta: { permission: 'receipt.create' },
-      },
-      {
-        path: 'receipts/:id/edit',
-        name: 'receipts.edit',
-        component: VoucherFormPage,
-        props: { type: 'receipt' },
-        meta: { permission: 'receipt.update' },
-      },
+      // {
+      //   path: 'receipts/create',
+      //   name: 'receipts.create',
+      //   component: VoucherFormPage,
+      //   props: { type: 'receipt' },
+      //   meta: { permission: 'receipt.create' },
+      // },
+      // {
+      //   path: 'receipts/:id/edit',
+      //   name: 'receipts.edit',
+      //   component: VoucherFormPage,
+      //   props: { type: 'receipt' },
+      //   meta: { permission: 'receipt.update' },
+      // },
 
       // ==========================================
       // مسارات سندات الصرف (Payments)
@@ -151,20 +151,20 @@ export default [
         props: { type: 'payment' },
         meta: { permission: 'payment.view' },
       },
-      {
-        path: 'payments/create',
-        name: 'payments.create',
-        component: VoucherFormPage,
-        props: { type: 'payment' },
-        meta: { permission: 'payment.create' },
-      },
-      {
-        path: 'payments/:id/edit',
-        name: 'payments.edit',
-        component: VoucherFormPage,
-        props: { type: 'payment' },
-        meta: { permission: 'payment.update' },
-      },
+      // {
+      //   path: 'payments/create',
+      //   name: 'payments.create',
+      //   component: VoucherFormPage,
+      //   props: { type: 'payment' },
+      //   meta: { permission: 'payment.create' },
+      // },
+      // {
+      //   path: 'payments/:id/edit',
+      //   name: 'payments.edit',
+      //   component: VoucherFormPage,
+      //   props: { type: 'payment' },
+      //   meta: { permission: 'payment.update' },
+      // },
 
       // ==========================================
       // مسارات القيود اليومية (عرض، إضافة، تعديل)
