@@ -38,7 +38,7 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
-        <!-- 🌟 زر استعلام حضور لفتح الصفحة العامة في تبويب جديد -->
+        <!-- زر استعلام حضور لفتح الصفحة العامة في تبويب جديد -->
         <AppButton
           @click="goToPublicReport"
           class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-sm transition-all duration-200"
@@ -80,6 +80,7 @@
       </div>
     </div>
 
+    <!-- شريط الفلاتر المشترك -->
     <AttendanceFilter
       v-model:searchQuery="searchQuery"
       v-model:startDate="startDate"
@@ -94,16 +95,75 @@
       :payGroupOptions="payGroupOptions"
     />
 
-    <AttendanceTable
+    <!-- محول العرض الداخلي للسجلات التفصيلية (حركات مسطحة أو كشف شهري مجمع) -->
+    <div
       v-if="viewMode === 'detailed'"
-      :logs="logs"
-      :pagination="pagination"
-      :loading="loading"
-      @page-change="handlePageChange"
-      @edit="openEditModal"
-      @delete="openDeleteDialog"
-    />
+      class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/90 px-4 py-2.5 rounded-2xl shadow-sm"
+    >
+      <div class="flex items-center gap-2.5">
+        <span class="text-xs font-bold text-slate-400">نمط عرض السجلات التفصيلية:</span>
+        <div class="inline-flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button
+            type="button"
+            @click="setDetailedSubMode('flat')"
+            :class="
+              detailedSubMode === 'flat'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            "
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150"
+          >
+            حركات يومية (مسطح)
+          </button>
+          <button
+            type="button"
+            @click="setDetailedSubMode('grouped')"
+            :class="
+              detailedSubMode === 'grouped'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            "
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 flex items-center gap-1.5"
+          >
+            <span>كشف شهري مجمع للموظفين</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+          </button>
+        </div>
+      </div>
 
+      <div v-if="detailedSubMode === 'grouped'" class="flex items-center gap-3">
+        <button
+          type="button"
+          @click="setCurrentMonthRange"
+          class="text-xs text-sky-400 hover:text-sky-300 font-medium underline flex items-center gap-1.5 transition-colors"
+        >
+          <span>📅 ضبط التواريخ للشهر الحالي</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- جدول السجلات التفصيلية (النمط المسطح أو المجمع) -->
+    <template v-if="viewMode === 'detailed'">
+      <AttendanceTable
+        v-if="detailedSubMode === 'flat'"
+        :logs="logs"
+        :pagination="pagination"
+        :loading="loading"
+        @page-change="handlePageChange"
+        @edit="openEditModal"
+        @delete="openDeleteDialog"
+      />
+
+      <AttendanceMonthlyGroupedView
+        v-else
+        :department-id="departmentId"
+        :start-date="startDate"
+        :end-date="endDate"
+        :search-query="searchQuery"
+      />
+    </template>
+
+    <!-- جدول السجلات التجميعية (النمط الآخر) -->
     <AttendanceSummaryTable
       v-else
       :summary-logs="summaryLogs"
@@ -146,6 +206,7 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
 import AttendanceFilter from './components/AttendanceFilter.vue'
 import AttendanceTable from './components/AttendanceTable.vue'
+import AttendanceMonthlyGroupedView from './components/AttendanceMonthlyGroupedView.vue'
 import AttendanceLogModal from './components/AttendanceLogModal.vue'
 import attendanceLogService from '@/modules/hr/services/attendanceLog.service'
 import AttendanceSummaryTable from './AttendanceSummaryTable.vue'
@@ -160,6 +221,7 @@ const toast = useToast()
 const { logs, pagination, loading } = storeToRefs(attendanceStore)
 
 const viewMode = ref('detailed')
+const detailedSubMode = ref('flat') // خيارات: 'flat' (مسطح) أو 'grouped' (كشف شهري مجمع)
 const summaryLogs = ref([])
 const summaryLoading = ref(false)
 
@@ -188,11 +250,43 @@ const positionOptions = ref([])
 const payGroupOptions = ref([])
 let searchTimeout = null
 
-// مراقبة التغيرات في فلاتر التواريخ والأقسام وطريقة الدفع لإعادة جلب البيانات تلقائياً
+// ضبط نطاق التواريخ تلقائياً للشهر الحالي
+const setCurrentMonthRange = () => {
+  const now = new Date()
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+  const format = (d) => {
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  startDate.value = format(firstDay)
+  endDate.value = format(lastDay)
+}
+
+// تبديل النمط الفرعي للسجلات التفصيلية
+const setDetailedSubMode = (mode) => {
+  detailedSubMode.value = mode
+  if (mode === 'grouped') {
+    // إذا كانت التواريخ الحالية يوماً واحداً فقط، نوسعها تلقائياً للشهر الحالي لراحة المستخدم
+    if (startDate.value === endDate.value) {
+      setCurrentMonthRange()
+    }
+  } else {
+    handlePageChange(1)
+  }
+}
+
+// مراقبة التغيرات في فلاتر التواريخ والأقسام وطريقة الدفع لإعادة جلب البيانات
 watch(
   [startDate, endDate, departmentId, positionId, payGroupId, employmentType, presentOnly],
   () => {
-    handlePageChange(1)
+    if (viewMode.value === 'summary' || detailedSubMode.value === 'flat') {
+      handlePageChange(1)
+    }
   },
 )
 
@@ -200,7 +294,9 @@ watch(
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    handlePageChange(1)
+    if (viewMode.value === 'summary' || detailedSubMode.value === 'flat') {
+      handlePageChange(1)
+    }
   }, 500)
 })
 
@@ -211,6 +307,8 @@ const switchView = (mode) => {
 
 const handlePageChange = async (page = 1) => {
   if (viewMode.value === 'detailed') {
+    if (detailedSubMode.value === 'grouped') return
+
     const filters = {
       page,
       search: searchQuery.value,
@@ -283,7 +381,7 @@ const loadFiltersLookupData = async () => {
 }
 
 onMounted(() => {
-  // تنفيذ جلب جدول الحضور فوراً لمنع تجمد البيانات
+  // تنفيذ جلب جدول الحضور فوراً
   handlePageChange(1)
   // تحميل الخيارات المساعدة في الخلفية
   loadFiltersLookupData()
@@ -294,7 +392,7 @@ const goToKiosk = () => {
   window.open(routeData.href, '_blank')
 }
 
-// 🌟 فتح صفحة استعلام الحضور العامة في تبويب جديد
+// فتح صفحة استعلام الحضور العامة في تبويب جديد
 const goToPublicReport = () => {
   const routeData = router.resolve({ name: 'PublicEmployeeAttendanceReport' })
   window.open(routeData.href, '_blank')

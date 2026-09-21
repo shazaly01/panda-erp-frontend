@@ -109,9 +109,7 @@
           </div>
 
           <div class="space-y-1">
-            <label class="block text-xs font-bold text-slate-700 tracking-wide"
-              >من تاريخ (افتراضي: 4 أسابيع)</label
-            >
+            <label class="block text-xs font-bold text-slate-700 tracking-wide">من تاريخ</label>
             <input
               v-model="filters.start_date"
               type="date"
@@ -291,7 +289,7 @@
           </div>
         </div>
 
-        <!-- شريط دوام الشهر الكامل -->
+        <!-- شريط دوام الشهر الكامل (أفقي ومضبوط 100% بدون إزاحة توقيت) -->
         <div
           v-if="filters.group_by === 'month' && fullMonthDays.length > 0"
           class="bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm p-3.5 sm:p-5 md:p-6 space-y-3"
@@ -721,6 +719,17 @@ const filters = ref({
   group_by: 'week',
 })
 
+/**
+ * 🌟 دالة تحويل التاريخ إلى صيغة YYYY-MM-DD بالتوقيت المحلي لمنع خطأ الـ Timezone
+ */
+const formatLocalDate = (date) => {
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 onMounted(() => {
   if (!brandingStore.isLoaded) {
     brandingStore.fetchBranding()
@@ -759,11 +768,11 @@ onMounted(() => {
 
   filters.value.start_date = route.query.start_date
     ? String(route.query.start_date)
-    : defaultStartSunday.toISOString().substring(0, 10)
+    : formatLocalDate(defaultStartSunday)
 
   filters.value.end_date = route.query.end_date
     ? String(route.query.end_date)
-    : defaultEndSaturday.toISOString().substring(0, 10)
+    : formatLocalDate(defaultEndSaturday)
 
   nextTick(() => {
     searchInputRef.value?.focus()
@@ -811,8 +820,8 @@ const changeGroupBy = (mode) => {
   if (mode === 'month') {
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    filters.value.start_date = firstDay.toISOString().substring(0, 10)
-    filters.value.end_date = lastDay.toISOString().substring(0, 10)
+    filters.value.start_date = formatLocalDate(firstDay)
+    filters.value.end_date = formatLocalDate(lastDay)
   } else {
     const currentDayOfWeek = now.getDay()
     const currentSunday = new Date(now)
@@ -822,8 +831,8 @@ const changeGroupBy = (mode) => {
     const defaultEndSaturday = new Date(currentSunday)
     defaultEndSaturday.setDate(currentSunday.getDate() + 6)
 
-    filters.value.start_date = defaultStartSunday.toISOString().substring(0, 10)
-    filters.value.end_date = defaultEndSaturday.toISOString().substring(0, 10)
+    filters.value.start_date = formatLocalDate(defaultStartSunday)
+    filters.value.end_date = formatLocalDate(defaultEndSaturday)
   }
 
   if (reportData.value) {
@@ -831,14 +840,20 @@ const changeGroupBy = (mode) => {
   }
 }
 
+/**
+ * 🌟 توليد الأعمدة السبعة للأسبوع بالاعتماد على التوقيت المحلي الدقيق
+ */
 const getDaysColumns = (period) => {
   const days = []
-  const start = new Date(period.start_date + 'T00:00:00')
-  const end = new Date(period.end_date + 'T00:00:00')
+  const [sYear, sMonth, sDay] = period.start_date.split('-').map(Number)
+  const [eYear, eMonth, eDay] = period.end_date.split('-').map(Number)
+
+  const start = new Date(sYear, sMonth - 1, sDay)
+  const end = new Date(eYear, eMonth - 1, eDay)
 
   const current = new Date(start)
   while (current <= end) {
-    const dateStr = current.toISOString().substring(0, 10)
+    const dateStr = formatLocalDate(current)
     const dayName = current.toLocaleDateString('ar-EG', { weekday: 'long' })
     const formattedDate = current.toLocaleDateString('ar-EG', { month: 'numeric', day: 'numeric' })
 
@@ -857,6 +872,9 @@ const getDaysColumns = (period) => {
   return days
 }
 
+/**
+ * 🌟 شريط أيام الشهر الكامل مضبوط بالتوقيت المحلي لضمان ظهور يوم 1 بدقة
+ */
 const fullMonthDays = computed(() => {
   if (!reportData.value || filters.value.group_by !== 'month') return []
 
@@ -866,12 +884,15 @@ const fullMonthDays = computed(() => {
   })
 
   const days = []
-  const start = new Date(filters.value.start_date + 'T00:00:00')
-  const end = new Date(filters.value.end_date + 'T00:00:00')
+  const [sYear, sMonth, sDay] = filters.value.start_date.split('-').map(Number)
+  const [eYear, eMonth, eDay] = filters.value.end_date.split('-').map(Number)
+
+  const start = new Date(sYear, sMonth - 1, sDay)
+  const end = new Date(eYear, eMonth - 1, eDay)
 
   const current = new Date(start)
   while (current <= end) {
-    const dateStr = current.toISOString().substring(0, 10)
+    const dateStr = formatLocalDate(current)
     const dayNumber = current.getDate()
     const shortDayName = current.toLocaleDateString('ar-EG', { weekday: 'narrow' })
     const record = allRecords.find((r) => r.date === dateStr) || null
@@ -890,8 +911,9 @@ const fullMonthDays = computed(() => {
 })
 
 const isWeekend = (dateStr) => {
-  const day = new Date(dateStr + 'T00:00:00').getDay()
-  return day === 5 // الجمعة
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const d = new Date(year, month - 1, day)
+  return d.getDay() === 5 // الجمعة
 }
 
 const getStatusAbbr = (status) => {

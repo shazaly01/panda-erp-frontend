@@ -30,6 +30,8 @@ const InternshipApplicationsList = () =>
 // ==========================================
 const AttendanceList = () => import('./views/attendance/AttendanceLogList.vue')
 const AttendanceSummaryPrint = () => import('./views/attendance/AttendanceSummaryPrint.vue')
+const DepartmentMonthlyAttendancePrint = () =>
+  import('./views/attendance/DepartmentMonthlyAttendancePrint.vue')
 const TeamAttendancePage = () => import('./views/attendance/TeamAttendancePage.vue')
 const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
@@ -148,6 +150,15 @@ export const hrDashboardRoutes = [
         component: AttendanceSummaryPrint,
         meta: {
           title: 'طباعة الحضور',
+          layout: 'blank',
+        },
+      },
+      {
+        path: 'attendance/department-monthly-print',
+        name: 'hr.attendance.department-monthly.print',
+        component: DepartmentMonthlyAttendancePrint,
+        meta: {
+          title: 'طباعة كشف الحضور الشهري للقسم',
           layout: 'blank',
         },
       },

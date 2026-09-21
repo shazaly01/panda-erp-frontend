@@ -1,31 +1,23 @@
 <!---src\modules\hr\views\attendance\AttendanceSummaryPrint.vue--->
 <template>
   <div
-    class="print-landscape-container bg-slate-50 text-slate-900 p-8 font-sans mx-auto relative overflow-hidden"
+    class="print-landscape-container bg-slate-50 text-slate-900 p-6 font-sans mx-auto relative overflow-hidden"
     dir="rtl"
   >
-    <div class="absolute bottom-0 right-0 w-full h-24 pointer-events-none hidden print:block z-0">
-      <svg viewBox="0 0 1440 320" preserveAspectRatio="none" class="w-full h-full">
-        <path
-          fill="url(#footer-wave-smooth)"
-          fill-opacity="1"
-          d="M0,256L120,240C240,224,480,192,720,192C960,192,1200,224,1320,240L1440,256L1440,320L1320,320C1200,320,960,320,720,320C480,320,240,320,120,320L0,320Z"
-        ></path>
-        <defs>
-          <linearGradient id="footer-wave-smooth" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#1e40af" stop-opacity="0.06" />
-            <stop offset="100%" stop-color="#312e81" stop-opacity="0.1" />
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>
-
+    <!-- شريط الإجراءات العلوي (يختفي عند الطباعة) -->
     <div
-      class="print:hidden flex justify-end gap-3 mb-8 bg-white border border-slate-200 p-4 rounded-2xl shadow-sm relative z-10"
+      class="print:hidden flex justify-between items-center mb-5 bg-white border border-slate-200 p-3.5 rounded-2xl shadow-sm relative z-10"
     >
+      <div class="flex items-center gap-2 text-xs text-slate-600">
+        <span class="font-bold text-slate-800">تلميح الطباعة:</span>
+        <span>
+          تم تقليص ارتفاع الأسطر وتنسيق ساعات العمل رقمياً لمنع التشتت وتوفير الحبر والورق.
+        </span>
+      </div>
+
       <button
         @click="printReport"
-        class="bg-gradient-to-r from-blue-700 to-indigo-900 hover:from-blue-800 hover:to-indigo-950 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 transition-all text-sm shadow-md shadow-blue-500/10 hover:scale-[1.01]"
+        class="bg-gradient-to-r from-blue-700 to-indigo-900 hover:from-blue-800 hover:to-indigo-950 text-white font-bold py-2 px-5 rounded-xl flex items-center gap-2 transition-all text-xs shadow-md shadow-blue-500/10 hover:scale-[1.01]"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
@@ -35,27 +27,17 @@
             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h6z"
           />
         </svg>
-        تصدير وطباعة التقرير الفنية
+        تصدير وطباعة التقرير
       </button>
     </div>
 
+    <!-- الترويسة الفنية (داكنة على الشاشة - بيضاء رسمية مدمجة عند الطباعة) -->
     <div
-      class="artistic-header-banner relative z-10 bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 text-white p-6 rounded-2xl shadow-xl mb-8 flex justify-between items-center gap-6 overflow-hidden border border-blue-800/40"
+      class="artistic-header-banner relative z-10 bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 text-white p-4 rounded-xl shadow-lg mb-4 flex justify-between items-center gap-4 overflow-hidden border border-blue-800/40"
     >
-      <div class="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-        </svg>
-      </div>
-
-      <div class="flex items-center gap-5 z-10 whitespace-nowrap">
+      <div class="flex items-center gap-3.5 z-10 whitespace-nowrap">
         <div
-          class="w-24 h-24 bg-white rounded-2xl shadow-xl border border-white/30 flex-shrink-0 flex items-center justify-center logo-holder p-1"
+          class="w-16 h-16 bg-white rounded-xl shadow-md border border-white/30 flex-shrink-0 flex items-center justify-center logo-holder p-1"
         >
           <img
             :src="brandingStore.logoMiniUrl || '/MainLogo2.png'"
@@ -64,59 +46,64 @@
           />
         </div>
         <div>
-          <h1 class="text-2xl font-black tracking-tight text-white drop-shadow-sm">
+          <h1 class="text-lg font-black tracking-tight text-white drop-shadow-sm header-title">
             {{ brandingStore.appName || 'محطة مياه المنارة' }}
           </h1>
+          <p class="text-[10px] text-blue-200/80 mt-0.5 header-subtitle">
+            نظام إدارة الموارد البشرية والوقت (Panda HR)
+          </p>
         </div>
       </div>
 
-      <div class="text-center z-10 px-6 py-1 border-r border-l border-white/10">
-        <h2 class="text-2xl font-black text-white tracking-tight drop-shadow-md">
-          تقرير الحضور والانصراف
+      <div
+        class="text-center z-10 px-5 py-0.5 border-r border-l border-white/10 header-center-divider"
+      >
+        <h2 class="text-lg font-black text-white tracking-tight drop-shadow-md header-doc-title">
+          تقرير الحضور والانصراف التجميعي
         </h2>
-        <p class="text-xs font-medium text-blue-200/70 mt-1">
+        <p class="text-[10px] font-medium text-blue-200/70 mt-0.5 header-doc-desc">
           سجل الحركات الإجمالية وساعات العمل الفعلية للموظفين
         </p>
       </div>
 
-      <div class="flex flex-col gap-1.5 items-end z-10 min-w-[320px] whitespace-nowrap">
-        <div class="flex flex-row gap-1.5 flex-wrap justify-end">
+      <div class="flex flex-col gap-1 items-end z-10 min-w-[280px] whitespace-nowrap text-xs">
+        <div class="flex flex-row gap-1 flex-wrap justify-end">
           <div
             v-if="activeFilters.department_name"
-            class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/10 px-2.5 py-0.5 rounded-lg text-[10px]"
+            class="filter-badge flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-lg text-[10px]"
           >
-            <span class="text-blue-200 font-normal">القسم:</span>
+            <span class="text-blue-200 font-normal badge-label">القسم:</span>
             <span class="font-bold text-white">{{ activeFilters.department_name }}</span>
           </div>
 
           <div
             v-if="activeFilters.position_name"
-            class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/10 px-2.5 py-0.5 rounded-lg text-[10px]"
+            class="filter-badge flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-lg text-[10px]"
           >
-            <span class="text-blue-200 font-normal">الوظيفة:</span>
+            <span class="text-blue-200 font-normal badge-label">الوظيفة:</span>
             <span class="font-bold text-white">{{ activeFilters.position_name }}</span>
           </div>
 
           <div
             v-if="activeFilters.search"
-            class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/10 px-2.5 py-0.5 rounded-lg text-[10px]"
+            class="filter-badge flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-lg text-[10px]"
           >
-            <span class="text-blue-200 font-normal">بحث عن:</span>
+            <span class="text-blue-200 font-normal badge-label">بحث عن:</span>
             <span class="font-bold text-amber-300 font-mono">"{{ activeFilters.search }}"</span>
           </div>
         </div>
 
         <div
-          class="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 px-3 py-1 rounded-xl shadow-inner"
+          class="filter-badge flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/10 px-2.5 py-0.5 rounded-lg shadow-inner"
         >
-          <span class="text-blue-200 text-[10px] font-medium">نطاق الفلترة:</span>
-          <span class="font-black text-amber-300 font-mono text-[11px] tracking-wide">
+          <span class="text-blue-200 text-[10px] font-medium badge-label">نطاق الفلترة:</span>
+          <span class="font-black text-amber-300 font-mono text-[10px] tracking-wide badge-value">
             {{ filterPeriodText }}
           </span>
         </div>
 
         <div
-          class="flex items-center gap-2 bg-slate-950/40 border border-white/5 px-3 py-0.5 rounded-lg text-[10px] text-slate-300"
+          class="export-time-badge flex items-center gap-1.5 bg-slate-950/40 border border-white/5 px-2 py-0.5 rounded text-[9px] text-slate-300"
         >
           <span>تاريخ التصدير:</span>
           <span class="font-mono text-white font-bold">{{ currentDate }}</span>
@@ -126,33 +113,44 @@
       </div>
     </div>
 
+    <!-- جدول البيانات التجميعية المضغوط والمرتب -->
     <div
-      class="relative z-10 w-full mb-8 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white"
+      class="relative z-10 w-full mb-6 rounded-lg overflow-hidden border border-slate-300 shadow-sm bg-white"
     >
       <table class="w-full text-right border-collapse table-auto text-xs print-table">
         <thead>
           <tr
-            class="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 text-white font-bold text-[11px] uppercase tracking-wide border-none"
+            class="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 text-white font-bold text-[10.5px] uppercase tracking-wide border-none table-head-row"
           >
-            <th class="p-3.5 text-center w-24 font-bold border-l border-slate-800/40">كود</th>
-            <th class="p-3.5 text-right font-bold border-l border-slate-800/40">
+            <th class="py-2 px-2 text-center w-28 font-bold border-l border-slate-800/40">كود</th>
+            <th class="py-2 px-3 text-right font-bold border-l border-slate-800/40">
               اسم الموظف الفني
             </th>
-            <th class="p-3.5 text-right font-bold border-l border-slate-800/40">القسم الإداري</th>
-            <th class="p-3.5 text-center font-bold bg-blue-950/40 border-l border-slate-800/40">
+            <th class="py-2 px-2 text-right font-bold border-l border-slate-800/40">
+              القسم الإداري
+            </th>
+            <th
+              class="py-2 px-2 text-center font-bold bg-blue-950/40 border-l border-slate-800/40 w-16"
+            >
               أيام الحضور
             </th>
-            <th class="p-3.5 text-center font-bold border-l border-slate-800/40">أيام التأخير</th>
-            <th class="p-3.5 text-center font-bold bg-blue-950/40 border-l border-slate-800/40">
+            <th class="py-2 px-2 text-center font-bold border-l border-slate-800/40 w-16">
+              أيام التأخير
+            </th>
+            <th
+              class="py-2 px-2 text-center font-bold bg-blue-950/40 border-l border-slate-800/40 w-16"
+            >
               أيام الغياب
             </th>
-            <th class="p-3.5 text-center font-bold border-l border-slate-800/40">الإجازات</th>
-            <th
-              class="p-3.5 text-center font-black bg-gradient-to-b from-blue-950/60 to-blue-900/60 w-44 border-l border-slate-800/40"
-            >
-              إجمالي الساعات الفعلية
+            <th class="py-2 px-2 text-center font-bold border-l border-slate-800/40 w-16">
+              الإجازات
             </th>
-            <th class="p-3.5 text-center font-bold">إجمالي دقائق التأخير</th>
+            <th
+              class="py-2 px-2 text-center font-black bg-gradient-to-b from-blue-950/60 to-blue-900/60 w-32 border-l border-slate-800/40"
+            >
+              إجمالي الساعات
+            </th>
+            <th class="py-2 px-2 text-center font-bold w-28">إجمالي التأخير</th>
           </tr>
         </thead>
         <tbody>
@@ -162,48 +160,70 @@
             class="border-b border-slate-200 odd:bg-slate-50/30 hover:bg-slate-100/40 transition-colors break-inside-avoid"
           >
             <td
-              class="p-3 border-l border-slate-200 text-center font-mono font-bold bg-slate-50 text-slate-800 whitespace-nowrap"
+              class="py-1 px-2 border-l border-slate-200 text-center font-mono font-bold bg-slate-50/80 text-slate-800 whitespace-nowrap text-[11px]"
             >
               {{ row.employee_number }}
             </td>
-            <td class="p-3 border-l border-slate-200 font-bold text-slate-900 text-[13px]">
+            <td class="py-1 px-3 border-l border-slate-200 font-bold text-slate-900 text-xs">
               {{ row.full_name }}
             </td>
-            <td class="p-3 border-l border-slate-200 text-slate-600 font-semibold text-xs">
+            <td
+              class="py-1 px-2 border-l border-slate-200 text-slate-600 font-semibold text-[11px]"
+            >
               {{ row.department_name }}
             </td>
             <td
-              class="p-3 border-l border-slate-200 text-center font-bold text-emerald-700 bg-emerald-50/10 text-sm"
+              class="py-1 px-2 border-l border-slate-200 text-center font-bold text-emerald-700 bg-emerald-50/10 text-xs font-mono"
             >
               {{ row.summary.present_days }}
             </td>
-            <td class="p-3 border-l border-slate-200 text-center font-bold text-amber-600">
+            <td
+              class="py-1 px-2 border-l border-slate-200 text-center font-bold text-amber-600 font-mono text-xs"
+            >
               {{ row.summary.late_days }}
             </td>
             <td
-              class="p-3 border-l border-slate-200 text-center font-bold text-rose-600 bg-rose-50/10 text-sm"
+              class="py-1 px-2 border-l border-slate-200 text-center font-bold text-rose-600 bg-rose-50/10 text-xs font-mono"
             >
               {{ row.summary.absent_days }}
             </td>
-            <td class="p-3 border-l border-slate-200 text-center font-bold text-blue-600">
+            <td
+              class="py-1 px-2 border-l border-slate-200 text-center font-bold text-blue-600 font-mono text-xs"
+            >
               {{ row.summary.leave_days }}
             </td>
+
+            <!-- عمود ساعات العمل المحسن والواضح بنظام الأرقام المريحة للعين -->
             <td
-              class="p-3 border-l border-slate-200 text-center font-black text-slate-950 bg-blue-50/20"
+              class="py-1 px-2 border-l border-slate-200 text-center font-mono font-bold whitespace-nowrap bg-blue-50/20"
             >
-              <span class="text-sm block text-blue-900 tracking-tight font-mono">{{
-                row.hours.total_work_hours_formatted
-              }}</span>
-              <span class="text-[9px] text-slate-400 font-normal font-mono block mt-0.5">
-                ({{ row.hours.total_work_hours_decimal }} ساعة)
+              <span
+                v-if="Number(row.hours?.total_work_hours_decimal) > 0"
+                class="text-blue-900 text-xs"
+              >
+                {{ Number(row.hours.total_work_hours_decimal).toFixed(2) }}
+                <span class="text-[10px] font-sans text-slate-500 font-normal">س</span>
               </span>
+              <span v-else class="text-slate-300 font-normal">-</span>
             </td>
-            <td class="p-3 text-center font-mono text-amber-900 font-bold text-sm bg-amber-50/10">
-              {{ row.hours.total_delay_formatted }}
+
+            <!-- عمود دقائق التأخير المنظم -->
+            <td
+              class="py-1 px-2 text-center font-mono font-bold text-[11px] whitespace-nowrap bg-amber-50/10"
+            >
+              <span
+                v-if="
+                  row.hours?.total_delay_formatted && row.hours.total_delay_formatted !== '0 دقيقة'
+                "
+                class="text-amber-900"
+              >
+                {{ row.hours.total_delay_formatted }}
+              </span>
+              <span v-else class="text-slate-300 font-normal">-</span>
             </td>
           </tr>
           <tr v-if="!reportData || !reportData.length">
-            <td colspan="9" class="p-8 text-center text-slate-400 font-medium bg-slate-50 text-sm">
+            <td colspan="9" class="py-6 text-center text-slate-400 font-medium bg-slate-50 text-xs">
               لا توجد بيانات حضور مجمعة للطباعة حالياً.
             </td>
           </tr>
@@ -211,37 +231,38 @@
       </table>
     </div>
 
+    <!-- التوقيعات والاعتمادات الرسمية الثلاثية -->
     <div
-      class="relative z-10 mt-16 grid grid-cols-3 gap-8 text-center pt-8 border-t border-slate-200 break-inside-avoid"
+      class="relative z-10 mt-6 grid grid-cols-3 gap-6 text-center pt-4 border-t border-slate-300 break-inside-avoid"
     >
-      <div class="space-y-10">
-        <p class="font-bold text-slate-800 text-xs tracking-wide">مسؤول إدارة الوقت والحضور</p>
-        <div class="space-y-1 text-[11px] text-slate-400">
-          <div class="border-b border-slate-200 w-44 mx-auto"></div>
+      <div class="space-y-6">
+        <p class="font-bold text-slate-800 text-[11px] tracking-wide">مسؤول إدارة الوقت والحضور</p>
+        <div class="space-y-0.5 text-[10px] text-slate-400">
+          <div class="border-b border-slate-300 w-36 mx-auto"></div>
           <p>التوقيع: ........................</p>
         </div>
       </div>
-      <div class="space-y-10">
-        <p class="font-bold text-slate-800 text-xs tracking-wide">مدير الموارد البشرية</p>
-        <div class="space-y-1 text-[11px] text-slate-400">
-          <div class="border-b border-slate-200 w-44 mx-auto"></div>
+      <div class="space-y-6">
+        <p class="font-bold text-slate-800 text-[11px] tracking-wide">مدير الموارد البشرية</p>
+        <div class="space-y-0.5 text-[10px] text-slate-400">
+          <div class="border-b border-slate-300 w-36 mx-auto"></div>
           <p>التوقيع: ........................</p>
         </div>
       </div>
-      <div class="space-y-10">
-        <p class="font-bold text-slate-800 text-xs tracking-wide">اعتماد الإدارة العامة</p>
-        <div class="space-y-1 text-[11px] text-slate-400">
-          <div class="border-b border-slate-200 w-44 mx-auto"></div>
+      <div class="space-y-6">
+        <p class="font-bold text-slate-800 text-[11px] tracking-wide">اعتماد الإدارة العامة</p>
+        <div class="space-y-0.5 text-[10px] text-slate-400">
+          <div class="border-b border-slate-300 w-36 mx-auto"></div>
           <p>الختم الرسمي: ........................</p>
         </div>
       </div>
     </div>
 
     <div
-      class="print-footer fixed bottom-0 left-0 w-full text-center text-[10px] text-slate-400 border-t border-slate-200 pt-2 bg-white hidden print:block"
+      class="print-footer fixed bottom-0 left-0 w-full text-center text-[9px] text-slate-400 border-t border-slate-200 pt-1 bg-white hidden print:block"
     >
-      صفحة <span class="page-number"></span> | {{ brandingStore.appName || 'Panda ERP' }} - نظام
-      إدارة الوقت الموحد
+      {{ brandingStore.appName || 'Panda ERP' }} - كشف الحضور والانصراف التجميعي | تاريخ الاستخراج:
+      {{ currentDate }}
     </div>
   </div>
 </template>
@@ -311,7 +332,7 @@ onMounted(() => {
 
 <style scoped>
 /* ==========================================================================
-   1. التنسيق الخارجي وعرض الشاشة السلس
+   1. التنسيق الخارجي على الشاشة
    ========================================================================== */
 .print-landscape-container {
   position: fixed;
@@ -323,7 +344,7 @@ onMounted(() => {
   color: #0f172a !important;
   z-index: 999999;
   overflow-y: auto;
-  padding: 40px;
+  padding: 24px;
 }
 
 .artistic-header-banner {
@@ -333,16 +354,16 @@ onMounted(() => {
 }
 
 .logo-holder {
-  box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.2);
 }
 
 /* ==========================================================================
-   2. قواعد هندسة الـ PDF لفرض التدرجات اللونية والأشكال
+   2. قواعد الطباعة الذكية (توفير الحبر وضغط السطور لتوفير الورق)
    ========================================================================== */
 @media print {
   @page {
     size: A4 landscape;
-    margin: 12mm 10mm 15mm 10mm;
+    margin: 8mm 6mm 8mm 6mm;
   }
 
   * {
@@ -397,13 +418,93 @@ onMounted(() => {
     display: none !important;
   }
 
+  /* تحويل الترويسة إلى بيضاء رسمية بدون إهدار حبر */
   .artistic-header-banner {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1e1b4b 100%) !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #94a3b8 !important;
+    border-top: 4px solid #1e3a8a !important;
+    box-shadow: none !important;
+    padding: 8px 14px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .logo-holder {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .header-title,
+  .header-doc-title {
+    color: #0f172a !important;
+    text-shadow: none !important;
+    font-size: 14px !important;
+  }
+
+  .header-subtitle,
+  .header-doc-desc {
+    color: #475569 !important;
+    font-size: 9px !important;
+  }
+
+  .header-center-divider {
+    border-color: #cbd5e1 !important;
+    padding: 0 12px !important;
+  }
+
+  .filter-badge {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    backdrop-filter: none !important;
+    padding: 1px 6px !important;
+  }
+
+  .filter-badge span {
+    color: #0f172a !important;
+  }
+
+  .filter-badge .badge-label {
+    color: #475569 !important;
+  }
+
+  .filter-badge .badge-value {
+    color: #1e3a8a !important;
+  }
+
+  .export-time-badge {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    padding: 1px 6px !important;
+  }
+
+  .export-time-badge span {
+    color: #0f172a !important;
+  }
+
+  /* ضغط رؤوس وخلايا الجدول لأدنى ارتفاع لاستهلاك أقل عدد من الصفحات */
+  .table-head-row {
+    background: #f1f5f9 !important;
   }
 
   .print-table th {
-    background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 50%, #1e1b4b 100%) !important;
-    color: #ffffff !important;
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1px solid #94a3b8 !important;
+    padding: 3px 4px !important;
+    font-size: 9.5px !important;
+    height: 22px !important;
+  }
+
+  .print-table td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 1.5px 4px !important;
+    font-size: 9.5px !important;
+    line-height: 1.1 !important;
+    height: 20px !important;
   }
 }
 

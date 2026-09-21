@@ -1,4 +1,3 @@
-//src\modules\hr\services\attendanceLog.service.js
 import apiClient from '@/services/apiClient'
 
 const resource = '/hr/attendance-logs'
@@ -36,8 +35,13 @@ export default {
     return apiClient.get('/hr/reports/employee-detailed-attendance', { params })
   },
 
-  // 🌟 دالة الجلب المخصصة للرابط الخارجي العام
+  // دالة الجلب المخصصة للرابط الخارجي العام
   getPublicEmployeeDetailedReport(params = {}) {
     return apiClient.get('/hr/public/employee-detailed-attendance', { params })
+  },
+
+  // تقرير الحضور الشهري لموظفي القسم
+  getDepartmentMonthlyReport(params = {}) {
+    return apiClient.get('/hr/reports/department-monthly-attendance', { params })
   },
 }
