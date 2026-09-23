@@ -1,82 +1,131 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <!-- الهيدر العلوي وشريط الإجراءات -->
+    <div
+      class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-2 border-b border-slate-800/60"
+    >
       <div>
-        <h1 class="text-2xl font-bold text-text-primary">سجلات الحضور والانصراف</h1>
-        <p class="text-sm text-text-muted mt-1">
+        <h1 class="text-2xl font-bold text-text-primary tracking-tight">سجلات الحضور والانصراف</h1>
+        <p class="text-xs text-text-muted mt-1 leading-relaxed">
           متابعة حركات البصمة اليومية للموظفين، ومراجعة التأخير والغياب والعمل الإضافي.
         </p>
       </div>
 
-      <div
-        class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 shadow-inner"
-      >
-        <button
-          type="button"
-          @click="switchView('detailed')"
-          :class="
-            viewMode === 'detailed'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-slate-200'
-          "
-          class="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200"
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- محوّل العرض الرئيسي (تفصيلي / تجميعي) بنمط Segmented Control مدمج -->
+        <div
+          class="inline-flex items-center p-1 bg-slate-900/90 rounded-xl border border-slate-800 shadow-inner"
         >
-          سجلات تفصيلية
-        </button>
-        <button
-          type="button"
-          @click="switchView('summary')"
-          :class="
-            viewMode === 'summary'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-slate-200'
-          "
-          class="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200"
-        >
-          سجلات تجميعية
-        </button>
-      </div>
+          <button
+            type="button"
+            @click="switchView('detailed')"
+            :class="
+              viewMode === 'detailed'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            "
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            <span>سجلات تفصيلية</span>
+          </button>
+          <button
+            type="button"
+            @click="switchView('summary')"
+            :class="
+              viewMode === 'summary'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            "
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            <span>سجلات تجميعية</span>
+          </button>
+        </div>
 
-      <div class="flex flex-wrap items-center gap-3">
-        <!-- زر استعلام حضور لفتح الصفحة العامة في تبويب جديد -->
-        <AppButton
+        <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
+
+        <!-- رابط استعلام حضور (مظهر Badge مدمج بنافذة خارجية) -->
+        <button
+          type="button"
           @click="goToPublicReport"
-          class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-sm transition-all duration-200"
+          class="group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold text-sky-400 bg-sky-950/40 hover:bg-sky-900/60 border border-sky-800/50 hover:border-sky-700 transition-all duration-200 shadow-sm"
+          title="فتح تقرير استعلام الحضور في نافذة مستقلة"
         >
-          <svg class="w-5 h-5 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-          استعلام حضور
-        </AppButton>
+          <div
+            class="p-1 rounded-lg bg-sky-900/60 text-sky-300 group-hover:scale-110 transition-transform"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </div>
+          <span>استعلام حضور</span>
+        </button>
 
-        <AppButton
+        <!-- زر شاشة الباركود (Kiosk) بنمط ناعم وأنيق -->
+        <button
           v-if="authStore.can('hr.attendance.manage')"
+          type="button"
           @click="goToKiosk"
-          class="bg-slate-800 text-amber-400 border border-amber-500/30 font-bold shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:bg-amber-500 hover:text-slate-950 hover:border-amber-500 transition-all duration-200"
+          class="group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/50 hover:border-amber-600/70 transition-all duration-200 shadow-sm"
+          title="فتح شاشة الكيوسك لتسجيل الحضور عبر الباركود"
         >
-          <svg class="w-5 h-5 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-            />
-          </svg>
-          شاشة الباركود
-        </AppButton>
+          <div
+            class="p-1 rounded-lg bg-amber-900/60 text-amber-300 group-hover:scale-110 transition-transform"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+              />
+            </svg>
+          </div>
+          <span>شاشة الباركود</span>
+        </button>
 
-        <AppButton
+        <!-- زر تسجيل حركة يدوية الأساسي بنمط مدمج وبارز -->
+        <button
           v-if="authStore.can('hr.attendance.manage')"
+          type="button"
           @click="openCreateModal"
-          icon="plus"
+          class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-900/30 transition-all duration-200 hover:-translate-y-0.5"
         >
-          تسجيل حركة يدوية
-        </AppButton>
+          <div
+            class="p-1 rounded-lg bg-blue-700/60 text-white group-hover:rotate-90 transition-transform"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </div>
+          <span>تسجيل حركة يدوية</span>
+        </button>
       </div>
     </div>
 
@@ -95,7 +144,7 @@
       :payGroupOptions="payGroupOptions"
     />
 
-    <!-- محول العرض الداخلي للسجلات التفصيلية (حركات مسطحة أو كشف شهري مجمع) -->
+    <!-- محول العرض الداخلي للسجلات التفصيلية (حركات مسطحة أو كشف مجمع للأقسام) -->
     <div
       v-if="viewMode === 'detailed'"
       class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/90 px-4 py-2.5 rounded-2xl shadow-sm"
@@ -113,31 +162,39 @@
             "
             class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150"
           >
-            حركات يومية (مسطح)
+            حركات يومية
           </button>
           <button
             type="button"
             @click="setDetailedSubMode('grouped')"
             :class="
               detailedSubMode === 'grouped'
-                ? 'bg-emerald-600 text-white shadow-sm'
+                ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             "
             class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 flex items-center gap-1.5"
           >
-            <span>كشف شهري مجمع للموظفين</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+            <span>كشف الحضور الأسبوعي للقسم</span>
+            <span class="w-2 h-2 rounded-full bg-indigo-300 animate-pulse"></span>
           </button>
         </div>
       </div>
 
-      <div v-if="detailedSubMode === 'grouped'" class="flex items-center gap-3">
+      <div v-if="detailedSubMode === 'grouped'" class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          @click="setCurrentWeekRange"
+          class="text-xs text-indigo-400 hover:text-indigo-300 font-bold underline flex items-center gap-1.5 transition-colors"
+        >
+          <span>📅 الأسبوع الحالي (افتراضي)</span>
+        </button>
+        <span class="text-slate-700 hidden sm:inline">|</span>
         <button
           type="button"
           @click="setCurrentMonthRange"
-          class="text-xs text-sky-400 hover:text-sky-300 font-medium underline flex items-center gap-1.5 transition-colors"
+          class="text-xs text-slate-400 hover:text-slate-200 font-medium underline flex items-center gap-1.5 transition-colors"
         >
-          <span>📅 ضبط التواريخ للشهر الحالي</span>
+          <span>🗓️ التبديل للشهر الحالي</span>
         </button>
       </div>
     </div>
@@ -157,8 +214,8 @@
       <AttendanceMonthlyGroupedView
         v-else
         :department-id="departmentId"
-        :start-date="startDate"
-        :end-date="endDate"
+        v-model:start-date="startDate"
+        v-model:end-date="endDate"
         :search-query="searchQuery"
       />
     </template>
@@ -202,7 +259,6 @@ import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
 
-import AppButton from '@/components/ui/AppButton.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
 import AttendanceFilter from './components/AttendanceFilter.vue'
 import AttendanceTable from './components/AttendanceTable.vue'
@@ -221,14 +277,17 @@ const toast = useToast()
 const { logs, pagination, loading } = storeToRefs(attendanceStore)
 
 const viewMode = ref('detailed')
-const detailedSubMode = ref('flat') // خيارات: 'flat' (مسطح) أو 'grouped' (كشف شهري مجمع)
+const detailedSubMode = ref('flat') // خيارات: 'flat' (مسطح) أو 'grouped' (كشف مجمع للأقسام)
 const summaryLogs = ref([])
 const summaryLoading = ref(false)
 
 const searchQuery = ref('')
 const startDate = ref(new Date().toISOString().split('T')[0])
 const endDate = ref(new Date().toISOString().split('T')[0])
-const departmentId = ref('')
+
+// تعيين القسم الافتراضي حسب المستخدم الذي سجل الدخول، أو قيمة فارغة إذا لم يكن مرتبطاً بقسم
+const departmentId = ref(authStore.user?.department_id || '')
+
 const positionId = ref('')
 const payGroupId = ref('')
 const employmentType = ref('')
@@ -242,7 +301,9 @@ const departmentOptions = computed(() => {
 })
 
 const selectedDepartmentName = computed(() => {
-  const matched = departmentOptions.value.find((dept) => dept.id === departmentId.value)
+  const matched = departmentOptions.value.find(
+    (dept) => String(dept.id) === String(departmentId.value),
+  )
   return matched ? matched.name : null
 })
 
@@ -250,31 +311,45 @@ const positionOptions = ref([])
 const payGroupOptions = ref([])
 let searchTimeout = null
 
+// تنسيق التاريخ المحلي
+const formatLocalDate = (d) => {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // ضبط نطاق التواريخ تلقائياً للشهر الحالي
 const setCurrentMonthRange = () => {
   const now = new Date()
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-  const format = (d) => {
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+  startDate.value = formatLocalDate(firstDay)
+  endDate.value = formatLocalDate(lastDay)
+}
 
-  startDate.value = format(firstDay)
-  endDate.value = format(lastDay)
+// ضبط نطاق التواريخ تلقائياً للأسبوع الحالي (يبدأ من الأحد إلى السبت)
+const setCurrentWeekRange = () => {
+  const now = new Date()
+  const currentDayOfWeek = now.getDay() // 0 = الأحد
+
+  const currentSunday = new Date(now)
+  currentSunday.setDate(now.getDate() - currentDayOfWeek)
+
+  const currentSaturday = new Date(currentSunday)
+  currentSaturday.setDate(currentSunday.getDate() + 6)
+
+  startDate.value = formatLocalDate(currentSunday)
+  endDate.value = formatLocalDate(currentSaturday)
 }
 
 // تبديل النمط الفرعي للسجلات التفصيلية
 const setDetailedSubMode = (mode) => {
   detailedSubMode.value = mode
   if (mode === 'grouped') {
-    // إذا كانت التواريخ الحالية يوماً واحداً فقط، نوسعها تلقائياً للشهر الحالي لراحة المستخدم
-    if (startDate.value === endDate.value) {
-      setCurrentMonthRange()
-    }
+    // 🌟 جعل الأسبوع الحالي هو الافتراضي تلقائياً عند الدخول على الكشف المجمع لتوفير النقرات
+    setCurrentWeekRange()
   } else {
     handlePageChange(1)
   }
@@ -381,9 +456,7 @@ const loadFiltersLookupData = async () => {
 }
 
 onMounted(() => {
-  // تنفيذ جلب جدول الحضور فوراً
   handlePageChange(1)
-  // تحميل الخيارات المساعدة في الخلفية
   loadFiltersLookupData()
 })
 
@@ -392,7 +465,6 @@ const goToKiosk = () => {
   window.open(routeData.href, '_blank')
 }
 
-// فتح صفحة استعلام الحضور العامة في تبويب جديد
 const goToPublicReport = () => {
   const routeData = router.resolve({ name: 'PublicEmployeeAttendanceReport' })
   window.open(routeData.href, '_blank')

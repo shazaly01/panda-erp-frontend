@@ -19,7 +19,7 @@
       </div>
       <h3 class="text-base font-bold text-slate-200 mb-1">يرجى تحديد القسم الإداري</h3>
       <p class="text-xs text-slate-400 max-w-sm mx-auto">
-        لعرض كشف الحضور الشهري المجمع للموظفين، يرجى اختيار القسم من قائمة الفلاتر أعلاه.
+        لعرض كشف الحضور الأسبوعي لموظفي القسم، يرجى اختيار القسم من قائمة الفلاتر أعلاه.
       </p>
     </div>
 
@@ -62,14 +62,17 @@
       </p>
     </div>
 
-    <!-- عرض بطاقات الموظفين وأشرطة الشهر -->
+    <!-- عرض بطاقات الموظفين وأشرطة التقرير -->
     <div v-else class="space-y-5">
-      <!-- شريط إجمالي القسم السريع مع زر الطباعة ومحدد الصفحات وزر طي/توسيع الكل -->
+      <!-- شريط إجمالي القسم السريع مع محول الفترة وأدوات التحكم -->
       <div
-        class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-md"
+        class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md"
       >
         <div class="flex flex-wrap items-center gap-2.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span
+            class="w-2.5 h-2.5 rounded-full animate-pulse"
+            :class="isWeekly ? 'bg-indigo-500' : 'bg-emerald-500'"
+          ></span>
           <span class="text-xs font-bold text-slate-300">
             القسم: <strong class="text-white">{{ reportData?.department?.name }}</strong>
           </span>
@@ -78,13 +81,52 @@
             إجمالي الموظفين: {{ filteredEmployees.length }}
           </span>
           <span class="text-slate-600">|</span>
-          <span class="text-xs text-slate-400">
-            الفترة: {{ reportData?.filter?.month_title || `${startDate} إلى ${endDate}` }}
+          <span
+            class="text-[11px] font-bold px-2.5 py-0.5 rounded-md font-sans"
+            :class="
+              isWeekly
+                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
+                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+            "
+          >
+            {{ isWeekly ? 'كشف أسبوعي (افتراضي)' : 'كشف شهري' }}
+          </span>
+          <span class="text-slate-600">|</span>
+          <span class="text-xs text-slate-300 font-medium">
+            {{ displayPeriodTitle }}
           </span>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- زر طباعة التقرير الفني الشهري المستقل -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- محوّل الفترة السريع المباشر (أسبوعي افتراضي / شهري اختياري) -->
+          <div class="inline-flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              @click="setWeeklyRange"
+              :class="
+                isWeekly
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              "
+              class="px-3 py-1 rounded-lg text-xs font-bold transition-all duration-150"
+            >
+              📅 الأسبوع الحالي
+            </button>
+            <button
+              type="button"
+              @click="setMonthlyRange"
+              :class="
+                !isWeekly
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              "
+              class="px-3 py-1 rounded-lg text-xs font-bold transition-all duration-150"
+            >
+              🗓️ الشهر الحالي
+            </button>
+          </div>
+
+          <!-- زر طباعة التقرير الفني المستقل -->
           <button
             type="button"
             @click="openPrintReport"
@@ -102,16 +144,16 @@
           </button>
 
           <!-- تحديد عدد الموظفين في الصفحة -->
-          <div class="flex items-center gap-1.5 text-xs text-slate-400">
+          <div class="flex items-center gap-1 text-xs text-slate-400">
             <span>عرض:</span>
             <select
               v-model.number="perPage"
-              class="bg-slate-950 border border-slate-750 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
+              class="bg-slate-950 border border-slate-750 text-slate-200 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-blue-500 font-mono"
             >
-              <option :value="5">5 موظفين</option>
-              <option :value="10">10 موظفين</option>
-              <option :value="15">15 موظفاً</option>
-              <option :value="20">20 موظفاً</option>
+              <option :value="5">5</option>
+              <option :value="10">10</option>
+              <option :value="15">15</option>
+              <option :value="20">20</option>
             </select>
           </div>
 
@@ -120,7 +162,7 @@
             @click="toggleAllEmployees"
             class="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white rounded-lg text-xs font-bold border border-slate-700 transition-colors"
           >
-            {{ allExpanded ? 'طي الجداول التفصيلية' : 'توسيع كل الجداول التفصيلية' }}
+            {{ allExpanded ? 'طي الجداول' : 'توسيع الكل' }}
           </button>
         </div>
       </div>
@@ -131,7 +173,7 @@
         :key="item.employee.id"
         class="bg-slate-900/60 border border-slate-800/90 rounded-2xl overflow-hidden shadow-lg transition-all duration-200"
       >
-        <!-- رأس البطاقة: بيانات الموظف + الملخص الشهري السريع -->
+        <!-- رأس البطاقة: بيانات الموظف + الملخص الزمني السريع -->
         <div
           class="p-4 bg-slate-950/40 border-b border-slate-800/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
         >
@@ -158,7 +200,7 @@
             </div>
           </div>
 
-          <!-- شارات الملخص الشهري بالأرقام -->
+          <!-- شارات الملخص الزمني بالأرقام -->
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <span
               class="px-2.5 py-1 rounded-lg font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
@@ -210,7 +252,7 @@
           </div>
         </div>
 
-        <!-- الشريط الأفقي لأيام الشهر الكامل للموظف -->
+        <!-- الشريط الأفقي لأيام الفترة (أسبوعي افتراضياً أو شهري) -->
         <div class="p-3.5 bg-slate-900/30 overflow-x-auto scrollbar-thin">
           <table class="w-full text-center border-collapse">
             <thead>
@@ -221,15 +263,20 @@
                   اليوم
                 </th>
                 <th
-                  v-for="day in getMonthDays(item.records)"
+                  v-for="day in getPeriodDays(item.records)"
                   :key="day.date"
                   :class="[
-                    'p-1.5 border border-slate-800 min-w-[36px]',
+                    'p-1.5 border border-slate-800',
+                    isWeekly ? 'min-w-[65px] sm:min-w-[80px]' : 'min-w-[36px]',
                     isWeekend(day.date) ? 'bg-rose-950/20 text-rose-400' : 'bg-slate-950/40',
                   ]"
                 >
-                  <span class="block text-[8px]">{{ day.shortDayName }}</span>
-                  <span class="font-mono text-[11px]">{{ day.dayNumber }}</span>
+                  <span :class="isWeekly ? 'text-[10px] font-bold' : 'text-[8px]'" class="block">
+                    {{ day.shortDayName }}
+                  </span>
+                  <span :class="isWeekly ? 'text-xs font-bold' : 'text-[11px]'" class="font-mono">
+                    {{ day.dayNumber }}
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -242,14 +289,15 @@
                   الحالة
                 </td>
                 <td
-                  v-for="day in getMonthDays(item.records)"
+                  v-for="day in getPeriodDays(item.records)"
                   :key="'status-' + day.date"
                   class="p-1 border border-slate-800/80"
                 >
                   <span
                     v-if="day.record"
                     :class="[
-                      'w-6 h-6 mx-auto rounded-md flex items-center justify-center font-bold text-[9px]',
+                      'mx-auto rounded-md flex items-center justify-center font-bold',
+                      isWeekly ? 'w-7 h-7 text-[10px]' : 'w-6 h-6 text-[9px]',
                       day.record.status === 'present'
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                         : day.record.status === 'late'
@@ -274,7 +322,7 @@
                   الساعات
                 </td>
                 <td
-                  v-for="day in getMonthDays(item.records)"
+                  v-for="day in getPeriodDays(item.records)"
                   :key="'hours-' + day.date"
                   class="p-1 border border-slate-800/80 text-[10px]"
                 >
@@ -428,7 +476,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import attendanceLogService from '@/modules/hr/services/attendanceLog.service'
@@ -452,6 +500,8 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['update:startDate', 'update:endDate'])
+
 const router = useRouter()
 const toast = useToast()
 const loading = ref(false)
@@ -462,6 +512,74 @@ const allExpanded = ref(false)
 // إعدادات الصفحات
 const currentPage = ref(1)
 const perPage = ref(5) // 5 موظفين في الصفحة
+
+/**
+ * معرفة هل التقرير أسبوعي بناءً على رد الباك إند أو عدد الأيام (<= 7)، والافتراضي هو true
+ */
+const isWeekly = computed(() => {
+  if (reportData.value?.filter?.report_type) {
+    return reportData.value.filter.report_type === 'weekly'
+  }
+  if (props.startDate && props.endDate) {
+    const [sY, sM, sD] = props.startDate.split('-').map(Number)
+    const [eY, eM, eD] = props.endDate.split('-').map(Number)
+    const start = new Date(sY, sM - 1, sD)
+    const end = new Date(eY, eM - 1, eD)
+    const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1
+    return diffDays <= 7
+  }
+  return true // افتراضي
+})
+
+const displayPeriodTitle = computed(() => {
+  return (
+    reportData.value?.filter?.period_title ||
+    reportData.value?.filter?.month_title ||
+    (props.startDate && props.endDate
+      ? `${props.startDate} إلى ${props.endDate}`
+      : 'الأسبوع الحالي')
+  )
+})
+
+// تنسيق التاريخ المحلي
+const formatLocalDate = (d) => {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// التبديل السريع إلى الأسبوع الحالي (يبدأ من الأحد إلى السبت)
+const setWeeklyRange = () => {
+  const now = new Date()
+  const dayOfWeek = now.getDay() // 0 = الأحد
+
+  const currentSunday = new Date(now)
+  currentSunday.setDate(now.getDate() - dayOfWeek)
+
+  const currentSaturday = new Date(currentSunday)
+  currentSaturday.setDate(currentSunday.getDate() + 6)
+
+  emit('update:startDate', formatLocalDate(currentSunday))
+  emit('update:endDate', formatLocalDate(currentSaturday))
+}
+
+// التبديل السريع إلى الشهر الحالي (من اليوم الأول إلى الأخير)
+const setMonthlyRange = () => {
+  const now = new Date()
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+  emit('update:startDate', formatLocalDate(firstDay))
+  emit('update:endDate', formatLocalDate(lastDay))
+}
+
+// التأكد من تطبيق الأسبوع الحالي إذا لم يتم تمرير تواريخ عند التحميل
+onMounted(() => {
+  if (!props.startDate || !props.endDate || props.startDate === props.endDate) {
+    setWeeklyRange()
+  }
+})
 
 // فتح صفحة الطباعة المستقلة
 const openPrintReport = () => {
@@ -528,13 +646,14 @@ const fetchReport = async () => {
       department_id: props.departmentId,
       start_date: props.startDate || null,
       end_date: props.endDate || null,
+      report_type: isWeekly.value ? 'weekly' : 'monthly',
     }
 
     const response = await attendanceLogService.getDepartmentMonthlyReport(params)
     reportData.value = response.data
     currentPage.value = 1
   } catch (error) {
-    const message = error.response?.data?.message || 'تعذر تحميل كشف حضور القسم الشهري.'
+    const message = error.response?.data?.message || 'تعذر تحميل كشف حضور القسم.'
     toast.error(message)
     reportData.value = null
   } finally {
@@ -561,8 +680,8 @@ const toggleAllEmployees = () => {
   })
 }
 
-// دالة توليد مصفوفة أيام الفترة لإنشاء الشريط الأفقي للموظف
-const getMonthDays = (records = []) => {
+// توليد مصفوفة أيام الفترة لإنشاء الشريط الأفقي للموظف
+const getPeriodDays = (records = []) => {
   if (!props.startDate || !props.endDate) return []
 
   const days = []
@@ -584,7 +703,9 @@ const getMonthDays = (records = []) => {
     days.push({
       date: dateStr,
       dayNumber: current.getDate(),
-      shortDayName: current.toLocaleDateString('ar-EG', { weekday: 'narrow' }),
+      shortDayName: current.toLocaleDateString('ar-EG', {
+        weekday: isWeekly.value ? 'short' : 'narrow',
+      }),
       record,
     })
 
