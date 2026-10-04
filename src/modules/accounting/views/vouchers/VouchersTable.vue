@@ -1,4 +1,4 @@
-<!--src\modules\accounting\views\vouchers\VouchersTable.vue-->
+<!--src/modules/accounting/views/vouchers/VouchersTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -95,6 +95,23 @@
 
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
+          <!-- زر الطباعة المباشرة للسند -->
+          <button
+            @click.stop="$emit('print', item)"
+            class="p-1.5 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+            title="طباعة السند الورقي"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+              />
+            </svg>
+          </button>
+
+          <!-- زر عرض السند -->
           <button
             @click.stop="$emit('view', item)"
             class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
@@ -116,6 +133,7 @@
             </svg>
           </button>
 
+          <!-- زر اعتماد السند -->
           <button
             v-if="item.status === 'draft' && authStore.can(`${type}.approve`)"
             @click.stop="$emit('approve', item)"
@@ -132,11 +150,17 @@
             </svg>
           </button>
 
+          <!-- زر تعديل السند (للمسودات) / إلغاء الترحيل والتعديل (للسندات المرحلة) -->
           <button
-            v-if="item.status !== 'posted' && authStore.can(`${type}.update`)"
+            v-if="authStore.can(`${type}.update`)"
             @click.stop="$emit('edit', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-            title="تعديل"
+            :class="[
+              'p-1.5 rounded-lg transition-colors',
+              item.status === 'posted'
+                ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'
+                : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
+            ]"
+            :title="item.status === 'posted' ? 'إلغاء الترحيل والتعديل' : 'تعديل'"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -148,6 +172,7 @@
             </svg>
           </button>
 
+          <!-- زر ترحيل السند -->
           <button
             v-if="item.status !== 'posted' && authStore.can(`${type}.post`)"
             @click.stop="$emit('post', item)"
@@ -164,6 +189,7 @@
             </svg>
           </button>
 
+          <!-- زر حذف السند -->
           <button
             v-if="authStore.can(`${type}.delete`)"
             @click.stop="item.status !== 'posted' ? $emit('delete', item) : null"
@@ -199,15 +225,14 @@ import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 
-const props = defineProps({
+defineProps({
   vouchers: { type: Array, required: true },
   pagination: { type: Object, required: true },
   loading: { type: Boolean, default: false },
-  // التعديل هنا: استقبال النوع من الشاشة الأب
   type: { type: String, required: true },
 })
 
-const emit = defineEmits(['page-change', 'view', 'edit', 'post', 'delete', 'approve'])
+defineEmits(['page-change', 'view', 'edit', 'post', 'unpost', 'delete', 'approve', 'print'])
 
 const authStore = useAuthStore()
 
@@ -217,11 +242,11 @@ const formatNumber = (num) => {
 
 const tableHeaders = computed(() => {
   const headers = [
-    { key: 'voucher_info', label: 'رقم وتاريخ السند', class: 'min-w-[160px]' }, // عدلت المسمى قليلاً ليكون أدق
+    { key: 'voucher_info', label: 'رقم وتاريخ السند', class: 'min-w-[160px]' },
     { key: 'payment_info', label: 'وسيلة الدفع', class: 'min-w-[180px]' },
     { key: 'amount', label: 'المبلغ الإجمالي', class: 'text-left min-w-[120px]' },
     { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-    { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[150px]' },
+    { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[170px]' },
   ]
   return headers
 })

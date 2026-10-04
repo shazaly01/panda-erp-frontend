@@ -52,6 +52,7 @@ export const useVoucherStore = defineStore('voucher', () => {
     error.value = null
     try {
       const response = await voucherService.create(payload)
+      currentVoucher.value = response.data?.data || response.data || null
       return response
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل إنشاء السند.'
@@ -66,6 +67,7 @@ export const useVoucherStore = defineStore('voucher', () => {
     error.value = null
     try {
       const response = await voucherService.update(id, payload)
+      currentVoucher.value = response.data?.data || response.data || null
       return response
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل تحديث السند.'
@@ -93,7 +95,26 @@ export const useVoucherStore = defineStore('voucher', () => {
     }
   }
 
-  // أضفنا دالة الحذف للتعامل مع المسودات
+  async function unpostVoucherAction(id) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await voucherService.unpostVoucher(id)
+      if (currentVoucher.value && currentVoucher.value.id === id) {
+        currentVoucher.value.status = 'draft'
+      }
+      const voucherInList = vouchers.value.find((v) => v.id === id)
+      if (voucherInList) voucherInList.status = 'draft'
+      return response
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل إلغاء ترحيل السند.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // حذف السندات (للمسودات)
   async function deleteVoucher(id) {
     loading.value = true
     error.value = null
@@ -114,9 +135,8 @@ export const useVoucherStore = defineStore('voucher', () => {
     try {
       await voucherService.approveVoucher(id)
 
-      // تحديث حالة السند في الواجهة مباشرة بدون إعادة تحميل
       if (currentVoucher.value && currentVoucher.value.id === id) {
-        currentVoucher.value.status = 'approved' // أو حسب القيمة في الـ Enum لديك
+        currentVoucher.value.status = 'approved'
       }
       const voucherInList = vouchers.value.find((v) => v.id === id)
       if (voucherInList) voucherInList.status = 'approved'
@@ -139,6 +159,7 @@ export const useVoucherStore = defineStore('voucher', () => {
     createVoucher,
     updateVoucher,
     postVoucherAction,
+    unpostVoucherAction,
     deleteVoucher,
     approveVoucherAction,
   }

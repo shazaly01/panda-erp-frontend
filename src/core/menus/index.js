@@ -1,3 +1,4 @@
+//src\core\menus\index.js
 import {
   HomeIcon,
   UsersIcon,

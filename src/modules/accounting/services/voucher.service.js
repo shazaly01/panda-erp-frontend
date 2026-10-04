@@ -34,7 +34,12 @@ export default {
     return apiClient.post(`${resource}/${id}/post`)
   },
 
-  // اعتماد السند (حسب مسارات الباك إند لديك)
+  // إلغاء ترحيل السند (حذف القيد وإعادته لمسودة)
+  unpostVoucher(id) {
+    return apiClient.post(`${resource}/${id}/unpost`)
+  },
+
+  // اعتماد السند
   approveVoucher(id) {
     return apiClient.post(`${resource}/${id}/approve`)
   },

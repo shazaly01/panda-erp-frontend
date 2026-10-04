@@ -107,7 +107,9 @@
 
         <!-- زر تسجيل حركة يدوية الأساسي بنمط مدمج وبارز -->
         <button
-          v-if="authStore.can('hr.attendance.manage')"
+          v-if="
+            authStore.can('hr.attendance.manual_entry') || authStore.can('hr.attendance.manage')
+          "
           type="button"
           @click="openCreateModal"
           class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-900/30 transition-all duration-200 hover:-translate-y-0.5"
@@ -194,7 +196,7 @@
           @click="setCurrentMonthRange"
           class="text-xs text-slate-400 hover:text-slate-200 font-medium underline flex items-center gap-1.5 transition-colors"
         >
-          <span>🗓️ التبديل للشهر الحالي</span>
+          <span>🗓️️ التبديل للشهر الحالي</span>
         </button>
       </div>
     </div>

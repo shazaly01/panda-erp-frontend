@@ -1,3 +1,4 @@
+//src\router\index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -14,6 +15,12 @@ const BackupsList = () => import('@/views/settings/BackupsList.vue')
 const GrantRequestsList = () => import('@/views/grantRequests/GrantRequestsListView.vue')
 const GrantRequestFormView = () => import('@/views/grantRequests/GrantRequestFormView.vue')
 const GrantRequestPrintView = () => import('@/views/grantRequests/GrantRequestPrintView.vue')
+
+// --- استيراد شاشات الطباعة المستقلة للسندات والتقارير المالية ---
+const VoucherPrintModal = () =>
+  import('@/modules/accounting/views/vouchers/components/VoucherPrintModal.vue')
+const ExpensesReportPrintView = () =>
+  import('@/modules/accounting/views/vouchers/ExpensesReportPrintView.vue')
 
 // --- استيراد مكونات التوثيق الجديدة المنفصلة مع الحفاظ على الهيكلية العالمية ---
 const RegisterView = () => import('@/views/RegisterView.vue')
@@ -47,12 +54,24 @@ const routes = [
     ],
   },
 
-  // --- مسار الطباعة المستقل (خارج AppLayout ليعمل كصفحة بيور تماماً بدون القوائم) ---
+  // --- مسارات الطباعة المستقلة (خارج AppLayout لتعمل كصفحات بيور تماماً بدون القوائم) ---
   {
     path: '/grant-requests/:id/print',
     name: 'GrantRequestPrint',
     component: GrantRequestPrintView,
     meta: { requiresAuth: true, permission: 'grant_request.print' },
+  },
+  {
+    path: '/accounting/vouchers/:id/print',
+    name: 'VoucherPrint',
+    component: VoucherPrintModal,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/accounting/reports/expenses/print',
+    name: 'ExpensesReportPrint',
+    component: ExpensesReportPrintView,
+    meta: { requiresAuth: true },
   },
 
   // --- المسارات المحمية (تتطلب مصادقة وتعمل داخل AppLayout) ---

@@ -14,15 +14,20 @@
       </AppButton>
     </div>
 
-    <!-- فلاتر البحث والحالة -->
+    <!-- فلاتر البحث والحالة والتواريخ مع زر طباعة التقرير -->
     <VouchersFilter
       v-model:searchQuery="searchQuery"
       v-model:statusFilter="statusFilter"
+      v-model:dateFrom="dateFrom"
+      v-model:dateTo="dateTo"
       @update:searchQuery="onSearch"
       @update:statusFilter="handlePageChange(1)"
+      @update:dateFrom="handlePageChange(1)"
+      @update:dateTo="handlePageChange(1)"
+      @print-expenses="openExpensesReport"
     />
 
-    <!-- جدول عرض السندات -->
+    <!-- جدول عرض السندات مع استقبال الأحداث -->
     <VouchersTable
       :vouchers="vouchers"
       :pagination="pagination"
@@ -33,10 +38,12 @@
       @edit="openEditModal"
       @approve="openApproveDialog"
       @post="openPostDialog"
+      @unpost="openUnpostDialog"
       @delete="openDeleteDialog"
+      @print="openPrintModal"
     />
 
-    <!-- نافذة الإنشاء والتعديل المنبثقة المحدثة -->
+    <!-- نافذة الإنشاء والتعديل المنبثقة -->
     <VoucherModal
       v-if="isFormModalOpen"
       v-model="isFormModalOpen"
@@ -72,6 +79,15 @@
     />
 
     <AppConfirmDialog
+      v-model="isUnpostDialogOpen"
+      title="تأكيد إلغاء الترحيل وإعادة الفتح للتعديل"
+      :message="`هل أنت متأكد من رغبتك في إلغاء ترحيل السند رقم ${voucherToUnpost?.number}؟ سيتم حذف القيد المحاسبي المرتبط نهائياً وإعادة السند إلى مسودة لتتمكن من تعديله.`"
+      confirm-text="إلغاء الترحيل والفتح للتعديل"
+      confirm-variant="warning"
+      @confirmed="unpostSelectedVoucher"
+    />
+
+    <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف مسودة السند"
       :message="`هل أنت متأكد من رغبتك في حذف مسودة السند بشكل نهائي؟`"
@@ -82,6 +98,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
@@ -94,7 +111,6 @@ import VouchersTable from './VouchersTable.vue'
 import VoucherViewModal from './components/VoucherViewModal.vue'
 import VoucherModal from './components/VoucherModal.vue'
 
-// استقبال النوع من الـ Router (receipt أو payment)
 const props = defineProps({
   type: {
     type: String,
@@ -102,6 +118,7 @@ const props = defineProps({
   },
 })
 
+const router = useRouter()
 const authStore = useAuthStore()
 const voucherStore = useVoucherStore()
 const toast = useToast()
@@ -119,10 +136,13 @@ const pageDescription = computed(() =>
     : 'إدارة المبالغ المدفوعة والمصروفات النقدية والبنكية',
 )
 const createPermission = computed(() => (isReceipt.value ? 'receipt.create' : 'payment.create'))
+const updatePermission = computed(() => (isReceipt.value ? 'receipt.update' : 'payment.update'))
 
-// الفلاتر والبحث
+// الفلاتر والبحث والتواريخ
 const searchQuery = ref('')
 const statusFilter = ref('')
+const dateFrom = ref('')
+const dateTo = ref('')
 let searchTimeout = null
 
 const onSearch = () => {
@@ -137,6 +157,8 @@ const handlePageChange = async (page = 1) => {
     page,
     search: searchQuery.value,
     status: statusFilter.value,
+    date_from: dateFrom.value || undefined,
+    date_to: dateTo.value || undefined,
     type: props.type,
   }
 
@@ -152,6 +174,8 @@ watch(
   () => {
     searchQuery.value = ''
     statusFilter.value = ''
+    dateFrom.value = ''
+    dateTo.value = ''
     handlePageChange(1)
   },
 )
@@ -159,6 +183,32 @@ watch(
 onMounted(() => {
   handlePageChange()
 })
+
+// فتح تقرير المصروفات المباشر في نافذة مستقلة مع الفلاتر الحالية
+const openExpensesReport = () => {
+  const query = {}
+  if (dateFrom.value) query.date_from = dateFrom.value
+  if (dateTo.value) query.date_to = dateTo.value
+  if (statusFilter.value) query.status = statusFilter.value
+  if (searchQuery.value) query.search = searchQuery.value
+
+  const routeUrl = router.resolve({
+    name: 'ExpensesReportPrint',
+    query,
+  }).href
+
+  window.open(routeUrl, '_blank')
+}
+
+// فتح طباعة السند المنفرد
+const openPrintModal = (voucher) => {
+  if (!voucher?.id) return
+  const routeUrl = router.resolve({
+    name: 'VoucherPrint',
+    params: { id: voucher.id },
+  }).href
+  window.open(routeUrl, '_blank')
+}
 
 // إدارة النافذة المنبثقة للإنشاء والتعديل
 const isFormModalOpen = ref(false)
@@ -171,7 +221,11 @@ const openCreateModal = () => {
 
 const openEditModal = (voucher) => {
   if (voucher.status === 'posted') {
-    toast.warning('السندات المُرحلة غير قابلة للتعديل.')
+    if (!authStore.can(updatePermission.value)) {
+      toast.warning('لا تملك صلاحية تعديل هذا السند.')
+      return
+    }
+    openUnpostDialog(voucher)
     return
   }
   voucherToEditId.value = voucher.id
@@ -235,6 +289,38 @@ const postSelectedVoucher = async () => {
     } finally {
       isPostDialogOpen.value = false
       voucherToPost.value = null
+    }
+  }
+}
+
+// إلغاء ترحيل السند وإعادة الفتح للتعديل
+const isUnpostDialogOpen = ref(false)
+const voucherToUnpost = ref(null)
+
+const openUnpostDialog = (voucher) => {
+  if (!authStore.can(updatePermission.value)) {
+    toast.warning('لا تملك صلاحية تعديل هذا السند.')
+    return
+  }
+  voucherToUnpost.value = voucher
+  isUnpostDialogOpen.value = true
+}
+
+const unpostSelectedVoucher = async () => {
+  if (voucherToUnpost.value) {
+    const targetId = voucherToUnpost.value.id
+    try {
+      await voucherStore.unpostVoucherAction(targetId)
+      toast.success('تم إلغاء ترحيل السند وحذف القيد المحاسبي بنجاح.')
+      await handlePageChange(pagination.value?.current_page || 1)
+
+      voucherToEditId.value = targetId
+      isFormModalOpen.value = true
+    } catch (error) {
+      toast.error(voucherStore.error || 'حدث خطأ أثناء إلغاء ترحيل السند.')
+    } finally {
+      isUnpostDialogOpen.value = false
+      voucherToUnpost.value = null
     }
   }
 }

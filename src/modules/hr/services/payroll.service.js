@@ -4,7 +4,15 @@ const resource = '/hr/payroll'
 
 export default {
   /**
-   * معاينة مسير الراتب لموظف محدد في شهر محدد
+   * جلب الموظفين المؤهلين لمسير الرواتب لفترة مالية ونوع مسير محدد
+   * @param {Object} params - { pay_period_id, run_type }
+   */
+  getEligibleEmployees(params) {
+    return apiClient.get(`${resource}/eligible-employees`, { params })
+  },
+
+  /**
+   * معاينة مسير الراتب لموظف محدد في فترة محددة
    */
   preview(payload) {
     return apiClient.post(`${resource}/preview`, payload)
@@ -17,24 +25,38 @@ export default {
     return apiClient.post(`${resource}/post-batch`, payload)
   },
 
-  // 🌟 الجديد: جلب سجل المسيرات السابقة المعتمدة
+  /**
+   * إلغاء والتراجع عن مسير الرواتب المعتمد وعكس القيد المحاسبي
+   */
+  rollbackBatch(batchId, payload) {
+    return apiClient.post(`${resource}/batches/${batchId}/rollback`, payload)
+  },
+
+  /**
+   * جلب سجل المسيرات السابقة المعتمدة
+   */
   getBatches(params) {
     return apiClient.get(`${resource}/batches`, { params })
   },
 
-  // 🌟 الجديد: جلب ملخص المسير (للإحصائيات العلوية)
+  /**
+   * جلب ملخص المسير (للإحصائيات العلوية)
+   */
   getSummary(payload) {
     return apiClient.post(`${resource}/summary`, payload)
   },
 
-  // جلب الموظفين الذين تم ترحيل رواتبهم لشهر محدد
-  getProcessedEmployees(month) {
-    return apiClient.get(`${resource}/processed-employees`, { params: { month } })
+  /**
+   * جلب الموظفين الذين تم ترحيل رواتبهم لفترة ونوع مسير محدد
+   */
+  getProcessedEmployees(params) {
+    return apiClient.get(`${resource}/processed-employees`, { params })
   },
 
-  // 🌟 الجديد: طلب تحميل ملف البنك
+  /**
+   * تحميل ملف البنك للتحويلات بصيغة CSV
+   */
   exportBankFile(batchId) {
-    // نستخدم responseType: 'blob' لكي يفهم Axios أننا نستقبل ملفاً وليس بيانات JSON
     return apiClient.get(`${resource}/batches/${batchId}/export-bank`, { responseType: 'blob' })
   },
 }

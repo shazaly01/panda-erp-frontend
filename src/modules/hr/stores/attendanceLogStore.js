@@ -1,7 +1,7 @@
-//src\modules\hr\stores\attendanceLogStore.js
+// src/modules/hr/stores/attendanceLogStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import attendanceLogService from '../services/attendanceLog.service' // تأكد من مسار الملف لديك
+import attendanceLogService from '../services/attendanceLog.service'
 
 export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
   // ==========================
@@ -60,7 +60,8 @@ export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
     loading.value = true
     error.value = null
     try {
-      await attendanceLogService.create(payload)
+      const response = await attendanceLogService.create(payload)
+      return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل تسجيل الحضور'
       throw err
@@ -73,7 +74,8 @@ export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
     loading.value = true
     error.value = null
     try {
-      await attendanceLogService.update(id, payload)
+      const response = await attendanceLogService.update(id, payload)
+      return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل تحديث سجل الحضور'
       throw err
@@ -97,13 +99,17 @@ export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
     }
   }
 
-  // 🌟 الجديد: دالة إرسال رقم الباركود للباك إند
-  async function scanBarcode(employeeNumber) {
+  // 🌟 إرسال رمز الموظف مع نمط الإدخال (hardware, camera, qr, manual)
+  async function scanBarcode(employeeNumber, entryMode = 'hardware') {
     loading.value = true
     error.value = null
     try {
-      const response = await attendanceLogService.scanBarcode(employeeNumber)
-      return response.data // نرجع البيانات لكي تستخدمها الشاشة في عرض رسالة الترحيب
+      const payload = {
+        employee_number: employeeNumber,
+        entry_mode: entryMode,
+      }
+      const response = await attendanceLogService.scanBarcode(payload)
+      return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'حدث خطأ أثناء قراءة الباركود'
       throw err
@@ -124,6 +130,6 @@ export const useAttendanceLogStore = defineStore('hrAttendanceLog', () => {
     createLog,
     updateLog,
     deleteLog,
-    scanBarcode, // 🌟 لا تنسَ تصدير الدالة
+    scanBarcode,
   }
 })

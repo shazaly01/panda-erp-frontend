@@ -1,8 +1,6 @@
-<!--src\modules\hr\views\attendance\TeamAttendancePage.vue--->
 <template>
   <div class="space-y-5 max-w-7xl mx-auto pb-12">
     <div class="bg-surface-section p-4 rounded-xl shadow-sm border border-surface-border">
-      <!-- 🌟 تم تحديث عدد الأعمدة إلى lg:grid-cols-5 ليتسع للفلتر الجديد في سطر واحد -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
         <div class="flex flex-col gap-1.5">
           <label for="search-filter" class="text-xs font-semibold text-text-secondary"
@@ -47,7 +45,6 @@
           </select>
         </div>
 
-        <!-- 🌟 الفلتر الجديد: تصفية حسب طريقة / مجموعة الدفع -->
         <div class="flex flex-col gap-1.5">
           <label for="pay-group-filter" class="text-xs font-semibold text-text-secondary"
             >طريقة الدفع:</label
@@ -249,7 +246,14 @@
         <input
           type="time"
           v-model="editForms[item.id].check_in"
-          class="w-28 p-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-surface-ground text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :disabled="!canCheckIn || editForms[item.id].isSaving"
+          :title="!canCheckIn ? 'لا تملك صلاحية تعديل وقت الدخول' : ''"
+          class="w-28 p-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :class="[
+            !canCheckIn
+              ? 'bg-gray-100 dark:bg-gray-800/60 text-gray-400 dark:text-gray-500 cursor-not-allowed select-none'
+              : 'bg-white dark:bg-surface-ground',
+          ]"
         />
       </template>
 
@@ -257,7 +261,32 @@
         <input
           type="time"
           v-model="editForms[item.id].check_out"
-          class="w-28 p-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-surface-ground text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :disabled="!canCheckOut || editForms[item.id].isSaving"
+          :title="!canCheckOut ? 'لا تملك صلاحية تعديل وقت الخروج' : ''"
+          class="w-28 p-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :class="[
+            !canCheckOut
+              ? 'bg-gray-100 dark:bg-gray-800/60 text-gray-400 dark:text-gray-500 cursor-not-allowed select-none'
+              : 'bg-white dark:bg-surface-ground',
+          ]"
+        />
+      </template>
+
+      <!-- 🌟 حقل إدخال الدقائق الإضافية المعتمدة من المشرف -->
+      <template #cell-overtime_minutes="{ item }">
+        <input
+          type="number"
+          min="0"
+          max="1440"
+          placeholder="0"
+          v-model.number="editForms[item.id].overtime_minutes"
+          :disabled="!canAnyEdit || editForms[item.id].isSaving"
+          class="w-20 p-1.5 text-sm text-center font-mono border border-gray-300 dark:border-gray-600 rounded-md text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :class="[
+            !canAnyEdit
+              ? 'bg-gray-100 dark:bg-gray-800/60 text-gray-400 dark:text-gray-500 cursor-not-allowed select-none'
+              : 'bg-white dark:bg-surface-ground',
+          ]"
         />
       </template>
 
@@ -266,20 +295,27 @@
           type="text"
           v-model="editForms[item.id].reason"
           placeholder="سبب التعديل..."
-          class="w-36 p-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-surface-ground text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :disabled="!canAnyEdit || editForms[item.id].isSaving"
+          class="w-36 p-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+          :class="[
+            !canAnyEdit
+              ? 'bg-gray-100 dark:bg-gray-800/60 text-gray-400 dark:text-gray-500 cursor-not-allowed select-none'
+              : 'bg-white dark:bg-surface-ground',
+          ]"
         />
       </template>
 
       <template #cell-actions="{ item }">
         <button
           @click="saveRow(item.id)"
-          :disabled="editForms[item.id].isSaving"
-          class="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all focus:outline-none"
+          :disabled="!canAnyEdit || editForms[item.id].isSaving"
+          class="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           :class="[
-            editForms[item.id].reason.trim()
+            canAnyEdit && editForms[item.id].reason.trim()
               ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20'
               : 'bg-surface-ground text-text-secondary border border-surface-border hover:bg-black/5 dark:hover:bg-white/5',
           ]"
+          :title="!canAnyEdit ? 'ليس لديك صلاحية لتعديل حضور الفريق' : ''"
         >
           <span
             v-if="editForms[item.id].isSaving"
@@ -301,46 +337,59 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/authStore'
 import { useTeamAttendanceStore } from '@/modules/hr/stores/teamAttendanceStore'
-// 🌟 استيراد متجر مجموعات الدفع
 import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
 import apiClient from '@/services/apiClient'
 import AppTable from '@/components/ui/AppTable.vue'
 
 const toast = useToast()
+const authStore = useAuthStore()
 const teamStore = useTeamAttendanceStore()
-const payGroupStore = usePayGroupStore() // 🌟 تهيئة المتجر
+const payGroupStore = usePayGroupStore()
 
-// إعدادات الجدول
+// 🌟 التحقق من صلاحيات المشرف
+const canCheckIn = computed(() => {
+  return authStore.can('hr.team_attendance.check_in') || authStore.can('hr.team_attendance.manage')
+})
+
+const canCheckOut = computed(() => {
+  return authStore.can('hr.team_attendance.check_out') || authStore.can('hr.team_attendance.manage')
+})
+
+const canAnyEdit = computed(() => {
+  return canCheckIn.value || canCheckOut.value
+})
+
+// إعدادات الجدول مع إضافة عمود الإضافي
 const tableHeaders = [
   { key: 'employee', label: 'الموظف', class: 'w-1/4' },
   { key: 'position', label: 'المنصب' },
   { key: 'status', label: 'الحالة' },
   { key: 'check_in', label: 'وقت الدخول' },
   { key: 'check_out', label: 'وقت الخروج' },
+  { key: 'overtime_minutes', label: 'الإضافي (د)', class: 'text-center' },
   { key: 'reason', label: 'سبب التعديل' },
   { key: 'actions', label: 'الإجراء', class: 'text-center' },
 ]
 
-// الحالات والروابط التفاعلية
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const searchQuery = ref('')
 const selectedPosition = ref('')
-const selectedPayGroup = ref('') // 🌟 متغير الفلتر الجديد المربوط بـ v-model
+const selectedPayGroup = ref('')
 const selectedStatus = ref('')
 const positions = ref([])
-const payGroups = ref([]) // 🌟 مصفوفة لتخزين مجموعات الدفع المجلوبة
+const payGroups = ref([])
 const editForms = ref({})
 
 onMounted(() => {
   fetchPositions()
-  fetchPayGroupsData() // 🌟 جلب مجموعات الدفع عند تحميل الصفحة
+  fetchPayGroupsData()
   fetchData()
 })
 
-// جلب قائمة الوظائف
 const fetchPositions = async () => {
   try {
     const response = await apiClient.get('/hr/positions')
@@ -350,7 +399,6 @@ const fetchPositions = async () => {
   }
 }
 
-// 🌟 دالة جلب مجموعات الدفع النشطة من المتجر الخاص بها
 const fetchPayGroupsData = async () => {
   try {
     await payGroupStore.fetchPayGroups({ is_active: 1 })
@@ -360,7 +408,6 @@ const fetchPayGroupsData = async () => {
   }
 }
 
-// جلب مصفوفة الحضور مع تمرير الفلاتر المحدثة
 const fetchData = async () => {
   try {
     const payload = {
@@ -368,7 +415,7 @@ const fetchData = async () => {
       search: searchQuery.value.trim() || null,
       position_id: selectedPosition.value || null,
       status: selectedStatus.value || null,
-      pay_group_id: selectedPayGroup.value || null, // 🌟 إرسال معرّف مجموعة الدفع إلى السيرفر
+      pay_group_id: selectedPayGroup.value || null,
     }
     await teamStore.fetchTeamMatrix(payload)
     syncEditForms()
@@ -377,35 +424,31 @@ const fetchData = async () => {
   }
 }
 
-// بناء النماذج (Inline Forms) وتعبئتها لكل صف
 const syncEditForms = () => {
   teamStore.teamMatrix.forEach((emp) => {
-    if (!editForms.value[emp.id]) {
-      editForms.value[emp.id] = {
-        check_in: '',
-        check_out: '',
-        reason: '',
-        isSaving: false,
-      }
-    }
+    const hasLog = Boolean(emp.today_attendance)
 
-    if (emp.today_attendance) {
-      editForms.value[emp.id].check_in = emp.today_attendance.check_in
-        ? emp.today_attendance.check_in.substring(0, 5)
-        : ''
-      editForms.value[emp.id].check_out = emp.today_attendance.check_out
-        ? emp.today_attendance.check_out.substring(0, 5)
-        : ''
-    } else {
-      editForms.value[emp.id].check_in = ''
-      editForms.value[emp.id].check_out = ''
-      editForms.value[emp.id].reason = ''
+    editForms.value[emp.id] = {
+      check_in:
+        hasLog && emp.today_attendance.check_in
+          ? emp.today_attendance.check_in.substring(0, 5)
+          : '',
+      check_out:
+        hasLog && emp.today_attendance.check_out
+          ? emp.today_attendance.check_out.substring(0, 5)
+          : '',
+      overtime_minutes: hasLog ? (emp.today_attendance.overtime_minutes ?? 0) : 0,
+      reason: '',
+      isSaving: false,
     }
   })
 }
 
-// دالة الحفظ للصف الواحد
 const saveRow = async (employeeId) => {
+  if (!canAnyEdit.value) {
+    return toast.error('ليس لديك صلاحية لتعديل حضور الفريق.')
+  }
+
   const form = editForms.value[employeeId]
 
   if (!form.reason.trim()) {
@@ -419,6 +462,10 @@ const saveRow = async (employeeId) => {
       date: selectedDate.value,
       check_in: form.check_in || null,
       check_out: form.check_out || null,
+      overtime_minutes:
+        form.overtime_minutes !== '' && form.overtime_minutes !== null
+          ? Number(form.overtime_minutes)
+          : 0,
       reason: form.reason,
     }
 
@@ -434,7 +481,3 @@ const saveRow = async (employeeId) => {
   }
 }
 </script>
-
-<style scoped>
-/* التنسيق متوافق مع النظام الحالي */
-</style>

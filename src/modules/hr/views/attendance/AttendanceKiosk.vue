@@ -81,7 +81,9 @@
           ماسح الـ QR
         </button>
 
+        <!-- لوحة الأرقام: تظهر حصراً لمن يملك صلاحية الإدخال اليدوي -->
         <button
+          v-if="canManualEntry"
           type="button"
           @click="switchMode('manual')"
           :class="[
@@ -111,7 +113,10 @@
           <input
             ref="barcodeInput"
             v-model="employeeNumber"
+            @keydown="handleBarcodeKeyDown"
             @keyup.enter="handleHardwareScan"
+            @paste.prevent
+            @drop.prevent
             @blur="keepFocus"
             type="text"
             placeholder="مرر بطاقتك الوظيفية الآن..."
@@ -140,7 +145,7 @@
         />
 
         <KioskManualNumpad
-          v-else-if="activeMode === 'manual'"
+          v-else-if="activeMode === 'manual' && canManualEntry"
           v-model="manualEmployeeNumber"
           @submit="processAttendanceCode"
         />
@@ -211,8 +216,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAttendanceLogStore } from '@/modules/hr/stores/attendanceLogStore'
+import { useAuthStore } from '@/stores/authStore'
 
 import KioskHeader from './components/KioskHeader.vue'
 import KioskClock from './components/KioskClock.vue'
@@ -222,6 +228,8 @@ import KioskQrCameraScanner from './components/KioskQrCameraScanner.vue'
 import KioskManualNumpad from './components/KioskManualNumpad.vue'
 
 const attendanceStore = useAttendanceLogStore()
+const authStore = useAuthStore()
+
 const barcodeInput = ref(null)
 const employeeNumber = ref('')
 const manualEmployeeNumber = ref('')
@@ -229,6 +237,54 @@ const scanResult = ref(null)
 
 const activeMode = ref('hardware')
 let resultTimeout = null
+
+// التحقق من صلاحية الإدخال اليدوي الصريح
+const canManualEntry = computed(() => {
+  return authStore.can('hr.attendance.manual_entry')
+})
+
+// متغيرات ضبط سرعة تدفق المفاتيح لمنع الإدخال اليدوي البشري في حقل الباركود
+let lastKeystrokeTime = 0
+let isHardwareScanValid = true
+const MAX_KEYSTROKE_INTERVAL = 75 // الحد الأقصى بالملي ثانية بين الأحرف المتتالية للماسح السلكي
+
+const handleBarcodeKeyDown = (event) => {
+  // تجاهل مفاتيح التعديل الخاصة بالنظام
+  if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(event.key)) {
+    return
+  }
+
+  // منع الضغط المستمر التكراري على المفتاح
+  if (event.repeat) {
+    event.preventDefault()
+    return
+  }
+
+  // السماح بمفتاح Enter لإتمام المسح
+  if (event.key === 'Enter') {
+    return
+  }
+
+  const now = performance.now()
+
+  // إذا كان الحقل يحتوي على أحرف بالفعل، نقيس الفارق الزمني عن الحرف السابق
+  if (employeeNumber.value.length > 0) {
+    const interval = now - lastKeystrokeTime
+    if (interval > MAX_KEYSTROKE_INTERVAL) {
+      // سرعة الكتابة بطيئة (إدخال يدوي بشري) -> نرفض الإدخال ونصفر الحقل فوراً
+      isHardwareScanValid = false
+      employeeNumber.value = ''
+      lastKeystrokeTime = now
+      event.preventDefault()
+      return
+    }
+  } else {
+    // إعادة تهيئة الحالة لبداية مسح باركود جديد
+    isHardwareScanValid = true
+  }
+
+  lastKeystrokeTime = now
+}
 
 const keepFocus = () => {
   if (activeMode.value !== 'hardware' || scanResult.value) return
@@ -242,6 +298,11 @@ const handleBackgroundClick = () => {
 }
 
 const switchMode = (mode) => {
+  // منع التبديل إلى النمط اليدوي برمجياً إذا لم تكن الصلاحية متوفرة
+  if (mode === 'manual' && !canManualEntry.value) {
+    return
+  }
+
   activeMode.value = mode
   dismissResult()
   employeeNumber.value = ''
@@ -255,9 +316,14 @@ const switchMode = (mode) => {
 const handleHardwareScan = () => {
   const code = employeeNumber.value.trim()
   employeeNumber.value = ''
-  if (code) {
-    processAttendanceCode(code)
+
+  // رفض المعالجة إذا ثبت أن الإدخال كان يدوياً أو الكود قصير جداً
+  if (!isHardwareScanValid || !code || code.length < 2) {
+    isHardwareScanValid = true
+    return
   }
+
+  processAttendanceCode(code)
 }
 
 const handleCameraError = (errorMessage) => {
@@ -288,7 +354,7 @@ const processAttendanceCode = async (code) => {
   clearTimeout(resultTimeout)
 
   try {
-    const data = await attendanceStore.scanBarcode(code)
+    const data = await attendanceStore.scanBarcode(code, activeMode.value)
     setTimeout(() => {
       scanResult.value = {
         status: data.status,

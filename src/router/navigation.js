@@ -1,3 +1,4 @@
+//src\router\navigation.js
 import accountingNav from '@/modules/accounting/menu'
 import inventoryNav from '@/modules/inventory/menu'
 import purchasingNav from '@/modules/purchasing/menu'

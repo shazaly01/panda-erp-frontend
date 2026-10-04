@@ -5,8 +5,15 @@ import payrollService from '../services/payroll.service'
 export const usePayrollStore = defineStore('hrPayroll', () => {
   const payslipPreview = ref(null)
   const isPosting = ref(false)
+  const isRollingBack = ref(false)
   const loading = ref(false)
   const error = ref(null)
+
+  // قائمة الموظفين المؤهلين للفترة المحددة مع حالة is_processed
+  const eligibleEmployees = ref([])
+  const isEligibleLoading = ref(false)
+
+  // معرفات الموظفين المرحلين (تُستخرج تلقائياً أو عبر الجلب المباشر)
   const processedEmployeeIds = ref([])
 
   const batchesHistory = ref([])
@@ -21,7 +28,40 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
   })
   const isSummaryLoading = ref(false)
 
-  // 🚀 التعديل: استقبال payPeriodId و runType
+  /**
+   * جلب الموظفين المؤهلين لمسير الرواتب لفترة مالية محددة ونوع مسير
+   */
+  async function fetchEligibleEmployees(payPeriodId, runType) {
+    if (!payPeriodId || !runType) {
+      eligibleEmployees.value = []
+      processedEmployeeIds.value = []
+      return []
+    }
+
+    isEligibleLoading.value = true
+    error.value = null
+    try {
+      const response = await payrollService.getEligibleEmployees({
+        pay_period_id: payPeriodId,
+        run_type: runType,
+      })
+      const employees = response.data.data || []
+      eligibleEmployees.value = employees
+
+      // استخراج معرفات الموظفين الذين تم ترحيل رواتبهم مسبقاً من حقل is_processed
+      processedEmployeeIds.value = employees.filter((emp) => emp.is_processed).map((emp) => emp.id)
+
+      return employees
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل جلب قائمة الموظفين المؤهلين'
+      eligibleEmployees.value = []
+      processedEmployeeIds.value = []
+      throw err
+    } finally {
+      isEligibleLoading.value = false
+    }
+  }
+
   async function previewPayroll(employeeId, payPeriodId, runType) {
     loading.value = true
     error.value = null
@@ -46,7 +86,6 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     isPosting.value = true
     error.value = null
     try {
-      // payload يحتوي الآن على pay_period_id و run_type
       const response = await payrollService.postBatch(payload)
       return response.data
     } catch (err) {
@@ -54,6 +93,21 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
       throw err
     } finally {
       isPosting.value = false
+    }
+  }
+
+  async function rollbackPayrollBatch(batchId, reason) {
+    isRollingBack.value = true
+    error.value = null
+    try {
+      const response = await payrollService.rollbackBatch(batchId, { reason })
+      batchesHistory.value = batchesHistory.value.filter((b) => b.id !== batchId)
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشلت عملية التراجع عن المسير'
+      throw err
+    } finally {
+      isRollingBack.value = false
     }
   }
 
@@ -76,7 +130,6 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     }
   }
 
-  // 🚀 التعديل: استقبال payPeriodId و runType
   async function fetchBatchSummary(employeeIds, payPeriodId, runType) {
     if (!employeeIds || employeeIds.length === 0 || !payPeriodId || !runType) {
       batchSummary.value = {
@@ -105,7 +158,6 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
     }
   }
 
-  // 🚀 التعديل: جلب المرحلين بناءً على الفترة ونوع المسير
   async function fetchProcessedEmployees(payPeriodId, runType) {
     if (!payPeriodId || !runType) return
 
@@ -124,16 +176,21 @@ export const usePayrollStore = defineStore('hrPayroll', () => {
   return {
     payslipPreview,
     isPosting,
+    isRollingBack,
     loading,
     error,
+    eligibleEmployees,
+    isEligibleLoading,
+    processedEmployeeIds,
     batchesHistory,
     batchesPagination,
     batchSummary,
     isSummaryLoading,
-    processedEmployeeIds,
+    fetchEligibleEmployees,
     fetchProcessedEmployees,
     previewPayroll,
     postPayrollBatch,
+    rollbackPayrollBatch,
     clearPreview,
     fetchBatchesHistory,
     fetchBatchSummary,
