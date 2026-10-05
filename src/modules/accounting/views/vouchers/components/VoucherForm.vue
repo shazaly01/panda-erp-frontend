@@ -18,14 +18,12 @@
           >
             <button
               type="button"
-              :disabled="isEditMode"
               @click="handlePaymentMethodChange('box')"
               :class="[
-                'flex items-center justify-center gap-1.5 h-full rounded-lg text-xs font-bold transition-all duration-200 select-none',
+                'flex items-center justify-center gap-1.5 h-full rounded-lg text-xs font-bold transition-all duration-200 select-none cursor-pointer',
                 paymentMethodType === 'box'
                   ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
                   : 'text-gray-600 dark:text-text-muted hover:text-gray-900 dark:hover:text-text-primary hover:bg-white dark:hover:bg-surface-card/60',
-                isEditMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
               ]"
             >
               <span class="text-sm">💵</span>
@@ -33,14 +31,12 @@
             </button>
             <button
               type="button"
-              :disabled="isEditMode"
               @click="handlePaymentMethodChange('bank')"
               :class="[
-                'flex items-center justify-center gap-1.5 h-full rounded-lg text-xs font-bold transition-all duration-200 select-none',
+                'flex items-center justify-center gap-1.5 h-full rounded-lg text-xs font-bold transition-all duration-200 select-none cursor-pointer',
                 paymentMethodType === 'bank'
                   ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
                   : 'text-gray-600 dark:text-text-muted hover:text-gray-900 dark:hover:text-text-primary hover:bg-white dark:hover:bg-surface-card/60',
-                isEditMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
               ]"
             >
               <span class="text-sm">🏦</span>
@@ -517,7 +513,6 @@ watch(
 )
 
 const handlePaymentMethodChange = (newValue) => {
-  if (isEditMode.value) return
   paymentMethodType.value = newValue
   if (newValue === 'box') {
     form.value.bank_account_id = null

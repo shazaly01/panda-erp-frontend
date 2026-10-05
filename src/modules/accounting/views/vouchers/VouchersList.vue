@@ -14,8 +14,9 @@
       </AppButton>
     </div>
 
-    <!-- فلاتر البحث والحالة والتواريخ مع زر طباعة التقرير -->
+    <!-- فلاتر البحث والحالة والتواريخ مع زر طباعة التقرير (تم تمرير نوع السند) -->
     <VouchersFilter
+      :type="type"
       v-model:searchQuery="searchQuery"
       v-model:statusFilter="statusFilter"
       v-model:dateFrom="dateFrom"
@@ -184,9 +185,11 @@ onMounted(() => {
   handlePageChange()
 })
 
-// فتح تقرير المصروفات المباشر في نافذة مستقلة مع الفلاتر الحالية
+// فتح تقرير المصروفات / الإيرادات في نافذة مستقلة مع تمرير نوع السند الحالي
 const openExpensesReport = () => {
-  const query = {}
+  const query = {
+    type: props.type,
+  }
   if (dateFrom.value) query.date_from = dateFrom.value
   if (dateTo.value) query.date_to = dateTo.value
   if (statusFilter.value) query.status = statusFilter.value

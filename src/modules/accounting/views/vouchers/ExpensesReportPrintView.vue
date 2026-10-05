@@ -1,158 +1,134 @@
 <!--src/modules/accounting/views/vouchers/ExpensesReportPrintView.vue-->
 <template>
   <div
-    class="print-page-wrapper bg-slate-50 min-h-screen p-4 sm:p-6 print:p-0 print:bg-white print:min-h-0 font-sans"
-    dir="rtl"
+    class="print-page-wrapper bg-gray-100 min-h-screen p-4 sm:p-6 print:p-0 print:bg-white print:min-h-0"
+    dir="ltr"
   >
-    <!-- شريط الإجراءات العلوي (يختفي كلياً بالطباعة) -->
+    <!-- شريط الإجراءات العلوي (يختفي بالكامل أثناء الطباعة) -->
     <div
-      class="max-w-6xl mx-auto mb-4 bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between print:hidden"
+      class="max-w-[1100px] mx-auto mb-4 bg-white border border-gray-200 p-3 sm:p-4 rounded-xl shadow-sm flex items-center justify-between print:hidden"
     >
-      <div class="flex items-center gap-2 text-xs text-slate-600">
-        <span class="font-bold text-slate-800">تقرير المصروفات:</span>
-        <span> يتم تجهيز كافة سندات الصرف المحددة تلقائياً للطباعة الرسمية. </span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-gray-500">Report Type:</span>
+        <span
+          class="px-2.5 py-1 text-xs font-bold rounded-lg border"
+          :class="
+            isReceipt
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          "
+        >
+          {{ isReceipt ? 'Revenues Statement Report' : 'Expenses Statement Report' }}
+        </span>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
         <button
           type="button"
           @click="closeWindow"
-          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors"
         >
-          إغلاق النافذة
+          Close Window
         </button>
 
         <button
           type="button"
           @click="triggerPrint"
-          class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-xl flex items-center gap-2 transition-all text-xs shadow-md shadow-blue-500/10 active:scale-95"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg flex items-center gap-2 text-xs transition-colors shadow-sm"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2.5"
-              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h6z"
+              stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
             />
           </svg>
-          طباعة الكشف الآن
+          Print Statement
         </button>
       </div>
     </div>
 
-    <!-- ورقة التقرير الرسمية -->
-    <div
-      class="report-paper max-w-6xl mx-auto bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm print:p-0 print:border-none print:shadow-none"
-    >
-      <!-- 1. الترويسة الرسمية المتناسقة -->
-      <div
-        class="header-banner flex justify-between items-center pb-4 mb-4 border-b-2 border-slate-800"
-      >
-        <!-- اليمين: الشعار واسم المنشأة -->
-        <div class="flex items-center gap-4">
-          <div class="logo-box w-20 h-16 flex items-center justify-center">
+    <!-- ورقة التقرير الرسمية الأفقية (Landscape) -->
+    <div id="report-official-sheet" class="report-paper" dir="ltr">
+      <!-- 1. الترويسة الرسمية المتطابقة مع ترويسة السند -->
+      <div class="header-section">
+        <!-- كود النموذج أعلى اليسار -->
+        <div class="header-left">
+          <div class="form-code-badge">
+            {{ formCode }}
+          </div>
+        </div>
+
+        <!-- اسم المنشأة والعنوان الرسمي بالمنتصف -->
+        <div class="company-branding">
+          <div class="company-name">{{ brandingStore.appName || 'محطة مياه المنارة' }}</div>
+          <div class="report-title">
+            {{ reportTitle }}
+          </div>
+        </div>
+
+        <!-- الشعار الرسمي أعلى اليمين -->
+        <div class="header-right">
+          <div class="logo-box">
             <img
               :src="brandingStore.logoMiniUrl || brandingStore.logoUrl || '/MainLogo2.png'"
               :alt="brandingStore.appName || 'Logo'"
-              class="max-w-full max-h-full object-contain"
+              class="logo-img"
             />
           </div>
-          <div>
-            <h1 class="text-lg font-black text-slate-900 tracking-tight">
-              {{ brandingStore.appName || 'محطة مياه المنارة' }}
-            </h1>
-            <p class="text-[11px] text-slate-500 font-semibold mt-0.5">
-              الإدارة المالية - قسم الحسابات العامة
-            </p>
-          </div>
-        </div>
-
-        <!-- المنتصف: عنوان التقرير -->
-        <div class="text-center px-4">
-          <h2 class="text-xl font-black text-slate-900 tracking-wide underline underline-offset-8">
-            كشف المصروفات التحليلي
-          </h2>
-          <span class="text-xs font-mono font-bold text-slate-600 block mt-1">
-            EXPENSES STATEMENT REPORT
-          </span>
-        </div>
-
-        <!-- اليسار: بيانات الفترة وتاريخ الاستخراج -->
-        <div class="flex flex-col gap-1 text-xs items-end min-w-[200px]">
-          <div
-            class="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200"
-          >
-            <span class="text-slate-500 font-bold">الفترة:</span>
-            <span class="font-bold text-slate-900 font-mono">{{ periodLabel }}</span>
-          </div>
-          <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium mt-1">
-            <span>تاريخ الطباعة:</span>
-            <span class="font-mono font-bold text-slate-700">{{ currentDate }}</span>
-            <span>|</span>
-            <span class="font-mono font-bold text-slate-700">{{ currentTime }}</span>
-          </div>
         </div>
       </div>
 
-      <!-- 2. بطاقات الإحصائيات الموجزة -->
-      <div class="grid grid-cols-3 gap-3 mb-4 text-center">
-        <div class="bg-slate-50 border border-slate-200 p-2.5 rounded-lg">
-          <span class="text-[10px] text-slate-500 font-bold block">إجمالي عدد السندات</span>
-          <span class="text-base font-black text-slate-800 font-mono">{{
-            vouchersList.length
-          }}</span>
+      <!-- 2. شريط بيانات التقرير والبطاقات الإحصائية الموجزة -->
+      <div class="report-meta-bar">
+        <div class="meta-item">
+          <span class="meta-label">PERIOD:</span>
+          <span class="meta-val">{{ periodLabel }}</span>
         </div>
-        <div class="bg-rose-50/70 border border-rose-200 p-2.5 rounded-lg">
-          <span class="text-[10px] text-rose-700 font-bold block">إجمالي مبالغ المصروفات</span>
-          <span class="text-base font-black text-rose-700 font-mono">
-            {{ formatAmount(totalExpenses) }} {{ defaultCurrency }}
-          </span>
-        </div>
-        <div class="bg-slate-50 border border-slate-200 p-2.5 rounded-lg">
-          <span class="text-[10px] text-slate-500 font-bold block">حالة السندات المشمولة</span>
-          <span class="text-xs font-black text-slate-800">{{ statusLabel }}</span>
+        <div class="meta-item">
+          <span class="meta-label">DATE PRINTED:</span>
+          <span class="meta-val">{{ currentPrintDate }}</span>
         </div>
       </div>
 
-      <!-- 3. جدول بنود المصروفات -->
-      <div class="table-container mb-6">
-        <table class="w-full text-right border-collapse border border-slate-300 text-xs">
+      <div class="summary-cards-grid">
+        <div class="summary-card">
+          <span class="summary-title">TOTAL VOUCHERS</span>
+          <span class="summary-val">{{ vouchersList.length }}</span>
+        </div>
+        <div class="summary-card highlight-card">
+          <span class="summary-title">{{ isReceipt ? 'TOTAL REVENUES' : 'TOTAL EXPENSES' }}</span>
+          <span class="summary-val">{{ formatAmount(totalExpenses) }} {{ defaultCurrency }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-title">CURRENCY</span>
+          <span class="summary-val">{{ defaultCurrency }}</span>
+        </div>
+      </div>
+
+      <!-- 3. جدول بنود السندات بعد إزالة عمود الحالة وتوسيع الأعمدة النصية -->
+      <div class="table-wrapper">
+        <table class="report-table">
           <thead>
-            <tr
-              class="bg-slate-100 text-slate-800 font-black border-b border-slate-300 text-[11px]"
-            >
-              <th class="p-2 border border-slate-300 w-12 text-center">#</th>
-              <th class="p-2 border border-slate-300 w-28 text-center font-mono">رقم السند</th>
-              <th class="p-2 border border-slate-300 w-24 text-center font-mono">التاريخ</th>
-              <th class="p-2 border border-slate-300 min-w-[140px]">المستفيد / المدفوع لأمره</th>
-              <th class="p-2 border border-slate-300 min-w-[180px]">البيان / الوصف</th>
-              <th class="p-2 border border-slate-300 w-36">وسيلة الدفع / الخزينة</th>
-              <th class="p-2 border border-slate-300 w-24 text-center">الحالة</th>
-              <th class="p-2 border border-slate-300 w-32 text-left font-mono">المبلغ</th>
+            <tr>
+              <th class="col-idx">#</th>
+              <th class="col-num">VOUCHER #</th>
+              <th class="col-date">DATE</th>
+              <th class="col-payee">{{ isReceipt ? 'RECEIVED FROM' : 'PAYEE / BENEFICIARY' }}</th>
+              <th class="col-desc">DESCRIPTION</th>
+              <th class="col-method">METHOD / ACCOUNT</th>
+              <th class="col-amount">AMOUNT ({{ defaultCurrency }})</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(voucher, index) in vouchersList"
-              :key="voucher.id"
-              class="border-b border-slate-200 text-slate-800 odd:bg-white even:bg-slate-50/50"
-            >
-              <td class="p-2 border border-slate-300 text-center font-mono font-bold">
-                {{ index + 1 }}
-              </td>
-              <td class="p-2 border border-slate-300 text-center font-mono font-bold">
-                {{ voucher.number }}
-              </td>
-              <td class="p-2 border border-slate-300 text-center font-mono">
-                {{ formatDate(voucher.date) }}
-              </td>
-              <td class="p-2 border border-slate-300 font-semibold">
-                {{ voucher.payee_name || '---' }}
-              </td>
-              <td class="p-2 border border-slate-300 text-[11px] text-slate-600 leading-snug">
-                {{ voucher.description || '---' }}
-              </td>
-              <td class="p-2 border border-slate-300 text-[11px]">
+            <tr v-for="(voucher, index) in vouchersList" :key="voucher.id">
+              <td class="col-idx">{{ index + 1 }}</td>
+              <td class="col-num">{{ voucher.number }}</td>
+              <td class="col-date">{{ formatDate(voucher.date) }}</td>
+              <td class="col-payee">{{ voucher.payee_name || '---' }}</td>
+              <td class="col-desc">{{ voucher.description || '---' }}</td>
+              <td class="col-method">
                 {{
                   voucher.payment_method?.name ||
                   voucher.bank_account?.bank_name ||
@@ -160,60 +136,50 @@
                   '---'
                 }}
               </td>
-              <td class="p-2 border border-slate-300 text-center text-[10px] font-bold">
-                {{ formatStatus(voucher.status) }}
-              </td>
-              <td
-                class="p-2 border border-slate-300 text-left font-mono font-bold text-rose-700"
-                dir="ltr"
-              >
-                {{ formatAmount(voucher.amount) }}
-              </td>
+              <td class="col-amount">{{ formatAmount(voucher.amount) }}</td>
             </tr>
 
             <tr v-if="!loading && vouchersList.length === 0">
-              <td colspan="8" class="p-6 text-center text-slate-400 font-bold">
-                لا توجد سندات صرف مسجلة ضمن معايير البحث والفترة المحددة.
+              <td colspan="7" class="empty-state-cell">
+                No posted vouchers recorded within the selected criteria and period.
               </td>
             </tr>
 
             <!-- سطر الإجمالي العام -->
-            <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-400">
-              <td colspan="7" class="p-2.5 text-left border border-slate-300 text-xs">
-                الإجمالي العام للمصروفات (Grand Total):
+            <tr class="total-row">
+              <td colspan="6" class="total-label">
+                {{ isReceipt ? 'Grand Total Revenues:' : 'Grand Total Expenses:' }}
               </td>
-              <td
-                class="p-2.5 border border-slate-300 text-left font-mono text-sm font-black text-rose-800"
-                dir="ltr"
-              >
-                {{ formatAmount(totalExpenses) }} {{ defaultCurrency }}
+              <td class="col-amount total-val">
+                {{ formatAmount(totalExpenses) }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 4. قسم التوقيعات والاعتمادات الرسمية الثلاثية -->
-      <div
-        class="signatures-grid grid grid-cols-3 gap-6 text-center pt-4 border-t-2 border-slate-300"
-      >
-        <div class="space-y-4">
-          <p class="font-bold text-slate-800 text-xs">إعداد / المحاسب المسؤول</p>
-          <div class="border-b border-dotted border-slate-400 w-36 mx-auto pt-4"></div>
-          <p class="text-[10px] text-slate-400">التوقيع: .....................</p>
+      <!-- 4. منطقة التوقيعات والاعتمادات الرسمية الثلاثية -->
+      <div class="signatures-section">
+        <div class="sig-block">
+          <span class="sig-label">Prepared by / Accountant:</span>
+          <div class="sig-space"></div>
         </div>
 
-        <div class="space-y-4">
-          <p class="font-bold text-slate-800 text-xs">المراجعة والتدقيق المالي</p>
-          <div class="border-b border-dotted border-slate-400 w-36 mx-auto pt-4"></div>
-          <p class="text-[10px] text-slate-400">التوقيع: .....................</p>
+        <div class="sig-block">
+          <span class="sig-label">Checked by / Auditor:</span>
+          <div class="sig-space"></div>
         </div>
 
-        <div class="space-y-4">
-          <p class="font-bold text-slate-800 text-xs">اعتماد المدير المالي / العام</p>
-          <div class="border-b border-dotted border-slate-400 w-36 mx-auto pt-4"></div>
-          <p class="text-[10px] text-slate-400">الختم والاعتماد: .....................</p>
+        <div class="sig-block">
+          <span class="sig-label">Approved by / Manager:</span>
+          <div class="sig-space"></div>
         </div>
+      </div>
+
+      <!-- 5. فوتر التقرير أسفل الصفحة -->
+      <div class="report-footer">
+        <span class="footer-url">{{ currentUrl }}</span>
+        <span class="footer-date">{{ currentPrintDate }}</span>
       </div>
     </div>
   </div>
@@ -231,32 +197,25 @@ const brandingStore = useBrandingStore()
 const vouchersList = ref([])
 const loading = ref(false)
 
-const currentDate = new Date().toLocaleDateString('ar-EG', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
+const isReceipt = computed(() => {
+  return route.query.type === 'receipt'
 })
-const currentTime = new Date().toLocaleTimeString('ar-EG', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: true,
+
+const formCode = computed(() => {
+  return isReceipt.value ? 'R.F 01' : 'E.F 01'
+})
+
+const reportTitle = computed(() => {
+  return isReceipt.value ? 'REVENUES STATEMENT REPORT' : 'EXPENSES STATEMENT REPORT'
 })
 
 const periodLabel = computed(() => {
   const from = route.query.date_from
   const to = route.query.date_to
-  if (from && to) return `${from} إلى ${to}`
-  if (from) return `من ${from}`
-  if (to) return `حتى ${to}`
-  return 'كافة الفترات'
-})
-
-const statusLabel = computed(() => {
-  const st = route.query.status
-  if (st === 'posted') return 'السندات المرحلة فقط'
-  if (st === 'approved') return 'السندات المعتمدة'
-  if (st === 'draft') return 'المسودات'
-  return 'جميع الحالات'
+  if (from && to) return `${from} to ${to}`
+  if (from) return `From ${from}`
+  if (to) return `Up to ${to}`
+  return 'All Periods'
 })
 
 const defaultCurrency = computed(() => {
@@ -265,6 +224,15 @@ const defaultCurrency = computed(() => {
 
 const totalExpenses = computed(() => {
   return vouchersList.value.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+})
+
+const currentUrl = computed(() => {
+  return typeof window !== 'undefined' ? window.location.href : ''
+})
+
+const currentPrintDate = computed(() => {
+  const now = new Date()
+  return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
 })
 
 const formatAmount = (num) => {
@@ -282,27 +250,14 @@ const formatDate = (dateStr) => {
   return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
 }
 
-const formatStatus = (status) => {
-  switch (status) {
-    case 'posted':
-      return 'مُرحل'
-    case 'approved':
-      return 'معتمد'
-    case 'draft':
-      return 'مسودة'
-    default:
-      return status || '---'
-  }
-}
-
 const fetchReportData = async () => {
   loading.value = true
   try {
     const params = {
-      type: 'payment',
+      type: isReceipt.value ? 'receipt' : 'payment',
       date_from: route.query.date_from || undefined,
       date_to: route.query.date_to || undefined,
-      status: route.query.status || undefined,
+      status: 'posted', // قصر التقرير على السندات المرحلة فقط
       search: route.query.search || undefined,
       per_page: 1000,
     }
@@ -314,7 +269,7 @@ const fetchReportData = async () => {
       window.print()
     }, 500)
   } catch (error) {
-    console.error('فشل جلب بيانات كشف المصروفات:', error)
+    console.error('Failed to load statement report data:', error)
   } finally {
     loading.value = false
   }
@@ -339,7 +294,7 @@ const closeWindow = () => {
 <style>
 @media print {
   @page {
-    size: A4 portrait;
+    size: A4 landscape;
     margin: 8mm 10mm;
   }
 
@@ -365,6 +320,281 @@ const closeWindow = () => {
 </style>
 
 <style scoped>
+.report-paper {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+}
+
+/* 1. الترويسة العليا المطابقة لترويسة السند */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  min-height: 80px;
+}
+
+.header-left {
+  width: 140px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.form-code-badge {
+  border: 1.5px solid #000;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.company-branding {
+  text-align: center;
+  flex: 1;
+  padding: 0 10px;
+}
+
+.company-name {
+  font-size: 20px;
+  font-weight: bold;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  margin-bottom: 6px;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.report-title {
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.header-right {
+  width: 140px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.logo-box {
+  width: 105px;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.logo-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* 2. شريط بيانات التقرير والبطاقات */
+.report-meta-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background-color: #f9fafb;
+  border: 1px solid #000;
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-label {
+  color: #374151;
+}
+
+.meta-val {
+  color: #000;
+}
+
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.summary-card {
+  border: 1px solid #000;
+  padding: 6px 10px;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+.highlight-card {
+  background-color: #fef2f2;
+}
+
+.summary-title {
+  display: block;
+  font-size: 10px;
+  font-weight: bold;
+  color: #4b5563;
+  margin-bottom: 2px;
+}
+
+.summary-val {
+  font-size: 13px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* 3. جدول البنود والبيانات */
+.table-wrapper {
+  margin-bottom: 12px;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid #000;
+  font-size: 11px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #000;
+  padding: 6px 8px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.report-table th {
+  background-color: #f8f8f8;
+  font-weight: bold;
+  text-align: left;
+}
+
+.col-idx {
+  width: 4%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.col-num {
+  width: 10%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.col-date {
+  width: 10%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.col-payee {
+  width: 24%;
+  text-align: left;
+  font-weight: bold;
+}
+
+.col-desc {
+  width: 27%;
+  text-align: left;
+  font-size: 10.5px;
+}
+
+.col-method {
+  width: 13%;
+  text-align: left;
+  font-size: 10.5px;
+}
+
+.col-amount {
+  width: 12%;
+  text-align: right;
+  font-weight: bold;
+}
+
+.empty-state-cell {
+  text-align: center;
+  padding: 20px;
+  font-weight: bold;
+  color: #6b7280;
+}
+
+.total-row {
+  font-weight: bold;
+  background-color: #f8f8f8;
+}
+
+.total-label {
+  text-align: right;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.total-val {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 4. التوقيعات */
+.signatures-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 8px;
+}
+
+.sig-block {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sig-label {
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 35px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.sig-space {
+  border-bottom: 1px dotted #555;
+  width: 100%;
+  height: 1px;
+}
+
+/* 5. الفوتر */
+.report-footer {
+  margin-top: 24px;
+  padding-top: 6px;
+  border-top: 1px solid #d1d5db;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #374151;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 @media print {
   * {
     -webkit-print-color-adjust: exact !important;
@@ -379,14 +609,15 @@ const closeWindow = () => {
 
   .report-paper {
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     max-width: 100% !important;
     width: 100% !important;
-    border: none !important;
     box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
   }
 
-  .signatures-grid {
+  .signatures-section {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }

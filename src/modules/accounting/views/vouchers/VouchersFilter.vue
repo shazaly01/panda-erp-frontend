@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <!-- الصف الثاني: فلترة التواريخ، أزرار الفترات، وزر طباعة كشف المصروفات -->
+    <!-- الصف الثاني: فلترة التواريخ، أزرار الفترات، وزر طباعة كشف التقرير الديناميكي -->
     <div
       class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-surface-border"
     >
@@ -100,11 +100,16 @@
         </div>
       </div>
 
-      <!-- زر استخراج وطباعة كشف المصروفات -->
+      <!-- زر استخراج وطباعة كشف المصروفات / الإيرادات الديناميكي -->
       <button
         type="button"
         @click="$emit('print-expenses')"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-xs shadow-sm active:scale-95"
+        :class="[
+          'text-white font-bold py-1.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-xs shadow-sm active:scale-95',
+          isReceipt
+            ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/10'
+            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10',
+        ]"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
@@ -114,22 +119,24 @@
             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
           />
         </svg>
-        <span>طباعة كشف المصروفات للفترة</span>
+        <span>{{ isReceipt ? 'طباعة كشف الإيرادات للفترة' : 'طباعة كشف المصروفات للفترة' }}</span>
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 
-defineProps({
+const props = defineProps({
   searchQuery: { type: String, default: '' },
   typeFilter: { type: String, default: '' },
   statusFilter: { type: String, default: '' },
   dateFrom: { type: String, default: '' },
   dateTo: { type: String, default: '' },
+  type: { type: String, default: 'payment' },
 })
 
 const emit = defineEmits([
@@ -140,6 +147,8 @@ const emit = defineEmits([
   'update:dateTo',
   'print-expenses',
 ])
+
+const isReceipt = computed(() => props.type === 'receipt')
 
 const formatIsoDate = (d) => {
   const year = d.getFullYear()

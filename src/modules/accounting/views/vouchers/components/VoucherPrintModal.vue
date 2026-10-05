@@ -57,7 +57,7 @@
 
     <!-- ورقة السند الرسمية -->
     <div id="voucher-official-sheet" class="voucher-paper" dir="ltr">
-      <!-- 1. الترويسة العليا المتناسقة -->
+      <!-- 1. الترويسة العليا المتناسقة (بدون مربع رقم السند) -->
       <div class="header-section">
         <!-- كود النموذج أعلى اليسار -->
         <div class="header-left">
@@ -86,39 +86,39 @@
         </div>
       </div>
 
-      <!-- رقم السند في مربع مخصص أعلى اليمين محاذي للشعار -->
-      <div class="voucher-number-row">
+      <!-- 2. بيانات السند الأساسية مع نقل مربع رقم السند ليكون قرب الجدول أسفله -->
+      <div class="voucher-info-bar">
+        <div class="voucher-meta-info">
+          <div class="meta-item">
+            <span class="meta-label">DATE:</span>
+            <span class="meta-val">{{ formatDate(voucherData?.date) }}</span>
+          </div>
+
+          <template v-if="isBank">
+            <div class="meta-item">
+              <span class="meta-label">BANK:</span>
+              <span class="meta-val">{{ bankName }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">CHQ.NO:</span>
+              <span class="meta-val">{{ chequeNumber }}</span>
+            </div>
+          </template>
+
+          <div class="meta-item payee-item">
+            <span class="meta-label">{{ payeeLabel }}</span>
+            <span class="meta-val">{{ payeeName }}</span>
+          </div>
+        </div>
+
+        <!-- مربع رقم السند محاذي لليمين وقريب من الجدول -->
         <div class="voucher-number-badge">
           <span class="number-prefix">{{ voucherPrefix }}</span>
           <span class="number-value">{{ voucherData?.number || '---' }}</span>
         </div>
       </div>
 
-      <!-- 2. بيانات السند الأساسية -->
-      <div class="voucher-meta-info">
-        <div class="meta-item">
-          <span class="meta-label">DATE:</span>
-          <span class="meta-val">{{ formatDate(voucherData?.date) }}</span>
-        </div>
-
-        <template v-if="isBank">
-          <div class="meta-item">
-            <span class="meta-label">BANK:</span>
-            <span class="meta-val">{{ bankName }}</span>
-          </div>
-          <div class="meta-item">
-            <span class="meta-label">CHQ.NO:</span>
-            <span class="meta-val">{{ chequeNumber }}</span>
-          </div>
-        </template>
-
-        <div class="meta-item payee-item">
-          <span class="meta-label">{{ payeeLabel }}</span>
-          <span class="meta-val">{{ payeeName }}</span>
-        </div>
-      </div>
-
-      <!-- 3. جدول بنود السند -->
+      <!-- 3. جدول بنود السند (اسم الحساب في عمود DESCRIPTION مع توحيد الخط) -->
       <div class="table-wrapper">
         <table class="voucher-table">
           <thead>
@@ -132,7 +132,7 @@
             <!-- الأسطر المسجلة -->
             <tr v-for="(detail, idx) in normalizedDetails" :key="'item-' + idx">
               <td class="col-code">{{ detail.account_code ? '*' + detail.account_code : '' }}</td>
-              <td class="col-desc">{{ detail.description || voucherData?.description }}</td>
+              <td class="col-desc">{{ detail.account_name || '---' }}</td>
               <td class="col-amount">{{ formatAmount(detail.amount) }}</td>
             </tr>
 
@@ -159,21 +159,24 @@
         <span class="words-content">({{ amountInWords }})</span>
       </div>
 
-      <!-- 5. منطقة التوقيعات والاعتمادات الرسمية -->
+      <!-- 5. منطقة التوقيعات والاعتمادات الرسمية مع إظهار اسم المستخدم أسفل خط التوقيع -->
       <div class="signatures-section" :class="{ 'four-signers': !isBank, 'three-signers': isBank }">
         <div class="sig-block">
           <span class="sig-label">{{ isBank ? 'Prepared By:' : 'Prepared by:' }}</span>
           <div class="sig-space"></div>
+          <div class="sig-user-name">{{ preparedByName }}</div>
         </div>
 
         <div v-if="!isBank" class="sig-block">
           <span class="sig-label">Checked by:</span>
           <div class="sig-space"></div>
+          <div class="sig-user-name">&nbsp;</div>
         </div>
 
         <div class="sig-block">
           <span class="sig-label">{{ isBank ? 'Approved By:' : 'Approved by:' }}</span>
           <div class="sig-space"></div>
+          <div class="sig-user-name">&nbsp;</div>
         </div>
 
         <div class="sig-block">
@@ -181,7 +184,14 @@
             isReceipt ? 'Received By / Cashier:' : isBank ? 'Received By:' : 'Received BY:'
           }}</span>
           <div class="sig-space"></div>
+          <div class="sig-user-name">&nbsp;</div>
         </div>
+      </div>
+
+      <!-- 6. فوتر السند أسفل الصفحة لعرض رابط السند وتاريخ الطباعة -->
+      <div class="voucher-footer">
+        <span class="footer-url">{{ currentUrl }}</span>
+        <span class="footer-date">{{ currentPrintDate }}</span>
       </div>
     </div>
   </div>
@@ -302,9 +312,24 @@ const normalizedDetails = computed(() => {
   if (!details || !Array.isArray(details)) return []
   return details.map((d) => ({
     account_code: d.account?.code || d.account_code || '',
+    account_name: d.account?.name || d.account?.full_name || '',
     description: d.description || '',
     amount: Number(d.amount) || 0,
   }))
+})
+
+// إظهار اسم منشئ السند (اسم المستخدم أولاً فإن لم يوجد فالاسم الكامل)
+const preparedByName = computed(() => {
+  return voucherData.value?.creator?.username || voucherData.value?.creator?.full_name || ''
+})
+
+const currentUrl = computed(() => {
+  return typeof window !== 'undefined' ? window.location.href : ''
+})
+
+const currentPrintDate = computed(() => {
+  const now = new Date()
+  return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
 })
 
 const emptyRowsCount = computed(() => {
@@ -454,7 +479,7 @@ const closeWindow = () => {
   border-radius: 6px;
 }
 
-/* الترويسة العليا المتوازنة */
+/* الترويسة العليا */
 .header-section {
   display: flex;
   justify-content: space-between;
@@ -473,9 +498,10 @@ const closeWindow = () => {
 .form-code-badge {
   border: 1.5px solid #000;
   padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: bold;
   letter-spacing: 0.5px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .company-branding {
@@ -485,19 +511,21 @@ const closeWindow = () => {
 }
 
 .company-name {
-  font-size: 21px;
-  font-weight: 900;
+  font-size: 20px;
+  font-weight: bold;
   text-decoration: underline;
   text-underline-offset: 4px;
   margin-bottom: 6px;
   color: #000;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .voucher-title {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: bold;
   letter-spacing: 0.8px;
   color: #000;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .header-right {
@@ -523,30 +551,21 @@ const closeWindow = () => {
   object-fit: contain;
 }
 
-.voucher-number-row {
+/* شريط معلومات السند مع مربع الرقم فوق الجدول */
+.voucher-info-bar {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 14px;
-}
-
-.voucher-number-badge {
-  border: 1.5px solid #000;
-  padding: 4px 16px;
-  font-weight: 800;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: 0.5px;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 12px;
 }
 
 .voucher-meta-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
-  font-size: 12px;
+  gap: 5px;
+  font-size: 11px;
   font-weight: bold;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .meta-item {
@@ -557,14 +576,27 @@ const closeWindow = () => {
 
 .meta-label {
   min-width: 65px;
+  font-weight: bold;
 }
 
 .meta-val {
-  font-weight: 600;
+  font-weight: bold;
+}
+
+.voucher-number-badge {
+  border: 1.5px solid #000;
+  padding: 5px 16px;
+  font-weight: bold;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.5px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .table-wrapper {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .voucher-table {
@@ -572,12 +604,14 @@ const closeWindow = () => {
   border-collapse: collapse;
   border: 1.5px solid #000;
   font-size: 11px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .voucher-table th,
 .voucher-table td {
   border: 1px solid #000;
   padding: 6px 8px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .voucher-table th {
@@ -587,23 +621,24 @@ const closeWindow = () => {
 }
 
 .col-code {
-  width: 16%;
+  width: 18%;
   text-align: left;
-  font-family: monospace;
-  font-size: 12px;
+  font-weight: bold;
+  font-size: 11px;
 }
 
 .col-desc {
-  width: 59%;
+  width: 57%;
   text-align: left;
+  font-weight: bold;
+  font-size: 11px;
 }
 
 .col-amount {
   width: 25%;
   text-align: right;
-  font-family: monospace;
-  font-size: 12px;
   font-weight: bold;
+  font-size: 11px;
 }
 
 .empty-row td {
@@ -617,12 +652,13 @@ const closeWindow = () => {
 .total-label {
   text-align: right;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .total-val {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
+  text-align: right;
 }
 
 .border-none {
@@ -630,6 +666,7 @@ const closeWindow = () => {
   border-bottom: none !important;
 }
 
+/* قسم تفقيط المبلغ المالي */
 .words-section {
   font-size: 11px;
   font-weight: bold;
@@ -637,12 +674,14 @@ const closeWindow = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
+/* منطقة التوقيعات */
 .signatures-section {
   display: flex;
   justify-content: space-between;
-  margin-top: 40px;
+  margin-top: 24px;
   padding-top: 10px;
 }
 
@@ -660,15 +699,40 @@ const closeWindow = () => {
 }
 
 .sig-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
-  margin-bottom: 40px;
+  margin-bottom: 35px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .sig-space {
   border-bottom: 1px dotted #555;
   width: 100%;
   height: 1px;
+}
+
+.sig-user-name {
+  font-size: 11px;
+  font-weight: bold;
+  min-height: 18px;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 2px;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* الفوتر أسفل الصفحة */
+.voucher-footer {
+  margin-top: 36px;
+  padding-top: 8px;
+  border-top: 1px solid #d1d5db;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #374151;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 @media print {
@@ -691,6 +755,11 @@ const closeWindow = () => {
     box-shadow: none !important;
     border: none !important;
     background: #fff !important;
+  }
+
+  .voucher-footer {
+    position: relative;
+    bottom: 0;
   }
 }
 </style>
