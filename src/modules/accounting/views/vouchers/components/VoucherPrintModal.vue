@@ -57,14 +57,10 @@
 
     <!-- ورقة السند الرسمية -->
     <div id="voucher-official-sheet" class="voucher-paper" dir="ltr">
-      <!-- 1. الترويسة العليا المتناسقة (بدون مربع رقم السند) -->
+      <!-- 1. الترويسة العليا المتناسقة (تم حذف كود النموذج أعلى اليسار) -->
       <div class="header-section">
-        <!-- كود النموذج أعلى اليسار -->
-        <div class="header-left">
-          <div class="form-code-badge">
-            {{ formCode }}
-          </div>
-        </div>
+        <!-- الزاوية العلوية اليسرى فارغة للحفاظ على التوازن والتوسيط -->
+        <div class="header-left"></div>
 
         <!-- اسم المنشأة والعنوان الرسمي بالمنتصف -->
         <div class="company-branding">
@@ -86,7 +82,7 @@
         </div>
       </div>
 
-      <!-- 2. بيانات السند الأساسية مع نقل مربع رقم السند ليكون قرب الجدول أسفله -->
+      <!-- 2. بيانات السند الأساسية مع فصل المرجع ورقم السند في مربعين مستقلين -->
       <div class="voucher-info-bar">
         <div class="voucher-meta-info">
           <div class="meta-item">
@@ -111,14 +107,18 @@
           </div>
         </div>
 
-        <!-- مربع رقم السند محاذي لليمين وقريب من الجدول -->
-        <div class="voucher-number-badge">
-          <span class="number-prefix">{{ voucherPrefix }}</span>
-          <span class="number-value">{{ voucherData?.number || '---' }}</span>
+        <!-- مربعات البادئة ورقم السند المنفصلة -->
+        <div class="voucher-number-container">
+          <div class="voucher-ref-badge">
+            <span class="ref-text">{{ voucherPrefix }}: ________</span>
+          </div>
+          <div class="voucher-number-badge">
+            <span class="number-value">{{ voucherData?.number || '---' }}</span>
+          </div>
         </div>
       </div>
 
-      <!-- 3. جدول بنود السند (اسم الحساب في عمود DESCRIPTION مع توحيد الخط) -->
+      <!-- 3. جدول بنود السند مع توسيط النصوص وتعديل أحجام الأعمدة -->
       <div class="table-wrapper">
         <table class="voucher-table">
           <thead>
@@ -153,13 +153,13 @@
         </table>
       </div>
 
-      <!-- 4. تفقيط المبلغ بالكلمات الإنجليزية -->
+      <!-- 4. تفقيط المبلغ بالكلمات الإنجليزية بنقطتين وبدون أقواس -->
       <div class="words-section">
-        <span class="words-title">TOTAL AMOUNT IN WORDS</span>
-        <span class="words-content">({{ amountInWords }})</span>
+        <span class="words-title">TOTAL AMOUNT IN WORDS:</span>
+        <span class="words-content">{{ amountInWords }}</span>
       </div>
 
-      <!-- 5. منطقة التوقيعات والاعتمادات الرسمية مع إظهار اسم المستخدم أسفل خط التوقيع -->
+      <!-- 5. منطقة التوقيعات والاعتمادات الرسمية -->
       <div class="signatures-section" :class="{ 'four-signers': !isBank, 'three-signers': isBank }">
         <div class="sig-block">
           <span class="sig-label">{{ isBank ? 'Prepared By:' : 'Prepared by:' }}</span>
@@ -245,13 +245,6 @@ const isBank = computed(() => {
   if (v.payment_method?.type === 'bank') return true
   if (v.bank_account_id) return true
   return false
-})
-
-const formCode = computed(() => {
-  if (isReceipt.value) {
-    return isBank.value ? 'F.F 04' : 'F.F 03'
-  }
-  return isBank.value ? 'F.F 02' : 'F.F 01'
 })
 
 const voucherPrefix = computed(() => {
@@ -426,7 +419,12 @@ const formatDate = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return dateStr
-  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
 const triggerPrint = () => {
@@ -442,7 +440,7 @@ const closeWindow = () => {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 0;
   }
 
   html,
@@ -495,15 +493,6 @@ const closeWindow = () => {
   align-items: flex-start;
 }
 
-.form-code-badge {
-  border: 1.5px solid #000;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 .company-branding {
   text-align: center;
   flex: 1;
@@ -551,7 +540,7 @@ const closeWindow = () => {
   object-fit: contain;
 }
 
-/* شريط معلومات السند مع مربع الرقم فوق الجدول */
+/* شريط معلومات السند مع مربعات الرقم والمرجع */
 .voucher-info-bar {
   display: flex;
   justify-content: space-between;
@@ -583,20 +572,26 @@ const closeWindow = () => {
   font-weight: bold;
 }
 
-.voucher-number-badge {
-  border: 1.5px solid #000;
-  padding: 5px 16px;
-  font-weight: bold;
-  font-size: 12px;
+.voucher-number-container {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: 0.5px;
-  font-family: Arial, Helvetica, sans-serif;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-end;
 }
 
-.table-wrapper {
-  margin-bottom: 10px;
+.voucher-ref-badge,
+.voucher-number-badge {
+  border: 1.5px solid #000;
+  padding: 4px 14px;
+  font-weight: bold;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  min-width: 135px;
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
 }
 
 .voucher-table {
@@ -612,31 +607,32 @@ const closeWindow = () => {
   border: 1px solid #000;
   padding: 6px 8px;
   font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
 }
 
 .voucher-table th {
   background-color: #f8f8f8;
   font-weight: bold;
-  text-align: left;
+  text-align: center;
 }
 
 .col-code {
-  width: 18%;
-  text-align: left;
+  width: 24.25%;
+  text-align: center;
   font-weight: bold;
   font-size: 11px;
 }
 
 .col-desc {
   width: 57%;
-  text-align: left;
+  text-align: center;
   font-weight: bold;
   font-size: 11px;
 }
 
 .col-amount {
-  width: 25%;
-  text-align: right;
+  width: 18.75%;
+  text-align: center;
   font-weight: bold;
   font-size: 11px;
 }
@@ -650,7 +646,7 @@ const closeWindow = () => {
 }
 
 .total-label {
-  text-align: right;
+  text-align: center;
   font-weight: bold;
   font-size: 11px;
 }
@@ -658,7 +654,7 @@ const closeWindow = () => {
 .total-val {
   font-size: 12px;
   font-weight: bold;
-  text-align: right;
+  text-align: center;
 }
 
 .border-none {
@@ -716,7 +712,7 @@ const closeWindow = () => {
   font-weight: bold;
   min-height: 18px;
   margin-top: 4px;
-  text-align: left;
+  text-align: center;
   padding-left: 2px;
   color: #000;
   font-family: Arial, Helvetica, sans-serif;
@@ -748,7 +744,7 @@ const closeWindow = () => {
   }
 
   .voucher-paper {
-    padding: 0 !important;
+    padding: 8mm 10mm !important;
     margin: 0 auto !important;
     max-width: 100% !important;
     width: 100% !important;
