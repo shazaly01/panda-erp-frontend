@@ -50,8 +50,8 @@
                 id="product-category"
                 label="التصنيف المرجعي (القسم) *"
                 :model-value="modelValue.category_id"
-                :options="categories"
-                option-label="name"
+                :options="formattedCategories"
+                option-label="label"
                 option-value="id"
                 placeholder="اختر القسم..."
                 @update:model-value="updateField('category_id', $event)"
@@ -352,6 +352,14 @@ const productTypeOptions = [
   { id: 'composite', name: 'منتج تجميعي (Composite)' },
   { id: 'service', name: 'خدمة / صيانة (Service)' },
 ]
+
+// تجهيز التصنيفات بالمسار الشجري الكامل
+const formattedCategories = computed(() => {
+  return (props.categories || []).map((category) => ({
+    ...category,
+    label: category.full_path || category.name,
+  }))
+})
 
 // الوحدة الأساسية للصنف
 const baseUnit = computed(() => {

@@ -189,7 +189,7 @@ onMounted(async () => {
 
   try {
     const [categoriesRes, unitsRes, priceListsRes, warehousesRes, productData] = await Promise.all([
-      axios.get('/inventory/categories?is_active=1'),
+      axios.get('/inventory/categories?is_active=1&all=1'),
       axios.get('/inventory/units?is_active=1'),
       axios.get('/inventory/price-lists?is_active=1'),
       axios.get('/inventory/warehouses?is_active=1'),

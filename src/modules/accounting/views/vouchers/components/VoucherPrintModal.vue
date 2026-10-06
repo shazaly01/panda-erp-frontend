@@ -5,7 +5,7 @@
   >
     <!-- شريط إجراءات علوي (يختفي بالكامل أثناء الطباعة) -->
     <div
-      class="max-w-[820px] mx-auto mb-4 bg-white border border-gray-200 p-3 sm:p-4 rounded-xl shadow-sm flex items-center justify-between print:hidden"
+      class="max-w-[1100px] mx-auto mb-4 bg-white border border-gray-200 p-3 sm:p-4 rounded-xl shadow-sm flex items-center justify-between print:hidden"
     >
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-gray-500">نوع السند:</span>
@@ -55,12 +55,16 @@
       </div>
     </div>
 
-    <!-- ورقة السند الرسمية -->
+    <!-- ورقة السند الرسمية (وضع عرضي) -->
     <div id="voucher-official-sheet" class="voucher-paper" dir="ltr">
-      <!-- 1. الترويسة العليا المتناسقة (تم حذف كود النموذج أعلى اليسار) -->
+      <!-- 1. الترويسة العليا مع كود النموذج أعلى اليسار والشعار أعلى اليمين -->
       <div class="header-section">
-        <!-- الزاوية العلوية اليسرى فارغة للحفاظ على التوازن والتوسيط -->
-        <div class="header-left"></div>
+        <!-- كود النموذج أعلى اليسار -->
+        <div class="header-left">
+          <div class="form-code-badge">
+            {{ formCode }}
+          </div>
+        </div>
 
         <!-- اسم المنشأة والعنوان الرسمي بالمنتصف -->
         <div class="company-branding">
@@ -82,7 +86,7 @@
         </div>
       </div>
 
-      <!-- 2. بيانات السند الأساسية مع فصل المرجع ورقم السند في مربعين مستقلين -->
+      <!-- 2. بيانات السند الأساسية مع مربعات السند المطابقة لعرض عمود المبلغ -->
       <div class="voucher-info-bar">
         <div class="voucher-meta-info">
           <div class="meta-item">
@@ -107,10 +111,10 @@
           </div>
         </div>
 
-        <!-- مربعات البادئة ورقم السند المنفصلة -->
+        <!-- مربعات المرجع ورقم السند مطابقة لعرض عمود AMOUNT (20%) -->
         <div class="voucher-number-container">
           <div class="voucher-ref-badge">
-            <span class="ref-text">{{ voucherPrefix }}: ________</span>
+            <span class="ref-text">{{ voucherPrefix }}: __________________</span>
           </div>
           <div class="voucher-number-badge">
             <span class="number-value">{{ voucherData?.number || '---' }}</span>
@@ -118,7 +122,7 @@
         </div>
       </div>
 
-      <!-- 3. جدول بنود السند مع توسيط النصوص وتعديل أحجام الأعمدة -->
+      <!-- 3. جدول بنود السند شاملاً سطر الإجمالي وسطر التفقيط بالكلمات -->
       <div class="table-wrapper">
         <table class="voucher-table">
           <thead>
@@ -149,17 +153,19 @@
               <td class="col-desc total-label">Total</td>
               <td class="col-amount total-val">{{ formatAmount(totalAmount) }}</td>
             </tr>
+
+            <!-- سطر تفقيط المبلغ داخل الجدول مباشرة محاطاً بنفس الإطار -->
+            <tr class="words-row">
+              <td colspan="3" class="words-td">
+                <span class="words-title">TOTAL AMOUNT IN WORDS: </span>
+                <span class="words-content">{{ amountInWords }}</span>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 4. تفقيط المبلغ بالكلمات الإنجليزية بنقطتين وبدون أقواس -->
-      <div class="words-section">
-        <span class="words-title">TOTAL AMOUNT IN WORDS:</span>
-        <span class="words-content">{{ amountInWords }}</span>
-      </div>
-
-      <!-- 5. منطقة التوقيعات والاعتمادات الرسمية -->
+      <!-- 4. منطقة التوقيعات والاعتمادات الرسمية -->
       <div class="signatures-section" :class="{ 'four-signers': !isBank, 'three-signers': isBank }">
         <div class="sig-block">
           <span class="sig-label">{{ isBank ? 'Prepared By:' : 'Prepared by:' }}</span>
@@ -188,7 +194,7 @@
         </div>
       </div>
 
-      <!-- 6. فوتر السند أسفل الصفحة لعرض رابط السند وتاريخ الطباعة -->
+      <!-- 5. فوتر السند أسفل الصفحة لعرض رابط السند وتاريخ الطباعة -->
       <div class="voucher-footer">
         <span class="footer-url">{{ currentUrl }}</span>
         <span class="footer-date">{{ currentPrintDate }}</span>
@@ -213,6 +219,15 @@ const voucherStore = useVoucherStore()
 
 const voucherData = ref(props.voucher || null)
 
+const executePrint = () => {
+  const originalTitle = document.title
+  document.title = ''
+  window.print()
+  setTimeout(() => {
+    document.title = originalTitle
+  }, 1000)
+}
+
 onMounted(async () => {
   if (!brandingStore.isLoaded && brandingStore.fetchBranding) {
     brandingStore.fetchBranding()
@@ -227,7 +242,7 @@ onMounted(async () => {
       }
 
       setTimeout(() => {
-        window.print()
+        executePrint()
       }, 500)
     } catch (error) {
       console.error('فشل جلب بيانات السند للطباعة:', error)
@@ -245,6 +260,13 @@ const isBank = computed(() => {
   if (v.payment_method?.type === 'bank') return true
   if (v.bank_account_id) return true
   return false
+})
+
+const formCode = computed(() => {
+  if (isReceipt.value) {
+    return isBank.value ? 'F.F 04' : 'F.F 03'
+  }
+  return isBank.value ? 'F.F 02' : 'F.F 01'
 })
 
 const voucherPrefix = computed(() => {
@@ -311,7 +333,7 @@ const normalizedDetails = computed(() => {
   }))
 })
 
-// إظهار اسم منشئ السند (اسم المستخدم أولاً فإن لم يوجد فالاسم الكامل)
+// إظهار اسم منشئ السند
 const preparedByName = computed(() => {
   return voucherData.value?.creator?.username || voucherData.value?.creator?.full_name || ''
 })
@@ -327,7 +349,7 @@ const currentPrintDate = computed(() => {
 
 const emptyRowsCount = computed(() => {
   const currentCount = normalizedDetails.value.length
-  const minimumRows = 9
+  const minimumRows = 7
   return currentCount < minimumRows ? minimumRows - currentCount : 0
 })
 
@@ -428,7 +450,7 @@ const formatDate = (dateStr) => {
 }
 
 const triggerPrint = () => {
-  window.print()
+  executePrint()
 }
 
 const closeWindow = () => {
@@ -437,12 +459,13 @@ const closeWindow = () => {
 </script>
 
 <style>
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 0;
-  }
+/* فرض إزالة هوامش ترويسة وتذييل المتصفح التلقائية بشكل قطعي */
+@page {
+  size: A4 landscape;
+  margin: 0 !important;
+}
 
+@media print {
   html,
   body {
     background: #ffffff !important;
@@ -470,7 +493,7 @@ const closeWindow = () => {
   color: #000000;
   font-family: Arial, Helvetica, sans-serif;
   padding: 24px;
-  max-width: 820px;
+  max-width: 1100px;
   margin: 0 auto;
   box-sizing: border-box;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -487,10 +510,19 @@ const closeWindow = () => {
 }
 
 .header-left {
-  width: 120px;
+  width: 140px;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
+}
+
+.form-code-badge {
+  border: 1.5px solid #000;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .company-branding {
@@ -518,7 +550,7 @@ const closeWindow = () => {
 }
 
 .header-right {
-  width: 120px;
+  width: 140px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -540,7 +572,7 @@ const closeWindow = () => {
   object-fit: contain;
 }
 
-/* شريط معلومات السند مع مربعات الرقم والمرجع */
+/* شريط معلومات السند */
 .voucher-info-bar {
   display: flex;
   justify-content: space-between;
@@ -560,11 +592,10 @@ const closeWindow = () => {
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .meta-label {
-  min-width: 65px;
   font-weight: bold;
 }
 
@@ -572,26 +603,31 @@ const closeWindow = () => {
   font-weight: bold;
 }
 
+/* حاوية مربعات رقم السند والمرجع - مساوية تماماً لعمود AMOUNT (20%) */
 .voucher-number-container {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   align-items: flex-end;
+  width: 20%;
+  box-sizing: border-box;
 }
 
 .voucher-ref-badge,
 .voucher-number-badge {
   border: 1.5px solid #000;
-  padding: 4px 14px;
+  padding: 5px 8px;
   font-weight: bold;
   font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   letter-spacing: 0.5px;
-  min-width: 135px;
+  width: 100%;
+  min-width: 0;
   font-family: Arial, Helvetica, sans-serif;
   box-sizing: border-box;
+  text-align: center;
 }
 
 .voucher-table {
@@ -617,21 +653,21 @@ const closeWindow = () => {
 }
 
 .col-code {
-  width: 24.25%;
+  width: 24%;
   text-align: center;
   font-weight: bold;
   font-size: 11px;
 }
 
 .col-desc {
-  width: 57%;
+  width: 56%;
   text-align: center;
   font-weight: bold;
   font-size: 11px;
 }
 
 .col-amount {
-  width: 18.75%;
+  width: 20%;
   text-align: center;
   font-weight: bold;
   font-size: 11px;
@@ -662,15 +698,23 @@ const closeWindow = () => {
   border-bottom: none !important;
 }
 
-/* قسم تفقيط المبلغ المالي */
-.words-section {
-  font-size: 11px;
+/* تنسيق سطر تفقيط المبلغ المدمج داخل شبكة الجدول */
+.words-td {
+  text-align: left !important;
+  padding: 6px 8px;
   font-weight: bold;
-  margin-bottom: 24px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  font-size: 11px;
   font-family: Arial, Helvetica, sans-serif;
+  border: 1px solid #000;
+}
+
+.words-title {
+  font-weight: bold;
+  margin-right: 4px;
+}
+
+.words-content {
+  font-weight: bold;
 }
 
 /* منطقة التوقيعات */

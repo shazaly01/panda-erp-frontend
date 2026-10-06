@@ -51,7 +51,7 @@
 
     <!-- ورقة التقرير الرسمية الأفقية (Landscape) -->
     <div id="report-official-sheet" class="report-paper" dir="ltr">
-      <!-- 1. الترويسة الرسمية المتطابقة مع ترويسة السند -->
+      <!-- 1. الترويسة الرسمية -->
       <div class="header-section">
         <!-- كود النموذج أعلى اليسار -->
         <div class="header-left">
@@ -107,27 +107,25 @@
         </div>
       </div>
 
-      <!-- 3. جدول بنود السندات بعد إزالة عمود الحالة وتوسيع الأعمدة النصية -->
+      <!-- 3. جدول بنود السندات بالترتيب المعتمد المحدث -->
       <div class="table-wrapper">
         <table class="report-table">
           <thead>
             <tr>
-              <th class="col-idx">#</th>
-              <th class="col-num">VOUCHER #</th>
               <th class="col-date">DATE</th>
-              <th class="col-payee">{{ isReceipt ? 'RECEIVED FROM' : 'PAYEE / BENEFICIARY' }}</th>
+              <th class="col-code">A/C CODE</th>
               <th class="col-desc">DESCRIPTION</th>
+              <th class="col-payee">{{ isReceipt ? 'RECEIVED FROM' : 'PAYEE / BENEFICIARY' }}</th>
               <th class="col-method">METHOD / ACCOUNT</th>
               <th class="col-amount">AMOUNT ({{ defaultCurrency }})</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(voucher, index) in vouchersList" :key="voucher.id">
-              <td class="col-idx">{{ index + 1 }}</td>
-              <td class="col-num">{{ voucher.number }}</td>
+            <tr v-for="voucher in vouchersList" :key="voucher.id">
               <td class="col-date">{{ formatDate(voucher.date) }}</td>
-              <td class="col-payee">{{ voucher.payee_name || '---' }}</td>
+              <td class="col-code">{{ getAccountCode(voucher) }}</td>
               <td class="col-desc">{{ voucher.description || '---' }}</td>
+              <td class="col-payee">{{ voucher.payee_name || '---' }}</td>
               <td class="col-method">
                 {{
                   voucher.payment_method?.name ||
@@ -140,14 +138,14 @@
             </tr>
 
             <tr v-if="!loading && vouchersList.length === 0">
-              <td colspan="7" class="empty-state-cell">
+              <td colspan="6" class="empty-state-cell">
                 No posted vouchers recorded within the selected criteria and period.
               </td>
             </tr>
 
             <!-- سطر الإجمالي العام -->
             <tr class="total-row">
-              <td colspan="6" class="total-label">
+              <td colspan="5" class="total-label">
                 {{ isReceipt ? 'Grand Total Revenues:' : 'Grand Total Expenses:' }}
               </td>
               <td class="col-amount total-val">
@@ -247,7 +245,30 @@ const formatDate = (dateStr) => {
   if (!dateStr) return '---'
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return dateStr
-  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+const getAccountCode = (voucher) => {
+  if (!voucher) return '---'
+  const code =
+    voucher.account?.code ||
+    voucher.account_code ||
+    (Array.isArray(voucher.details) && voucher.details.length > 0
+      ? voucher.details[0]?.account?.code || voucher.details[0]?.account_code
+      : '')
+  return code ? `*${code}` : '---'
+}
+
+const executePrint = () => {
+  const originalTitle = document.title
+  document.title = ''
+  window.print()
+  setTimeout(() => {
+    document.title = originalTitle
+  }, 1000)
 }
 
 const fetchReportData = async () => {
@@ -257,7 +278,7 @@ const fetchReportData = async () => {
       type: isReceipt.value ? 'receipt' : 'payment',
       date_from: route.query.date_from || undefined,
       date_to: route.query.date_to || undefined,
-      status: 'posted', // قصر التقرير على السندات المرحلة فقط
+      status: 'posted',
       search: route.query.search || undefined,
       per_page: 1000,
     }
@@ -266,7 +287,7 @@ const fetchReportData = async () => {
     vouchersList.value = res.data?.data || []
 
     setTimeout(() => {
-      window.print()
+      executePrint()
     }, 500)
   } catch (error) {
     console.error('Failed to load statement report data:', error)
@@ -283,7 +304,7 @@ onMounted(() => {
 })
 
 const triggerPrint = () => {
-  window.print()
+  executePrint()
 }
 
 const closeWindow = () => {
@@ -292,12 +313,13 @@ const closeWindow = () => {
 </script>
 
 <style>
-@media print {
-  @page {
-    size: A4 landscape;
-    margin: 8mm 10mm;
-  }
+/* فرض إزالة هوامش ترويسة وتذييل المتصفح التلقائية بشكل قطعي */
+@page {
+  size: A4 landscape;
+  margin: 0 !important;
+}
 
+@media print {
   html,
   body {
     background: #ffffff !important;
@@ -332,7 +354,7 @@ const closeWindow = () => {
   border-radius: 6px;
 }
 
-/* 1. الترويسة العليا المطابقة لترويسة السند */
+/* 1. الترويسة العليا */
 .header-section {
   display: flex;
   justify-content: space-between;
@@ -464,7 +486,7 @@ const closeWindow = () => {
   color: #000;
 }
 
-/* 3. جدول البنود والبيانات */
+/* 3. جدول البنود والبيانات بالترتيب الجديد */
 .table-wrapper {
   margin-bottom: 12px;
 }
@@ -487,37 +509,30 @@ const closeWindow = () => {
 .report-table th {
   background-color: #f8f8f8;
   font-weight: bold;
-  text-align: left;
-}
-
-.col-idx {
-  width: 4%;
-  text-align: center;
-  font-weight: bold;
-}
-
-.col-num {
-  width: 10%;
-  text-align: center;
-  font-weight: bold;
 }
 
 .col-date {
-  width: 10%;
+  width: 11%;
   text-align: center;
   font-weight: bold;
 }
 
-.col-payee {
-  width: 24%;
-  text-align: left;
+.col-code {
+  width: 15%;
+  text-align: center;
   font-weight: bold;
 }
 
 .col-desc {
-  width: 27%;
+  width: 28%;
   text-align: left;
   font-size: 10.5px;
+}
+
+.col-payee {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
 }
 
 .col-method {
@@ -527,7 +542,7 @@ const closeWindow = () => {
 }
 
 .col-amount {
-  width: 12%;
+  width: 13%;
   text-align: right;
   font-weight: bold;
 }
@@ -608,7 +623,7 @@ const closeWindow = () => {
   }
 
   .report-paper {
-    padding: 0 !important;
+    padding: 8mm 10mm !important;
     margin: 0 auto !important;
     max-width: 100% !important;
     width: 100% !important;
