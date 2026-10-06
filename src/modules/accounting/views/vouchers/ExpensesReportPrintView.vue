@@ -253,13 +253,11 @@ const formatDate = (dateStr) => {
 
 const getAccountCode = (voucher) => {
   if (!voucher) return '---'
-  const code =
-    voucher.account?.code ||
-    voucher.account_code ||
-    (Array.isArray(voucher.details) && voucher.details.length > 0
-      ? voucher.details[0]?.account?.code || voucher.details[0]?.account_code
-      : '')
-  return code ? `*${code}` : '---'
+  const detailDesc =
+    Array.isArray(voucher.details) && voucher.details.length > 0
+      ? voucher.details[0]?.description
+      : null
+  return detailDesc || voucher.description || '---'
 }
 
 const executePrint = () => {

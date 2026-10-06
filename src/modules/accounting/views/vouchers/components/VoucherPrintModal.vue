@@ -135,7 +135,7 @@
           <tbody>
             <!-- الأسطر المسجلة -->
             <tr v-for="(detail, idx) in normalizedDetails" :key="'item-' + idx">
-              <td class="col-code">{{ detail.account_code ? '*' + detail.account_code : '' }}</td>
+              <td class="col-code">{{ detail.description || '---' }}</td>
               <td class="col-desc">{{ detail.account_name || '---' }}</td>
               <td class="col-amount">{{ formatAmount(detail.amount) }}</td>
             </tr>
@@ -795,6 +795,11 @@ const closeWindow = () => {
     box-shadow: none !important;
     border: none !important;
     background: #fff !important;
+  }
+
+  .signatures-section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .voucher-footer {
