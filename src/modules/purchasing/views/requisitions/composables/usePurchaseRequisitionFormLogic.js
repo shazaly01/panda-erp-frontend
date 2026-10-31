@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePurchaseRequisitionStore } from '@/modules/purchasing/stores/purchaseRequisitionStore'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
+import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
+import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { useAuthStore } from '@/stores/authStore'
-import apiClient from '@/services/apiClient'
 import { useToast } from 'vue-toastification'
 
 export function usePurchaseRequisitionFormLogic() {
@@ -14,18 +15,43 @@ export function usePurchaseRequisitionFormLogic() {
 
   const requisitionStore = usePurchaseRequisitionStore()
   const productStore = useProductStore()
+  const departmentStore = useDepartmentStore()
+  const employeeStore = useEmployeeStore()
   const authStore = useAuthStore()
 
   const isEdit = computed(() => !!route.params.id)
   const isFormLoaded = ref(false)
   const isSubmitting = ref(false)
-  const departmentsList = ref([])
 
-  // دالة مساعدة لضبط تاريخ الاحتياج الافتراضي بعد 4 أيام من تاريخ اليوم
+  // ربط مباشر مع القائمة المسطحة الهرمية من متجر الأقسام
+  const departmentsList = computed(() => departmentStore.flatDepartments)
+
+  // ربط مباشر مع قائمة الموظفين لاختيار المستلم
+  const employeesList = computed(() => employeeStore.allEmployees)
+
+  // فحص صلاحية تغيير القسم الطالب لدعم النمط الهجين
+  const canChangeDepartment = computed(() => {
+    if (authStore.user?.is_super_admin || authStore.isSuperAdmin) {
+      return true
+    }
+    if (typeof authStore.hasPermission === 'function') {
+      return authStore.hasPermission('purchasing.requisitions.change_department')
+    }
+    if (typeof authStore.can === 'function') {
+      return authStore.can('purchasing.requisitions.change_department')
+    }
+    const permissions = authStore.user?.permissions || []
+    if (Array.isArray(permissions)) {
+      return permissions.some(
+        (p) => (typeof p === 'string' ? p : p.name) === 'purchasing.requisitions.change_department',
+      )
+    }
+    return false
+  })
+
+  // ضبط تاريخ الاحتياج الافتراضي ليكون تاريخ اليوم الحالي
   const getDefaultRequiredDate = () => {
-    const targetDate = new Date()
-    targetDate.setDate(targetDate.getDate() + 4)
-    return targetDate.toISOString().substring(0, 10)
+    return new Date().toISOString().substring(0, 10)
   }
 
   // =========================================================
@@ -34,6 +60,7 @@ export function usePurchaseRequisitionFormLogic() {
   const form = ref({
     requisition_number: '',
     department_id: '',
+    received_by: null,
     request_date: new Date().toISOString().substring(0, 10),
     required_date: getDefaultRequiredDate(),
     priority: 'medium',
@@ -92,7 +119,6 @@ export function usePurchaseRequisitionFormLogic() {
       toast.warning(
         `الصنف "${selectedProduct.name}" مضاف مسبقاً في السطر رقم (${existingIndex + 1}).`,
       )
-      // تفريغ الحقل لإلغاء الازدواجية وإتاحة الاختيار مجدداً
       row.item_name = ''
       row.product_id = null
       row.product_unit_id = null
@@ -215,18 +241,21 @@ export function usePurchaseRequisitionFormLogic() {
   // 5. تحميل البيانات المرجعية وبيانات التعديل بالتوازي التام
   // =========================================================
   const loadDepartments = async () => {
-    try {
-      const response = await apiClient.get('/hr/departments')
-      departmentsList.value = response.data.data || response.data || []
-    } catch (err) {
-      console.error('فشل في جلب قائمة الأقسام:', err)
+    if (departmentStore.flatDepartments.length === 0) {
+      await departmentStore.fetchDepartments()
+    }
+  }
+
+  const loadEmployees = async () => {
+    if (employeeStore.allEmployees.length === 0) {
+      await employeeStore.fetchAllEmployees()
     }
   }
 
   onMounted(async () => {
     isFormLoaded.value = false
     try {
-      const startupRequests = [loadDepartments()]
+      const startupRequests = [loadDepartments(), loadEmployees()]
       if (isEdit.value) {
         startupRequests.push(requisitionStore.fetchRequisition(route.params.id))
       }
@@ -239,6 +268,7 @@ export function usePurchaseRequisitionFormLogic() {
         form.value = {
           requisition_number: cur.requisition_number || '',
           department_id: cur.department_id || '',
+          received_by: cur.received_by || null,
           request_date: cur.request_date
             ? cur.request_date.substring(0, 10)
             : new Date().toISOString().substring(0, 10),
@@ -267,8 +297,10 @@ export function usePurchaseRequisitionFormLogic() {
           }
         })
       } else if (!isEdit.value) {
-        if (authStore.user?.department_id) {
-          form.value.department_id = authStore.user.department_id
+        const userDeptId =
+          authStore.user?.department_id || authStore.user?.employee?.department_id || ''
+        if (userDeptId) {
+          form.value.department_id = userDeptId
         }
         items.value = [createEmptyRow(false)]
       }
@@ -312,6 +344,7 @@ export function usePurchaseRequisitionFormLogic() {
 
     const payload = {
       department_id: form.value.department_id || null,
+      received_by: form.value.received_by || null,
       request_date: form.value.request_date || null,
       required_date: form.value.required_date || null,
       priority: form.value.priority,
@@ -358,6 +391,8 @@ export function usePurchaseRequisitionFormLogic() {
     form,
     items,
     departmentsList,
+    employeesList,
+    canChangeDepartment,
     calculatedEstimatedTotal,
     totalItemsCount,
     getValidationError,
@@ -375,6 +410,7 @@ export function usePurchaseRequisitionFormLogic() {
     handleCancel,
     requisitionStore,
     productStore,
+    employeeStore,
     authStore,
   }
 }

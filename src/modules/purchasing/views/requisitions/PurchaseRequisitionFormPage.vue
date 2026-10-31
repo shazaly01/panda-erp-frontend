@@ -44,6 +44,8 @@
     <RequisitionHeaderForm
       v-model="form"
       :departments="departmentsList"
+      :employees="employeesList"
+      :can-change-department="canChangeDepartment"
       :validation-errors="requisitionStore.validationErrors"
     />
 
@@ -138,6 +140,8 @@ const {
   form,
   items,
   departmentsList,
+  employeesList,
+  canChangeDepartment,
   calculatedEstimatedTotal,
   totalItemsCount,
   getValidationError,

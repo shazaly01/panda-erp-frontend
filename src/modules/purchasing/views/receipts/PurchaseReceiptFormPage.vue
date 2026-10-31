@@ -43,6 +43,7 @@
     <!-- 1. ترويسة سند الاستلام والبيانات اللوجستية -->
     <ReceiptHeaderForm
       v-model="form"
+      :departments="departmentsList"
       :validation-errors="receiptStore.validationErrors"
       :is-order-linked="isOrderLinked"
       :route-badge-text="routeBadgeText"
@@ -64,7 +65,7 @@
         :handle-quantity-rejected-change="handleQuantityRejectedChange"
         :remove-row="removeRow"
         :trigger-add-new-empty-line="triggerAddNewEmptyLine"
-        :select-product-for-row="selectProductForRow"
+        :selectProductForRow="selectProductForRow"
         :handle-global-item-select="handleGlobalItemSelect"
         :increment-quantity="incrementQuantity"
         :decrement-quantity="decrementQuantity"
@@ -91,13 +92,21 @@
       <div class="text-xs text-gray-400 font-medium flex items-center gap-2">
         <span
           class="w-2 h-2 rounded-full"
-          :class="isOrderLinked ? 'bg-sky-400' : 'bg-emerald-400'"
+          :class="
+            form.status === 'received'
+              ? 'bg-emerald-400'
+              : isOrderLinked
+                ? 'bg-sky-400'
+                : 'bg-amber-400'
+          "
         ></span>
         <span>
           {{
-            isOrderLinked
-              ? 'تأكيد استلام السند سيقوم بمطابقة أمر الشراء وزيادة رصيد المستودع بالكميات المقبولة.'
-              : 'الاستلام المباشر سيقوم بإدخال الكميات المقبولة فورياً وتحديث رصيد المستودع المحدد.'
+            form.status === 'received'
+              ? 'تعديل سند الاستلام المؤكد سيقوم بإعادة ضبط وتحديث حركات المخزون وكميات أمر الشراء تلقائياً.'
+              : isOrderLinked
+                ? 'تأكيد استلام السند سيقوم بمطابقة أمر الشراء وزيادة رصيد المستودع بالكميات المقبولة.'
+                : 'الاستلام المباشر سيقوم بإدخال الكميات المقبولة فورياً وتحديث رصيد المستودع المحدد.'
           }}
         </span>
       </div>
@@ -114,9 +123,22 @@
           إلغاء وتراجع
         </AppButton>
 
+        <!-- زر حفظ التعديلات لسند الاستلام المؤكد -->
+        <AppButton
+          v-if="form.status === 'received'"
+          type="button"
+          size="sm"
+          :disabled="isSubmitting || !isFormLoaded"
+          @click="handleSubmit(false)"
+          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
+        >
+          <span v-if="isSubmitting">جاري تحديث السند والمخزون...</span>
+          <span v-else>حفظ وتحديث سند الاستلام</span>
+        </AppButton>
+
         <!-- زر الحفظ كمسودة مؤقتة -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           variant="outline"
           size="sm"
@@ -130,7 +152,7 @@
 
         <!-- زر الحفظ وتأكيد الاستلام والترحيل المخزني الفوري -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           size="sm"
           :disabled="isSubmitting || !isFormLoaded"
@@ -163,6 +185,7 @@ const {
   isEdit,
   form,
   items,
+  departmentsList,
   visibleTableSchema,
   isOrderLinked,
   routeBadgeText,
@@ -192,7 +215,9 @@ const {
 
 const formPageTitle = computed(() => {
   if (isEdit.value) {
-    return 'تعديل مسودة سند استلام مخزني'
+    return form.status === 'received'
+      ? 'تعديل سند استلام مخزني مؤكد'
+      : 'تعديل مسودة سند استلام مخزني'
   }
   if (isOrderLinked.value) {
     return 'سند استلام مخزني مستند لأمر شراء'

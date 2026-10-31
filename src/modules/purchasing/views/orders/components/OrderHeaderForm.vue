@@ -11,7 +11,7 @@
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-gray-300">مسار أمر الشراء:</span>
         <span
-          class="px-3 py-1 text-xs font-black rounded-lg border flex items-center gap-1.5 transition-all duration-300"
+          class="px-2.5 py-0.5 text-xs font-black rounded-lg border flex items-center gap-1.5 transition-all duration-300"
           :class="routeBadgeClass"
         >
           <span
@@ -25,7 +25,7 @@
       <div class="flex items-center gap-4 text-xs font-mono text-gray-400">
         <div
           v-if="formData.requisition_id"
-          class="flex items-center gap-1 bg-[#16171b] px-2.5 py-1 rounded-lg border border-[#3e414c]"
+          class="flex items-center gap-1 bg-[#16171b] px-2.5 py-0.5 rounded-lg border border-[#3e414c]"
         >
           <span class="text-gray-400 text-[11px]">طلب الاحتياج:</span>
           <span class="text-sky-400 font-bold">#{{ formData.requisition_id }}</span>
@@ -33,13 +33,13 @@
       </div>
     </div>
 
-    <!-- الشبكة الأساسية: الصف الأول (4 أعمدة) -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- 1. رقم أمر الشراء التسلسلي (order_number) - مقفل ومولّد تلقائياً -->
+    <!-- الشبكة الأساسية: الصف الأول (4 أعمدة بارتفاع موحد 36px) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+      <!-- 1. رقم أمر الشراء التسلسلي (order_number) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> رقم أمر الشراء </label>
         <div
-          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed overflow-hidden"
         >
           <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@
           المورد التجاري <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10 flex items-center">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@
             </svg>
           </span>
 
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <SupplierDropdown
               id="order-supplier-id"
               v-model="formData.supplier_id"
@@ -99,18 +99,61 @@
         </p>
       </div>
 
-      <!-- 3. تاريخ أمر الشراء (order_date) -->
+      <!-- 3. القسم المستفيد مع دعم البحث (department_id) -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-gray-300"> القسم المستفيد </label>
+          <span
+            v-if="isRequisitionLinked"
+            class="text-[10px] text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800"
+          >
+            محدد من طلب الاحتياج
+          </span>
+        </div>
+
+        <AppDropdown
+          id="order-department-id"
+          v-model="formData.department_id"
+          :options="departmentOptions"
+          option-label="name"
+          option-value="id"
+          :disabled="isRequisitionLinked"
+          :show-clear="!isRequisitionLinked"
+          :filter="true"
+          filter-placeholder="ابحث عن القسم..."
+          placeholder="اختر القسم المستفيد..."
+          accent-color="orange"
+        >
+          <template #icon>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </template>
+        </AppDropdown>
+
+        <p v-if="getFieldError('department_id')" class="text-rose-400 text-[10px] font-bold pr-1">
+          {{ getFieldError('department_id') }}
+        </p>
+      </div>
+
+      <!-- 4. تاريخ أمر الشراء (order_date) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300">
           تاريخ الأمر <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <input
             type="date"
             v-model="formData.order_date"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            style="color-scheme: dark"
+            class="block w-full h-full py-0 pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
           />
 
           <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
@@ -128,17 +171,21 @@
           {{ getFieldError('order_date') }}
         </p>
       </div>
+    </div>
 
-      <!-- 4. تاريخ التوريد المتوقع (expected_delivery_date) -->
+    <!-- الشبكة الأساسية: الصف الثاني (4 أعمدة بارتفاع موحد 36px) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+      <!-- 5. تاريخ التوريد المتوقع (expected_delivery_date) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> التوريد المتوقع </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <input
             type="date"
             v-model="formData.expected_delivery_date"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            style="color-scheme: dark"
+            class="block w-full h-full py-0 pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
           />
 
           <span
@@ -161,15 +208,12 @@
           {{ getFieldError('expected_delivery_date') }}
         </p>
       </div>
-    </div>
 
-    <!-- الشبكة الأساسية: الصف الثاني (4 أعمدة: شروط الدفع، عملة، سعر صرف، ربط طلب احتياج) -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- 5. شروط الدفع والائتمان (payment_terms) -->
+      <!-- 6. شروط الدفع والائتمان (payment_terms) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> شروط الدفع </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,13 +238,22 @@
         </p>
       </div>
 
-      <!-- 6. عملة أمر الشراء (currency_id) -->
+      <!-- 7. عملة أمر الشراء (currency_id) مع دعم AppDropdown -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> العملة </label>
-        <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+
+        <AppDropdown
+          id="order-currency-id"
+          v-model="formData.currency_id"
+          :options="currencyOptions"
+          option-label="label"
+          option-value="value"
+          :filter="false"
+          :show-clear="false"
+          placeholder="اختر العملة..."
+          accent-color="orange"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <template #icon>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -209,29 +262,19 @@
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-          </span>
+          </template>
+        </AppDropdown>
 
-          <select
-            v-model="formData.currency_id"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-8 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
-          >
-            <option :value="1" class="bg-[#16171b]">الريال السعودي (SAR)</option>
-            <option :value="2" class="bg-[#16171b]">الدولار الأمريكي (USD)</option>
-            <option :value="3" class="bg-[#16171b]">اليورو الأوروبي (EUR)</option>
-          </select>
-          <span class="absolute left-3 text-gray-500 pointer-events-none text-[10px]">▼</span>
-        </div>
         <p v-if="getFieldError('currency_id')" class="text-rose-400 text-[10px] font-bold pr-1">
           {{ getFieldError('currency_id') }}
         </p>
       </div>
 
-      <!-- 7. سعر الصرف (exchange_rate) -->
+      <!-- 8. سعر الصرف (exchange_rate) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> سعر الصرف </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <input
             type="number"
@@ -245,61 +288,37 @@
           {{ getFieldError('exchange_rate') }}
         </p>
       </div>
-
-      <!-- 8. بطاقة حالة الارتباط بطلب الشراء / الاحتياج -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300"> حالة الارتباط </label>
-        <div
-          v-if="isRequisitionLinked"
-          class="relative w-full h-11 bg-[#121316] border border-sky-600/40 rounded-xl flex items-center px-3 gap-2 opacity-90 cursor-not-allowed"
-        >
-          <span class="text-sky-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-          </span>
-          <span class="text-xs font-bold text-sky-300 truncate">
-            طلب احتياج مرتبط (#{{ formData.requisition_id }})
-          </span>
-        </div>
-
-        <div
-          v-else
-          class="relative w-full h-11 bg-[#121316] border border-[#3e414c]/60 rounded-xl flex items-center px-3 gap-2 text-gray-400 cursor-not-allowed select-none"
-        >
-          <span class="text-gray-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </span>
-          <span class="text-xs font-medium truncate"> أمر شراء مباشر غير مرتبط </span>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SupplierDropdown from '@/modules/purchasing/forms/SupplierDropdown.vue'
+import AppDropdown from '@/components/ui/AppDropdown.vue'
 
 const formData = defineModel({ type: Object, required: true })
 
 const props = defineProps({
+  departments: { type: Array, default: () => [] },
   validationErrors: { type: Object, default: () => null },
   isRequisitionLinked: { type: Boolean, default: false },
   routeBadgeText: { type: String, default: '' },
   routeBadgeClass: { type: String, default: '' },
 })
+
+const departmentOptions = computed(() => {
+  return props.departments.map((dept) => ({
+    id: dept.id,
+    name: dept.dropdownName || dept.name,
+  }))
+})
+
+const currencyOptions = [
+  { value: 1, label: 'الريال السعودي (SAR)' },
+  { value: 2, label: 'الدولار الأمريكي (USD)' },
+  { value: 3, label: 'اليورو الأوروبي (EUR)' },
+]
 
 const getFieldError = (path) => {
   if (!props.validationErrors) return null
@@ -314,12 +333,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   opacity: 0.6;
 }
 
-select option {
-  background-color: #16171b !important;
-  color: #f8fafc !important;
-}
-
-/* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
+/* ضبط وتوحيد قائمة المورد المنسدلة بارتفاع 36px */
 :deep(.header-dropdown .p-dropdown),
 :deep(.header-dropdown [data-pc-name='dropdown']),
 :deep(.header-dropdown [data-pc-section='root']),
@@ -329,6 +343,8 @@ select option {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  height: 36px !important;
+  min-height: 36px !important;
 }
 
 :deep(.header-dropdown .p-dropdown-label),
@@ -336,7 +352,9 @@ select option {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   color: #ffffff !important;
-  padding-right: 0.25rem !important;
+  padding: 0 0.5rem 0 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 :deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {

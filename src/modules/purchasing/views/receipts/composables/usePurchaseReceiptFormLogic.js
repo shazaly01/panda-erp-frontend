@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePurchaseReceiptStore } from '@/modules/purchasing/stores/purchaseReceiptStore'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
+import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from 'vue-toastification'
 
@@ -13,12 +14,16 @@ export function usePurchaseReceiptFormLogic() {
 
   const receiptStore = usePurchaseReceiptStore()
   const productStore = useProductStore()
+  const departmentStore = useDepartmentStore()
   const authStore = useAuthStore()
 
   const isEdit = computed(() => Boolean(route.params.id))
   const isFormLoaded = ref(false)
   const isSubmitting = ref(false)
   const activeReceiptId = ref(null)
+
+  // ربط مباشر مع القائمة المسطحة الهرمية للأقسام
+  const departmentsList = computed(() => departmentStore.flatDepartments)
 
   // =========================================================
   // 1. نموذج بيانات رأس سند الاستلام المخزني
@@ -27,6 +32,7 @@ export function usePurchaseReceiptFormLogic() {
     receipt_number: '',
     supplier_id: '',
     warehouse_id: '',
+    department_id: '',
     purchase_order_id: null,
     receipt_date: new Date().toISOString().substring(0, 10),
     supplier_delivery_note: '',
@@ -103,10 +109,10 @@ export function usePurchaseReceiptFormLogic() {
       label: 'الكمية الحالية',
       type: 'number',
       readonly: true,
-      defaultValue: 0,
+      defaultValue: null,
       widthClass: 'w-[10%]',
       slot: 'cell-current_quantity',
-      extractFromItem: (item) => parseFloat(item.current_quantity ?? 0),
+      extractFromItem: (item) => toNumberOrNull(item.current_quantity),
     },
     {
       key: 'quantity_received',
@@ -178,7 +184,7 @@ export function usePurchaseReceiptFormLogic() {
       purchase_order_item_id: null,
       location_id: null,
       batch_id: null,
-      current_quantity: 0,
+      ...emptyInventoryQuantities(),
       quantity_received: 1,
       quantity_accepted: 1,
       quantity_rejected: 0,
@@ -187,6 +193,8 @@ export function usePurchaseReceiptFormLogic() {
       rejection_reason: '',
       notes: '',
       available_units: [],
+      tracking_type: null,
+      serials: [],
     }
   }
 
@@ -202,7 +210,110 @@ export function usePurchaseReceiptFormLogic() {
     items.value.splice(index, 1)
   }
 
-  // اختيار صنف مع استخراج رصيده المتوفر بدقة
+  const toNumberOrNull = (value) => {
+    if (value === null || value === undefined || value === '') return null
+    const number = Number(value)
+    return Number.isFinite(number) ? number : null
+  }
+
+  const warehouseKey = (value) => {
+    const number = toNumberOrNull(value)
+    return Number.isInteger(number) && number > 0 ? number : null
+  }
+
+  const emptyInventoryQuantities = () => ({
+    current_quantity: null,
+    quantity_warehouse_id: null,
+    gas_stock_kg: null,
+    gas_reserved_kg: null,
+    gas_available_kg: null,
+    cylinders_count: null,
+    cylinders_by_status: null,
+    inventory_quantities_loading: false,
+  })
+
+  const clearRowInventory = (row, loading = false) => {
+    Object.assign(row, emptyInventoryQuantities())
+    row.inventory_quantities_loading = loading
+  }
+
+  const hasCurrentWarehouseScope = (product) => {
+    const selectedWarehouse = warehouseKey(form.value.warehouse_id)
+    return (
+      selectedWarehouse !== null &&
+      warehouseKey(product?.quantity_warehouse_id) === selectedWarehouse
+    )
+  }
+
+  const applyInventoryQuantities = (row, product) => {
+    clearRowInventory(row)
+    if (!product || !hasCurrentWarehouseScope(product)) return
+
+    row.quantity_warehouse_id = warehouseKey(product.quantity_warehouse_id)
+    if (row.tracking_type === 'by_weight_serial') {
+      row.gas_stock_kg = toNumberOrNull(product.gas_stock_kg)
+      row.gas_reserved_kg = toNumberOrNull(product.gas_reserved_kg)
+      row.gas_available_kg = toNumberOrNull(product.gas_available_kg)
+      const count = toNumberOrNull(product.cylinders_count)
+      row.cylinders_count = Number.isInteger(count) && count >= 0 ? count : null
+      row.cylinders_by_status = product.cylinders_by_status ?? null
+      row.current_quantity = row.cylinders_count
+    } else {
+      row.current_quantity = toNumberOrNull(
+        product.available_quantity ??
+          product.current_stock ??
+          product.stock ??
+          product.quantity ??
+          product.current_quantity,
+      )
+    }
+  }
+
+  let inventoryRefreshId = 0
+  let lastRequestedWarehouse = undefined
+  const refreshInventoryForWarehouse = async (warehouseId = form.value.warehouse_id) => {
+    const requestId = ++inventoryRefreshId
+    const selectedWarehouse = warehouseKey(warehouseId)
+    lastRequestedWarehouse = selectedWarehouse
+    items.value.forEach((row) =>
+      clearRowInventory(row, Boolean(row.product_id && selectedWarehouse)),
+    )
+    productStore.clearProducts()
+    if (selectedWarehouse === null) return null
+
+    const loadedProducts = await productStore.fetchProducts({
+      is_active: 1,
+      store_id: selectedWarehouse,
+      all: true,
+    })
+
+    if (
+      requestId !== inventoryRefreshId ||
+      warehouseKey(form.value.warehouse_id) !== selectedWarehouse
+    ) {
+      return null
+    }
+
+    if (!Array.isArray(loadedProducts)) {
+      items.value.forEach((row) => {
+        row.inventory_quantities_loading = false
+      })
+      return null
+    }
+
+    const productsById = new Map(loadedProducts.map((product) => [String(product.id), product]))
+    items.value.forEach((row) => {
+      const matchedProduct = productsById.get(String(row.product_id))
+      if (matchedProduct) {
+        if (!row.tracking_type) row.tracking_type = matchedProduct.tracking_type || null
+        row.available_units =
+          matchedProduct.units || matchedProduct.available_units || row.available_units
+      }
+      applyInventoryQuantities(row, matchedProduct)
+    })
+    return loadedProducts
+  }
+
   const selectProductForRow = (row, selectedProduct, currentRowIndex = null) => {
     if (!selectedProduct) return false
 
@@ -225,44 +336,41 @@ export function usePurchaseReceiptFormLogic() {
         ? parseFloat(matchedUnit.cost_price)
         : parseFloat(selectedProduct.cost_price || 0)
 
-    // استخراج رصيد الصنف المتوفر بدقة مع دعم كافة أسماء الحقول المرتجعة
-    const rawStock =
-      selectedProduct.available_quantity !== undefined &&
-      selectedProduct.available_quantity !== null
-        ? selectedProduct.available_quantity
-        : selectedProduct.current_stock !== undefined && selectedProduct.current_stock !== null
-          ? selectedProduct.current_stock
-          : selectedProduct.stock !== undefined && selectedProduct.stock !== null
-            ? selectedProduct.stock
-            : selectedProduct.quantity !== undefined && selectedProduct.quantity !== null
-              ? selectedProduct.quantity
-              : selectedProduct.current_quantity !== undefined &&
-                  selectedProduct.current_quantity !== null
-                ? selectedProduct.current_quantity
-                : 0
-
-    const resolvedStock = parseFloat(rawStock) || 0
-
     row.product_id = selectedProduct.id
     row.product_id_display = `PRD-${selectedProduct.id}`
     row.product_name = selectedProduct.name || ''
     row.product_unit_id = matchedUnit?.id || null
     row.unit_name = matchedUnit?.unit_name || matchedUnit?.name || ''
     row.available_units = selectedProduct.units || selectedProduct.available_units || []
-    row.current_quantity = resolvedStock
     row.unit_cost = resolvedCost
+    row.tracking_type = selectedProduct.tracking_type || null
+    const inventoryProduct = hasCurrentWarehouseScope(selectedProduct)
+      ? selectedProduct
+      : productStore.products?.find(
+          (product) =>
+            String(product.id) === String(selectedProduct.id) && hasCurrentWarehouseScope(product),
+        )
+    applyInventoryQuantities(row, inventoryProduct)
+    row.inventory_quantities_loading = !inventoryProduct && productStore.loading
+    row.serials = []
 
-    if (!row.quantity_received || row.quantity_received <= 0) {
-      row.quantity_received = 1
+    if (row.tracking_type === 'by_weight_serial') {
+      row.quantity_received = 0
+      row.quantity_accepted = 0
+      row.quantity_rejected = 0
+    } else {
+      if (!row.quantity_received || row.quantity_received <= 0) {
+        row.quantity_received = 1
+      }
+      row.quantity_accepted = row.quantity_received
+      row.quantity_rejected = 0
     }
-    row.quantity_accepted = row.quantity_received
-    row.quantity_rejected = 0
+
     row.total_cost = parseFloat((row.quantity_accepted * row.unit_cost).toFixed(4))
 
     return true
   }
 
-  // دعم الاختيار العام المباشر
   const handleGlobalItemSelect = (selectedItem) => {
     if (!selectedItem) return
     let targetRow = items.value[items.value.length - 1]
@@ -274,7 +382,6 @@ export function usePurchaseReceiptFormLogic() {
     selectProductForRow(targetRow, selectedItem, targetIndex)
   }
 
-  // مزامنة التكلفة عند تغيير الوحدة
   const syncUnitDetails = (row) => {
     const matchedUnit = row.available_units?.find((u) => u.id === row.product_unit_id)
     if (matchedUnit) {
@@ -288,7 +395,6 @@ export function usePurchaseReceiptFormLogic() {
     )
   }
 
-  // ذكاء مزامنة الكميات (تحديث المقبول والمرفوض فورياً وإعادة حساب الإجمالي)
   const handleQuantityReceivedChange = (row, val) => {
     const received = Math.max(0, parseFloat(val) || 0)
     row.quantity_received = received
@@ -339,7 +445,6 @@ export function usePurchaseReceiptFormLogic() {
     )
   }
 
-  // زيادة ونقصان الكميات بسرعة
   const incrementQuantity = (row, key = 'quantity_received') => {
     const current = parseFloat(row[key]) || 0
     const nextVal = current + 1
@@ -403,28 +508,8 @@ export function usePurchaseReceiptFormLogic() {
   watch(
     () => form.value.warehouse_id,
     async (newWarehouseId) => {
-      if (!newWarehouseId) {
-        productStore.products = []
-        return
-      }
-      await productStore.fetchProducts({ is_active: 1, store_id: newWarehouseId, all: true })
-
-      const activeProductIds = items.value.map((row) => row.product_id).filter(Boolean)
-      if (activeProductIds.length > 0 && typeof productStore.refreshItemsStock === 'function') {
-        try {
-          const stockMap = await productStore.refreshItemsStock({
-            store_id: newWarehouseId,
-            item_ids: activeProductIds,
-          })
-          items.value.forEach((row) => {
-            if (row.product_id && stockMap[row.product_id] !== undefined) {
-              row.current_quantity = parseFloat(stockMap[row.product_id]) || 0
-            }
-          })
-        } catch (err) {
-          console.error('فشل في مزامنة الرصيد مع المستودع الجديد:', err)
-        }
-      }
+      if (!isFormLoaded.value) return
+      await refreshInventoryForWarehouse(newWarehouseId)
     },
     { immediate: false },
   )
@@ -436,106 +521,119 @@ export function usePurchaseReceiptFormLogic() {
   // =========================================================
   // 7. تحميل البيانات المرجعية وبيانات التعديل
   // =========================================================
+  const loadDepartments = async () => {
+    if (departmentStore.flatDepartments.length === 0) {
+      await departmentStore.fetchDepartments()
+    }
+  }
+
   onMounted(async () => {
     isFormLoaded.value = false
     try {
+      const startupRequests = [loadDepartments()]
+
       if (isEdit.value) {
         activeReceiptId.value = route.params.id
-        await receiptStore.fetchReceipt(route.params.id)
+        startupRequests.push(receiptStore.fetchReceipt(route.params.id))
+      }
 
-        if (receiptStore.currentReceipt) {
-          const cur = receiptStore.currentReceipt
+      await Promise.all(startupRequests)
 
-          form.value = {
-            receipt_number: cur.receipt_number || '',
-            supplier_id: cur.supplier_id || '',
-            warehouse_id: cur.warehouse_id || '',
-            purchase_order_id: cur.purchase_order_id || null,
-            receipt_date: cur.receipt_date
-              ? cur.receipt_date.substring(0, 10)
-              : new Date().toISOString().substring(0, 10),
-            supplier_delivery_note: cur.supplier_delivery_note || '',
-            waybill_number: cur.waybill_number || '',
-            status: cur.status?.value || cur.status || 'draft',
-            notes: cur.notes || '',
-          }
+      if (isEdit.value && receiptStore.currentReceipt) {
+        const cur = receiptStore.currentReceipt
 
-          items.value = (cur.items || []).map((it) => {
-            const cost = parseFloat(it.unit_cost) || 0
-            const acceptedQty = parseFloat(it.quantity_accepted) || 0
-            return {
-              id: it.id,
-              product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
-              product_name: it.product?.name || it.product_name || '',
-              product_id: it.product_id,
-              product_unit_id: it.product_unit_id,
-              unit_name: it.product_unit?.unit?.name || it.unit_name || '',
-              purchase_order_item_id: it.purchase_order_item_id || null,
-              location_id: it.location_id || null,
-              batch_id: it.batch_id || null,
-              current_quantity: parseFloat(
-                it.current_quantity ||
-                  it.product?.available_quantity ||
-                  it.product?.current_stock ||
-                  0,
-              ),
-              quantity_received: parseFloat(it.quantity_received) || 1,
-              quantity_accepted: acceptedQty,
-              quantity_rejected: parseFloat(it.quantity_rejected) || 0,
-              unit_cost: cost,
-              total_cost: parseFloat(it.total_cost) || parseFloat((acceptedQty * cost).toFixed(4)),
-              rejection_reason: it.rejection_reason || '',
-              notes: it.notes || '',
-              available_units: it.product?.units || [],
-            }
-          })
-
-          if (cur.warehouse_id) {
-            await productStore.fetchProducts({
-              is_active: 1,
-              store_id: cur.warehouse_id,
-              all: true,
-            })
-
-            items.value.forEach((row) => {
-              const matchedStoreItem = productStore.products?.find((p) => p.id === row.product_id)
-              if (matchedStoreItem) {
-                row.available_units = matchedStoreItem.units || []
-                if (row.current_quantity === 0) {
-                  row.current_quantity = parseFloat(
-                    matchedStoreItem.available_quantity ||
-                      matchedStoreItem.current_stock ||
-                      matchedStoreItem.stock ||
-                      0,
-                  )
-                }
-              }
-            })
-          }
+        form.value = {
+          receipt_number: cur.receipt_number || '',
+          supplier_id: cur.supplier_id || '',
+          warehouse_id: cur.warehouse_id || '',
+          department_id: cur.department_id || (cur.purchase_order?.department_id ?? ''),
+          purchase_order_id: cur.purchase_order_id || null,
+          receipt_date: cur.receipt_date
+            ? cur.receipt_date.substring(0, 10)
+            : new Date().toISOString().substring(0, 10),
+          supplier_delivery_note: cur.supplier_delivery_note || '',
+          waybill_number: cur.waybill_number || '',
+          status: cur.status?.value || cur.status || 'draft',
+          notes: cur.notes || '',
         }
+
+        items.value = (cur.items || []).map((it) => {
+          const cost = parseFloat(it.unit_cost) || 0
+          const acceptedQty = parseFloat(it.quantity_accepted) || 0
+
+          const mappedSerials = Array.isArray(it.serials)
+            ? it.serials.map((s) => ({
+                id: s.id,
+                serial_id: s.serial_id,
+                serial_number: s.serial_number || s.serial?.serial_number || '',
+                replaced_serial_id: s.replaced_serial_id || null,
+                tare_weight:
+                  s.tare_weight !== null && s.tare_weight !== undefined
+                    ? parseFloat(s.tare_weight)
+                    : s.serial?.tare_weight !== null && s.serial?.tare_weight !== undefined
+                      ? parseFloat(s.serial.tare_weight)
+                      : null,
+                gross_weight:
+                  s.gross_weight !== null && s.gross_weight !== undefined
+                    ? parseFloat(s.gross_weight)
+                    : null,
+                net_weight:
+                  s.net_weight !== null && s.net_weight !== undefined
+                    ? parseFloat(s.net_weight)
+                    : 0,
+                notes: s.notes || '',
+              }))
+            : []
+
+          return {
+            ...createEmptyRow(),
+            id: it.id,
+            product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
+            product_name: it.product?.name || it.product_name || '',
+            product_id: it.product_id,
+            product_unit_id: it.product_unit_id,
+            unit_name: it.product_unit?.unit?.name || it.unit_name || '',
+            purchase_order_item_id: it.purchase_order_item_id || null,
+            location_id: it.location_id || null,
+            batch_id: it.batch_id || null,
+            current_quantity: null,
+            quantity_received: toNumberOrNull(it.quantity_received) ?? 1,
+            quantity_accepted: acceptedQty,
+            quantity_rejected: parseFloat(it.quantity_rejected) || 0,
+            unit_cost: cost,
+            total_cost: parseFloat(it.total_cost) || parseFloat((acceptedQty * cost).toFixed(4)),
+            rejection_reason: it.rejection_reason || '',
+            notes: it.notes || '',
+            available_units: it.product?.units || [],
+            tracking_type: it.product?.tracking_type || null,
+            serials: mappedSerials,
+          }
+        })
+
+        await refreshInventoryForWarehouse(form.value.warehouse_id)
       } else {
         if (authStore.user) {
           form.value.warehouse_id = authStore.user.warehouse_id || authStore.user.store_id || ''
-        }
-        if (form.value.warehouse_id) {
-          await productStore.fetchProducts({
-            is_active: 1,
-            store_id: form.value.warehouse_id,
-            all: true,
-          })
+          if (authStore.user.department_id) {
+            form.value.department_id = authStore.user.department_id
+          }
         }
         items.value = [createEmptyRow()]
+        await refreshInventoryForWarehouse(form.value.warehouse_id)
       }
     } catch (err) {
       console.error('فشل في تحميل بيانات سند الاستلام:', err)
       toast.error('حدث خطأ أثناء تحميل بيانات السند.')
     } finally {
       isFormLoaded.value = true
+      if (warehouseKey(form.value.warehouse_id) !== lastRequestedWarehouse) {
+        await refreshInventoryForWarehouse(form.value.warehouse_id)
+      }
     }
   })
 
   // =========================================================
-  // 8. الحفظ والترحيل
+  // 8. الحفظ والترحيل مع التحقق الصارم من الأرقام التسلسلية والأوزان
   // =========================================================
   const handleSubmit = async (receiveDirectly = false) => {
     if (!form.value.supplier_id) {
@@ -548,6 +646,95 @@ export function usePurchaseReceiptFormLogic() {
       return
     }
 
+    // التحقق الميداني الصارم والتكيفي بحسب سياسة التتبع للصنف
+    for (let i = 0; i < items.value.length; i++) {
+      const row = items.value[i]
+      if (!row.product_id) continue
+
+      const isWeightSerial = row.tracking_type === 'by_weight_serial'
+      const isStandardSerial = row.tracking_type === 'by_serial' || Boolean(row.is_serial_tracked)
+      const acceptedQty = parseFloat(row.quantity_accepted) || 0
+
+      // 1. الأصناف المتبعة بالسيريال العددي (1 قطعة = 1 سيريال)
+      if (isStandardSerial && acceptedQty > 0) {
+        const serialsCount = Array.isArray(row.serials) ? row.serials.length : 0
+        const expectedCount = parseInt(acceptedQty, 10)
+
+        if (serialsCount !== expectedCount) {
+          toast.error(
+            `الصنف "${row.product_name}" يتطلب استيفاء كامل الأرقام التسلسلية لكامل الكمية المقبولة (${expectedCount} قطعة). المستوفى حالياً: (${serialsCount}).`,
+          )
+          return
+        }
+
+        for (let sIdx = 0; sIdx < row.serials.length; sIdx++) {
+          const s = row.serials[sIdx]
+          if (!s.serial_number && !s.serial_id) {
+            toast.error(`يرجى مسح أو إدخال الرقم التسلسلي لجميع وحدات الصنف "${row.product_name}".`)
+            return
+          }
+        }
+      }
+
+      // 2. الأصناف المتبعة بالسيريال الوزني (أسطوانات غاز الكلور)
+      if (isWeightSerial && acceptedQty > 0) {
+        const serials = Array.isArray(row.serials) ? row.serials : []
+        if (serials.length === 0) {
+          toast.error(
+            `الصنف "${row.product_name}" يتم تتبعه بالسيريال الوزني؛ يجب إرفاق أرقام الأسطوانات وقراءات الميزان.`,
+          )
+          return
+        }
+
+        let totalNetGasWeight = 0.0
+
+        for (let sIdx = 0; sIdx < serials.length; sIdx++) {
+          const s = serials[sIdx]
+          const tare = parseFloat(s.tare_weight) || 0
+          const gross = parseFloat(s.gross_weight) || 0
+
+          if (!s.serial_number && !s.serial_id) {
+            toast.error(
+              `يرجى مسح أو كتابة الرقم التسلسلي لجميع أسطوانات الصنف "${row.product_name}".`,
+            )
+            return
+          }
+
+          if (tare <= 0) {
+            toast.error(
+              `الوزن الفارغ للأسطوانة (${s.serial_number || sIdx + 1}) غير مدخل أو غير صحيح.`,
+            )
+            return
+          }
+
+          if (gross <= 0) {
+            toast.error(
+              `الوزن الإجمالي بالميزان للأسطوانة (${s.serial_number || sIdx + 1}) غير مدخل أو غير صحيح.`,
+            )
+            return
+          }
+
+          if (gross <= tare) {
+            toast.error(
+              `الوزن الإجمالي للأسطوانة (${s.serial_number || sIdx + 1}) لا يمكن أن يكون أقل من أو مساوياً لوزنها الفارغ.`,
+            )
+            return
+          }
+
+          const net = Math.max(0, parseFloat((gross - tare).toFixed(4)))
+          totalNetGasWeight += net
+        }
+
+        // مطابقة صافي وزن الغاز الإجمالي مع كمية السند بالكيلوجرام (بهامش سماحية 1.0 كجم لموازين المحطة)
+        if (Math.abs(totalNetGasWeight - acceptedQty) > 1.0) {
+          toast.error(
+            `الكمية المقبولة في السند (${acceptedQty} كجم) يجب أن تطابق مجموع صافي أوزان غاز الأسطوانات على الميزان (${totalNetGasWeight.toFixed(2)} كجم) بهامش سماحية معقول.`,
+          )
+          return
+        }
+      }
+    }
+
     const dynamicItemsPayload = items.value
       .filter((row) => row.product_id && row.product_unit_id)
       .map((row) => {
@@ -555,6 +742,27 @@ export function usePurchaseReceiptFormLogic() {
         const qtyAccepted = parseFloat(row.quantity_accepted) || 0
         const qtyRejected = parseFloat(row.quantity_rejected) || 0
         const cost = parseFloat(row.unit_cost) || 0
+
+        const formattedSerials = Array.isArray(row.serials)
+          ? row.serials.map((s) => ({
+              serial_id: s.serial_id ? Number(s.serial_id) : null,
+              serial_number: s.serial_number ? String(s.serial_number).trim() : null,
+              replaced_serial_id: s.replaced_serial_id ? Number(s.replaced_serial_id) : null,
+              tare_weight:
+                s.tare_weight !== null && s.tare_weight !== undefined
+                  ? parseFloat(s.tare_weight)
+                  : null,
+              gross_weight:
+                s.gross_weight !== null && s.gross_weight !== undefined
+                  ? parseFloat(s.gross_weight)
+                  : null,
+              net_weight:
+                s.net_weight !== null && s.net_weight !== undefined
+                  ? parseFloat(s.net_weight)
+                  : null,
+              notes: s.notes ? String(s.notes).trim() : null,
+            }))
+          : []
 
         return {
           id: row.id || undefined,
@@ -569,6 +777,7 @@ export function usePurchaseReceiptFormLogic() {
           unit_cost: cost,
           rejection_reason: qtyRejected > 0 ? row.rejection_reason || null : null,
           notes: row.notes || null,
+          serials: formattedSerials,
         }
       })
 
@@ -580,6 +789,7 @@ export function usePurchaseReceiptFormLogic() {
     const finalPayload = {
       supplier_id: Number(form.value.supplier_id),
       warehouse_id: Number(form.value.warehouse_id),
+      department_id: form.value.department_id ? Number(form.value.department_id) : null,
       purchase_order_id: form.value.purchase_order_id ? Number(form.value.purchase_order_id) : null,
       receipt_date: form.value.receipt_date,
       supplier_delivery_note: form.value.supplier_delivery_note || null,
@@ -652,6 +862,7 @@ export function usePurchaseReceiptFormLogic() {
     isEdit,
     form,
     items,
+    departmentsList,
     detailSchema,
     visibleTableSchema,
     isOrderLinked,
@@ -680,6 +891,7 @@ export function usePurchaseReceiptFormLogic() {
     handleGlobalItemSelect,
     receiptStore,
     productStore,
+    departmentStore,
     authStore,
   }
 }

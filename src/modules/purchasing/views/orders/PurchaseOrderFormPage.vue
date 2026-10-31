@@ -89,13 +89,21 @@
       <div class="text-xs text-gray-400 font-medium flex items-center gap-2">
         <span
           class="w-2 h-2 rounded-full"
-          :class="isRequisitionLinked ? 'bg-sky-400' : 'bg-emerald-400'"
+          :class="
+            form.status === 'confirmed'
+              ? 'bg-blue-400'
+              : isRequisitionLinked
+                ? 'bg-sky-400'
+                : 'bg-emerald-400'
+          "
         ></span>
         <span>
           {{
-            isRequisitionLinked
-              ? 'أمر الشراء مرتبط بطلب احتياج داخلي معتمد ومحدد الكميات.'
-              : 'أمر شراء مباشر صادر للمورد بدون طلب احتياج مسبق.'
+            form.status === 'confirmed'
+              ? 'تعديل أمر الشراء المؤكد سيقوم بتحديث بنود وشروط التوريد المتفق عليها مع المورد.'
+              : isRequisitionLinked
+                ? 'أمر الشراء مرتبط بطلب احتياج داخلي معتمد ومحدد الكميات.'
+                : 'أمر شراء مباشر صادر للمورد بدون طلب احتياج مسبق.'
           }}
         </span>
       </div>
@@ -112,9 +120,22 @@
           إلغاء وتراجع
         </AppButton>
 
+        <!-- زر حفظ التعديلات لأمر الشراء المؤكد -->
+        <AppButton
+          v-if="form.status === 'confirmed'"
+          type="button"
+          size="sm"
+          :disabled="isSubmitting || !isFormLoaded"
+          @click="handleSubmit(false)"
+          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
+        >
+          <span v-if="isSubmitting">جاري تحديث أمر الشراء...</span>
+          <span v-else>حفظ وتحديث أمر الشراء</span>
+        </AppButton>
+
         <!-- زر الحفظ كمسودة مؤقتة -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           variant="outline"
           size="sm"
@@ -128,7 +149,7 @@
 
         <!-- زر الحفظ والاعتماد المباشر -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           size="sm"
           :disabled="isSubmitting || !isFormLoaded"
@@ -189,7 +210,7 @@ const {
 
 const formPageTitle = computed(() => {
   if (isEdit.value) {
-    return 'تعديل مسودة أمر شراء'
+    return form.status === 'confirmed' ? 'تعديل أمر شراء مؤكد' : 'تعديل مسودة أمر شراء'
   }
   if (isRequisitionLinked.value) {
     return 'إصدار أمر شراء مرتبط بطلب احتياج داخلي'

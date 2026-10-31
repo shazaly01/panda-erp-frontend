@@ -1,3 +1,4 @@
+//src\modules\hr\stores\employeeStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import employeeService from '../services/employee.service'

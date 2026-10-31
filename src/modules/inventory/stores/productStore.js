@@ -1,4 +1,4 @@
-//src\modules\inventory\stores\productStore.js
+// src/modules/inventory/stores/productStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import productService from '../services/product.service'
@@ -13,33 +13,89 @@ export const useProductStore = defineStore('inventoryProduct', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  // لا تُطبّق على القائمة إلا نتيجة آخر طلب جلب بدأ فعلياً.
+  let latestProductsRequestId = 0
+  let pendingProductsRequestId = null
+  let activeActions = 0
+
+  // loading يعكس طلب القائمة الحالي والعمليات الأخرى، لا طلباً قديماً مستبعداً.
+  const updateLoading = () => {
+    loading.value = pendingProductsRequestId !== null || activeActions > 0
+  }
+
+  const beginAction = () => {
+    activeActions += 1
+    updateLoading()
+  }
+
+  const endAction = () => {
+    activeActions -= 1
+    updateLoading()
+  }
+
   // ==========================
   // 2. Actions
   // ==========================
 
-  // جلب قائمة الأصناف والمنتجات
+  // جلب القائمة مع جميع حقولها، بما فيها الغاز وعدد الأسطوانات ونطاق المخزن.
+  // ترجع مصفوفة عند نجاح الطلب، حتى لو كانت فارغة، وnull للفشل أو الطلب المستبعد.
   async function fetchProducts(params = {}) {
-    loading.value = true
+    const requestId = ++latestProductsRequestId
+    pendingProductsRequestId = requestId
+    updateLoading()
     error.value = null
+
     try {
       const response = await productService.get(params)
-      if (response.data?.data) {
-        products.value = response.data.data
-        pagination.value = response.data.meta || response.data.pagination || null
-      } else {
-        products.value = response.data
+
+      // قد يكون المستخدم غيّر المخزن أو الفلتر قبل وصول هذه الاستجابة.
+      if (requestId !== latestProductsRequestId) return null
+
+      const payload = response?.data
+      const nextProducts = Array.isArray(payload) ? payload : payload?.data
+
+      if (!Array.isArray(nextProducts)) {
+        throw new Error('استجابة قائمة الأصناف غير صالحة؛ كان المتوقع مصفوفة أصناف.')
       }
+
+      products.value = nextProducts
+      pagination.value = Array.isArray(payload)
+        ? null
+        : payload?.meta || payload?.pagination || null
+
+      return products.value
     } catch (err) {
+      // فشل طلب قديم لا يمحو نتائج الطلب الحالي ولا يعرض خطأ لمخزن سابق.
+      if (requestId !== latestProductsRequestId) return null
+
+      products.value = []
+      pagination.value = null
       error.value = err.response?.data?.message || 'فشل تحميل قائمة الأصناف'
       console.error(err)
+      return null
     } finally {
-      loading.value = false
+      // انتهاء طلب قديم لا يوقف مؤشر تحميل الطلب الأحدث.
+      if (pendingProductsRequestId === requestId) {
+        pendingProductsRequestId = null
+        updateLoading()
+      }
     }
+  }
+
+  // سنستخدمها في نموذج الاستلام عند إزالة المخزن: تبطل طلب القائمة المعلق أيضاً.
+  // لا تلغي عمليات إنشاء أو تعديل أو حذف بدأت بالفعل، ولا تمس currentProduct.
+  function clearProducts() {
+    latestProductsRequestId += 1
+    pendingProductsRequestId = null
+    products.value = []
+    pagination.value = null
+    error.value = null
+    updateLoading()
   }
 
   // جلب بيانات صنف منفرد للتعديل أو العرض
   async function fetchProduct(id) {
-    loading.value = true
+    beginAction()
     error.value = null
     try {
       const response = await productService.find(id)
@@ -50,13 +106,13 @@ export const useProductStore = defineStore('inventoryProduct', () => {
       console.error(err)
       throw err
     } finally {
-      loading.value = false
+      endAction()
     }
   }
 
   // إنشاء صنف جديد
   async function createProduct(payload) {
-    loading.value = true
+    beginAction()
     error.value = null
     try {
       const response = await productService.create(payload)
@@ -66,13 +122,13 @@ export const useProductStore = defineStore('inventoryProduct', () => {
       error.value = err.response?.data?.message || 'فشل إنشاء الصنف'
       throw err
     } finally {
-      loading.value = false
+      endAction()
     }
   }
 
   // تحديث بيانات صنف
   async function updateProduct(id, payload) {
-    loading.value = true
+    beginAction()
     error.value = null
     try {
       const response = await productService.update(id, payload)
@@ -82,13 +138,13 @@ export const useProductStore = defineStore('inventoryProduct', () => {
       error.value = err.response?.data?.message || 'فشل تحديث الصنف'
       throw err
     } finally {
-      loading.value = false
+      endAction()
     }
   }
 
   // حذف صنف
   async function deleteProduct(id) {
-    loading.value = true
+    beginAction()
     error.value = null
     try {
       await productService.delete(id)
@@ -98,7 +154,7 @@ export const useProductStore = defineStore('inventoryProduct', () => {
         err.response?.data?.message || 'فشل حذف الصنف (قد يكون مرتبطاً بحركات مخزنية أو فواتير)'
       throw err
     } finally {
-      loading.value = false
+      endAction()
     }
   }
 
@@ -109,6 +165,7 @@ export const useProductStore = defineStore('inventoryProduct', () => {
     loading,
     error,
     fetchProducts,
+    clearProducts,
     fetchProduct,
     createProduct,
     updateProduct,

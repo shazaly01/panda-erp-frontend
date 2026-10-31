@@ -148,9 +148,9 @@
             </svg>
           </button>
 
-          <!-- زر تعديل الفاتورة: للمسودات فقط -->
+          <!-- زر تعديل الفاتورة: متاح للمسودات والفواتير المرحلة -->
           <button
-            v-if="isDraft(item)"
+            v-if="canEdit(item)"
             @click="$emit('edit-bill', item)"
             class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
             title="تعديل بيانات الفاتورة"
@@ -224,6 +224,11 @@ const tableHeaders = computed(() => [
 const isDraft = (item) => {
   const status = item.status?.value || item.status
   return status === 'draft'
+}
+
+const canEdit = (item) => {
+  const status = item.status?.value || item.status
+  return status === 'draft' || status === 'posted'
 }
 
 const canPay = (item) => {

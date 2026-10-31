@@ -43,6 +43,7 @@
     <!-- 1. ترويسة إذن الصرف والبيانات اللوجستية -->
     <IssueHeaderForm
       v-model="form"
+      :departments="departmentsList"
       :validation-errors="issueStore.validationErrors"
       :is-requisition-linked="isRequisitionLinked"
       :route-badge-text="routeBadgeText"
@@ -64,7 +65,7 @@
         :decrement-quantity="decrementQuantity"
         :remove-row="removeRow"
         :trigger-add-new-empty-line="triggerAddNewEmptyLine"
-        :select-product-for-row="selectProductForRow"
+        :selectProductForRow="selectProductForRow"
         :handle-global-item-select="handleGlobalItemSelect"
         :is-form-loaded="isFormLoaded"
       />
@@ -87,12 +88,12 @@
       <div class="text-xs text-gray-400 font-medium flex items-center gap-2">
         <span
           class="w-2 h-2 rounded-full"
-          :class="form.status === 'confirmed' ? 'bg-emerald-400' : 'bg-amber-400'"
+          :class="isConfirmedOrIssued ? 'bg-emerald-400' : 'bg-amber-400'"
         ></span>
         <span>
           {{
-            form.status === 'confirmed'
-              ? 'إذن الصرف مؤكد ومرحل - تم خصم الكميات من المستودع بنجاح.'
+            isConfirmedOrIssued
+              ? 'تعديل إذن الصرف المؤكد سيقوم بإعادة ضبط وتحديث حركات المخزون وكميات طلب الاحتياج تلقائياً.'
               : 'تأكيد الصرف سيقوم بخصم الكميات من أرصدة المستودع المحددة فورياً وبشكل نهائي.'
           }}
         </span>
@@ -110,9 +111,22 @@
           إلغاء وتراجع
         </AppButton>
 
+        <!-- زر حفظ التعديلات لإذن الصرف المؤكد/المنصرف -->
+        <AppButton
+          v-if="isConfirmedOrIssued"
+          type="button"
+          size="sm"
+          :disabled="isSubmitting || !isFormLoaded"
+          @click="handleSubmit(false)"
+          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
+        >
+          <span v-if="isSubmitting">جاري تحديث الصرف والمخزون...</span>
+          <span v-else>حفظ وتحديث إذن الصرف</span>
+        </AppButton>
+
         <!-- زر الحفظ كمسودة مؤقتة -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           variant="outline"
           size="sm"
@@ -126,7 +140,7 @@
 
         <!-- زر الحفظ والتأكيد المباشر والخصم المخزني -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           size="sm"
           :disabled="isSubmitting || !isFormLoaded"
@@ -159,6 +173,7 @@ const {
   isEdit,
   form,
   items,
+  departmentsList,
   visibleTableSchema,
   isRequisitionLinked,
   routeBadgeText,
@@ -182,9 +197,13 @@ const {
   issueStore,
 } = usePurchaseIssueFormLogic()
 
+const isConfirmedOrIssued = computed(() => {
+  return form.status === 'confirmed' || form.status === 'issued'
+})
+
 const formPageTitle = computed(() => {
   if (isEdit.value) {
-    return 'تعديل مسودة إذن صرف مخزني'
+    return isConfirmedOrIssued.value ? 'تعديل إذن صرف مخزني مؤكد' : 'تعديل مسودة إذن صرف مخزني'
   }
   if (isRequisitionLinked.value) {
     return 'إصدار إذن صرف مخزني بناءً على طلب احتياج داخلي'
@@ -196,6 +215,7 @@ const getStatusLabel = (status) => {
   const map = {
     draft: 'مسودة قيد المراجعة',
     confirmed: 'تم الصرف والخصم',
+    issued: 'تم الصرف والخصم',
     cancelled: 'ملغي',
   }
   return map[status] || status || 'مسودة جديدة'
@@ -205,6 +225,7 @@ const getStatusBadgeClass = (status) => {
   const map = {
     draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
     confirmed: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
+    issued: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
     cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
   }
   return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'

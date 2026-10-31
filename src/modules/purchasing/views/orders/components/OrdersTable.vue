@@ -121,9 +121,9 @@
             </svg>
           </button>
 
-          <!-- زر تعديل أمر الشراء: للمسودات فقط -->
+          <!-- زر تعديل أمر الشراء: متاح للمسودات ولأوامر الشراء المؤكدة -->
           <button
-            v-if="isDraft(item)"
+            v-if="canEdit(item)"
             @click="$emit('edit-order', item)"
             class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
             title="تعديل بيانات أمر الشراء"
@@ -214,6 +214,11 @@ const tableHeaders = computed(() => [
 const isDraft = (item) => {
   const status = item.status?.value || item.status
   return status === 'draft'
+}
+
+const canEdit = (item) => {
+  const status = item.status?.value || item.status
+  return status === 'draft' || status === 'confirmed'
 }
 
 const canCancel = (item) => {

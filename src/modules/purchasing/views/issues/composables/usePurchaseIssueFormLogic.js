@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePurchaseIssueStore } from '@/modules/purchasing/stores/purchaseIssueStore'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
+import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from 'vue-toastification'
 
@@ -13,12 +14,16 @@ export function usePurchaseIssueFormLogic() {
 
   const issueStore = usePurchaseIssueStore()
   const productStore = useProductStore()
+  const departmentStore = useDepartmentStore()
   const authStore = useAuthStore()
 
   const isEdit = computed(() => !!route.params.id)
   const isFormLoaded = ref(false)
   const isSubmitting = ref(false)
   const activeIssueId = ref(null)
+
+  // ربط مباشر مع القائمة المسطحة الهرمية للأقسام
+  const departmentsList = computed(() => departmentStore.flatDepartments)
 
   // =========================================================
   // 1. نموذج بيانات رأس إذن الصرف المخزني
@@ -225,7 +230,6 @@ export function usePurchaseIssueFormLogic() {
         ? parseFloat(matchedUnit.cost_price)
         : parseFloat(selectedProduct.cost_price || selectedProduct.price || 0)
 
-    // استخراج رصيد الصنف المتوفر مع دعم كافة أسماء الحقول المرتجعة
     const rawStock =
       selectedProduct.available_quantity !== undefined &&
       selectedProduct.available_quantity !== null
@@ -360,97 +364,110 @@ export function usePurchaseIssueFormLogic() {
   // =========================================================
   // 7. تحميل البيانات عند الفتح
   // =========================================================
+  const loadDepartments = async () => {
+    if (departmentStore.flatDepartments.length === 0) {
+      await departmentStore.fetchDepartments()
+    }
+  }
+
   onMounted(async () => {
     isFormLoaded.value = false
     try {
+      const startupRequests = [loadDepartments()]
+
       if (isEdit.value) {
         activeIssueId.value = route.params.id
-        await issueStore.fetchIssue(route.params.id)
+        startupRequests.push(issueStore.fetchIssue(route.params.id))
+      }
 
-        if (issueStore.currentIssue) {
-          const cur = issueStore.currentIssue
+      await Promise.all(startupRequests)
 
-          form.value = {
-            issue_number: cur.issue_number || '',
-            requisition_id: cur.requisition_id || null,
-            warehouse_id: cur.warehouse_id || '',
-            department_id: cur.department_id || null,
-            recipient_id: cur.recipient_id || null,
-            issue_date: cur.issue_date
-              ? cur.issue_date.substring(0, 10)
-              : new Date().toISOString().substring(0, 10),
-            status: cur.status?.value || cur.status || 'draft',
-            total_cost: parseFloat(cur.total_cost) || 0,
-            notes: cur.notes || '',
+      if (isEdit.value && issueStore.currentIssue) {
+        const cur = issueStore.currentIssue
+
+        form.value = {
+          issue_number: cur.issue_number || '',
+          requisition_id: cur.requisition_id || null,
+          warehouse_id: cur.warehouse_id || '',
+          department_id: cur.department_id || (cur.requisition?.department_id ?? null),
+          recipient_id: cur.recipient_id || null,
+          issue_date: cur.issue_date
+            ? cur.issue_date.substring(0, 10)
+            : new Date().toISOString().substring(0, 10),
+          status: cur.status?.value || cur.status || 'draft',
+          total_cost: parseFloat(cur.total_cost) || 0,
+          notes: cur.notes || '',
+        }
+
+        items.value = (cur.items || []).map((it) => {
+          const qty = parseFloat(it.quantity) || 1
+          const cost = parseFloat(it.unit_cost) || 0
+          const stock =
+            it.current_quantity !== undefined && it.current_quantity !== null
+              ? it.current_quantity
+              : it.current_stock !== undefined && it.current_stock !== null
+                ? it.current_stock
+                : it.product?.available_quantity !== undefined &&
+                    it.product?.available_quantity !== null
+                  ? it.product.available_quantity
+                  : it.product?.current_stock !== undefined
+                    ? it.product.current_stock
+                    : it.product?.stock !== undefined
+                      ? it.product.stock
+                      : 0
+
+          const stockVal = parseFloat(stock) || 0
+
+          return {
+            id: it.id,
+            product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
+            product_name: it.product?.name || it.product_name || '',
+            product_id: it.product_id,
+            product_unit_id: it.product_unit_id,
+            unit_name: it.product_unit?.unit?.name || it.unit_name || '',
+            requisition_item_id: it.requisition_item_id || null,
+            location_id: it.location_id || null,
+            batch_id: it.batch_id || null,
+            current_quantity: stockVal,
+            current_stock: stockVal,
+            quantity: qty,
+            unit_cost: cost,
+            total_cost: parseFloat(it.total_cost) || parseFloat((qty * cost).toFixed(4)),
+            available_units: it.product?.units || [],
+            notes: it.notes || '',
           }
+        })
 
-          items.value = (cur.items || []).map((it) => {
-            const qty = parseFloat(it.quantity) || 1
-            const cost = parseFloat(it.unit_cost) || 0
-            const stock =
-              it.current_quantity !== undefined && it.current_quantity !== null
-                ? it.current_quantity
-                : it.current_stock !== undefined && it.current_stock !== null
-                  ? it.current_stock
-                  : it.product?.available_quantity !== undefined &&
-                      it.product?.available_quantity !== null
-                    ? it.product.available_quantity
-                    : it.product?.current_stock !== undefined
-                      ? it.product.current_stock
-                      : it.product?.stock !== undefined
-                        ? it.product.stock
-                        : 0
-
-            const stockVal = parseFloat(stock) || 0
-
-            return {
-              id: it.id,
-              product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
-              product_name: it.product?.name || it.product_name || '',
-              product_id: it.product_id,
-              product_unit_id: it.product_unit_id,
-              unit_name: it.product_unit?.unit?.name || it.unit_name || '',
-              requisition_item_id: it.requisition_item_id || null,
-              location_id: it.location_id || null,
-              batch_id: it.batch_id || null,
-              current_quantity: stockVal,
-              current_stock: stockVal,
-              quantity: qty,
-              unit_cost: cost,
-              total_cost: parseFloat(it.total_cost) || parseFloat((qty * cost).toFixed(4)),
-              available_units: it.product?.units || [],
-              notes: it.notes || '',
-            }
+        if (cur.warehouse_id) {
+          await productStore.fetchProducts({
+            is_active: 1,
+            store_id: cur.warehouse_id,
+            all: true,
           })
 
-          if (cur.warehouse_id) {
-            await productStore.fetchProducts({
-              is_active: 1,
-              store_id: cur.warehouse_id,
-              all: true,
-            })
-
-            items.value.forEach((row) => {
-              const matchedStoreItem = productStore.products?.find((p) => p.id === row.product_id)
-              if (matchedStoreItem) {
-                row.available_units = matchedStoreItem.units || []
-                if (!row.current_quantity) {
-                  const sVal = parseFloat(
-                    matchedStoreItem.available_quantity ||
-                      matchedStoreItem.current_stock ||
-                      matchedStoreItem.stock ||
-                      0,
-                  )
-                  row.current_quantity = sVal
-                  row.current_stock = sVal
-                }
+          items.value.forEach((row) => {
+            const matchedStoreItem = productStore.products?.find((p) => p.id === row.product_id)
+            if (matchedStoreItem) {
+              row.available_units = matchedStoreItem.units || []
+              if (!row.current_quantity) {
+                const sVal = parseFloat(
+                  matchedStoreItem.available_quantity ||
+                    matchedStoreItem.current_stock ||
+                    matchedStoreItem.stock ||
+                    0,
+                )
+                row.current_quantity = sVal
+                row.current_stock = sVal
               }
-            })
-          }
+            }
+          })
         }
       } else {
         if (authStore.user) {
           form.value.warehouse_id = authStore.user.warehouse_id || authStore.user.store_id || ''
+          if (authStore.user.department_id) {
+            form.value.department_id = authStore.user.department_id
+          }
         }
         if (form.value.warehouse_id) {
           await productStore.fetchProducts({
@@ -470,7 +487,7 @@ export function usePurchaseIssueFormLogic() {
   })
 
   // =========================================================
-  // 8. تجهيز حمولة الإرسال والحفظ
+  // 8. تجهيز حمولة الإرسال والحفظ (department_id اختياري nullable)
   // =========================================================
   const handleSubmit = async (confirmDirectly = false) => {
     if (!form.value.warehouse_id) {
@@ -582,6 +599,7 @@ export function usePurchaseIssueFormLogic() {
     isEdit,
     form,
     items,
+    departmentsList,
     detailSchema,
     visibleTableSchema,
     isRequisitionLinked,
@@ -606,6 +624,7 @@ export function usePurchaseIssueFormLogic() {
     handleGlobalItemSelect,
     issueStore,
     productStore,
+    departmentStore,
     authStore,
   }
 }

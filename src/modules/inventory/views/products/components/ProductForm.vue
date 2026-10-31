@@ -38,7 +38,7 @@
               label="اسم الصنف / المنتج *"
               :model-value="modelValue.name"
               @update:model-value="updateField('name', $event)"
-              placeholder="مثال: زيت محرك 20W-50، فلتر هواء، خدمة صيانة..."
+              placeholder="مثال: غاز كلور مسال (أسطوانات)، مادة مروبة، خدمة صيانة..."
               required
             />
           </div>
@@ -67,7 +67,7 @@
                     label="كود الصنف (SKU)"
                     :model-value="modelValue.sku"
                     @update:model-value="updateField('sku', $event)"
-                    placeholder="مثال: PRD-1002"
+                    placeholder="مثال: CHL-1002"
                   />
                 </div>
                 <button
@@ -112,12 +112,12 @@
               <div>
                 <h2 class="text-sm font-bold text-text-primary">الوحدة والتسعير المباشر</h2>
                 <p class="text-[11px] text-text-muted">
-                  وحدة القياس الأساسية، سعر الشراء، وسعر البيع للعملاء.
+                  وحدة القياس الأساسية (كجم للغاز)، سعر التكلفة، وسعر البيع إن وجد.
                 </p>
               </div>
             </div>
 
-            <!-- مؤشر هامش الربح المحسوب تلقائياً -->
+            <!-- مؤشر هامش الربح المحسوب تلقائياً في حال الأصناف التجارية -->
             <div
               v-if="(modelValue.can_be_sold ?? true) && Number(baseUnitQuickPrice) > 0"
               class="flex items-center gap-2 px-3 py-1.5 rounded-xl border"
@@ -135,7 +135,7 @@
             </div>
           </div>
 
-          <!-- سطر الوحدة والأسعار الثلاثة المتناسقة -->
+          <!-- سطر الوحدة والأسعار -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <AppDropdown
@@ -145,7 +145,7 @@
                 :options="unitsList"
                 option-label="name"
                 option-value="id"
-                placeholder="اختر الوحدة (قطعة، حبة)..."
+                placeholder="اختر الوحدة (كجم، طن، لتر)..."
                 @update:model-value="updateBaseUnitField('unit_id', $event)"
               />
             </div>
@@ -176,7 +176,7 @@
           <!-- حقل مسح الباركود المباشر للصنف -->
           <div>
             <label class="block text-xs font-medium text-text-secondary mb-1.5">
-              كود الباركود (مسح مباشر عبر القارئ أو كتابة الكود)
+              كود الباركود للصنف (مسح مباشر عبر القارئ أو كتابة الكود)
             </label>
             <div class="flex items-center gap-2">
               <div class="relative flex-1">
@@ -210,7 +210,7 @@
               </button>
             </div>
 
-            <!-- وسوم الباركود الحالية -->
+            <!-- وسوم الباركود المسجلة -->
             <div class="flex flex-wrap gap-1.5 mt-2 min-h-[26px]">
               <span
                 v-for="(bc, bcIdx) in baseUnitCleanBarcodes"
@@ -231,7 +231,8 @@
                 v-if="baseUnitCleanBarcodes.length === 0"
                 class="text-[11px] text-text-muted italic flex items-center gap-1 py-0.5"
               >
-                لا يوجد باركود مسجل حالياً. يمكنك تركه فارغاً أو مسحه لربطه مع قارئ الباركود.
+                لا يوجد باركود عام مسجل. للأصناف المتبعة بالسيريال يتم مسح سيريال كل أسطوانة على
+                حدة.
               </span>
             </div>
           </div>
@@ -247,7 +248,7 @@
             label="الوصف والملاحظات"
             :model-value="modelValue.description"
             @update:model-value="updateField('description', $event)"
-            placeholder="ملاحظات تشغيلية، تفاصيل فنية، أو تعليمات استخدام إضافية..."
+            placeholder="ملاحظات تشغيلية، تعليمات أمان وضغط الغاز، تفاصيل المعالجة..."
           />
         </div>
 
@@ -262,7 +263,7 @@
       </div>
 
       <!-- ========================================================= -->
-      <!-- اللوحة الجانبية (4 أعمدة): الحالة والخصائص التشغيلية -->
+      <!-- اللوحة الجانبية (4 أعمدة): الحالة والخصائص والسياسات -->
       <!-- ========================================================= -->
       <div class="lg:col-span-4 space-y-4">
         <div
@@ -307,7 +308,7 @@
             <div>
               <span class="text-xs font-bold text-text-primary block">صنف متاح للبيع للعملاء</span>
               <span class="text-[11px] text-text-muted block mt-0.5 leading-snug">
-                يظهر الصنف في واجهات نقاط البيع وفواتير المبيعات.
+                يظهر الصنف في واجهات الفواتير ونقاط البيع.
               </span>
             </div>
           </label>
@@ -321,6 +322,30 @@
               :options="productTypeOptions"
               @update:model-value="handleTypeChange"
             />
+          </div>
+
+          <!-- سياسة التتبع المخزني الأساسية (Tracking Type) -->
+          <div class="space-y-1.5 pt-1 border-t border-surface-border/60">
+            <AppDropdown
+              id="sidebar-tracking-type"
+              label="سياسة التتبع المخزني *"
+              :model-value="modelValue.tracking_type || 'none'"
+              :options="trackingTypeOptions"
+              @update:model-value="updateField('tracking_type', $event)"
+            />
+
+            <!-- تلميح فوري لتوضيح سياسة التتبع بالسيريال الوزني -->
+            <div
+              v-if="modelValue.tracking_type === 'by_weight_serial'"
+              class="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/50 text-sky-800 dark:text-sky-300 text-[11px] leading-relaxed"
+            >
+              <div class="font-bold flex items-center gap-1.5 mb-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                <span>نظام أسطوانات الغاز وقراءات الميزان:</span>
+              </div>
+              يتم قيد حركات المخزون والمحاسبة بصافي وزن الغاز الفعلي (كجم)، مع ربط كل أسطوانة برقم
+              سيريال مستقل وأوزان ميزان (فارغ وقائم).
+            </div>
           </div>
         </div>
       </div>
@@ -348,9 +373,17 @@ const quickBarcodeInput = ref('')
 
 const productTypeOptions = [
   { id: 'storable', name: 'منتج مخزني (Storable)' },
-  { id: 'raw_material', name: 'مادة خام / مستلزمات (Raw Material)' },
+  { id: 'raw_material', name: 'مادة خام / مستلزمات تشغيل (Raw Material)' },
   { id: 'composite', name: 'منتج تجميعي (Composite)' },
   { id: 'service', name: 'خدمة / صيانة (Service)' },
+]
+
+// سياسات التتبع المعتمدة في النظام متطابقة مع Enum الباك إند
+const trackingTypeOptions = [
+  { id: 'none', name: 'بدون تتبع (رصيد إجمالي عادي)' },
+  { id: 'by_weight_serial', name: 'تتبع بالسيريال الوزني (أسطوانات غاز الكلور / أوزان ميزان)' },
+  { id: 'by_serial', name: 'تتبع بالسيريال العددي البسيط (1 قطعة = 1 سيريال)' },
+  { id: 'by_batch', name: 'تتبع برقم الدفعة وتاريخ الصلاحية (Batch/Lot)' },
 ]
 
 // تجهيز التصنيفات بالمسار الشجري الكامل
@@ -521,7 +554,7 @@ const handleTypeChange = (newType) => {
 }
 
 const generateSku = () => {
-  const prefix = props.modelValue.type === 'service' ? 'SRV' : 'PRD'
+  const prefix = props.modelValue.type === 'service' ? 'SRV' : 'CHL'
   const randomSuffix = Math.floor(100000 + Math.random() * 900000)
   updateField('sku', `${prefix}-${randomSuffix}`)
 }

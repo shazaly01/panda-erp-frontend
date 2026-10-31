@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePurchaseOrderStore } from '@/modules/purchasing/stores/purchaseOrderStore'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
+import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
+import { useAuthStore } from '@/stores/authStore'
 import { useToast } from 'vue-toastification'
 
 export function usePurchaseOrderFormLogic() {
@@ -12,11 +14,16 @@ export function usePurchaseOrderFormLogic() {
 
   const orderStore = usePurchaseOrderStore()
   const productStore = useProductStore()
+  const departmentStore = useDepartmentStore()
+  const authStore = useAuthStore()
 
   const isEdit = computed(() => !!route.params.id)
   const isFormLoaded = ref(false)
   const isSubmitting = ref(false)
   const activeOrderId = ref(null)
+
+  // ربط مباشر مع القائمة المسطحة الهرمية للأقسام
+  const departmentsList = computed(() => departmentStore.flatDepartments)
 
   // =========================================================
   // 1. نموذج بيانات رأس أمر الشراء
@@ -25,6 +32,7 @@ export function usePurchaseOrderFormLogic() {
     order_number: '',
     supplier_id: '',
     requisition_id: null,
+    department_id: '',
     currency_id: 1,
     exchange_rate: 1.0,
     order_date: new Date().toISOString().substring(0, 10),
@@ -386,10 +394,19 @@ export function usePurchaseOrderFormLogic() {
   // =========================================================
   // 6. تحميل البيانات والحفظ
   // =========================================================
+  const loadDepartments = async () => {
+    if (departmentStore.flatDepartments.length === 0) {
+      await departmentStore.fetchDepartments()
+    }
+  }
+
   onMounted(async () => {
     isFormLoaded.value = false
     try {
-      const startupRequests = [productStore.fetchProducts({ is_active: 1, all: true })]
+      const startupRequests = [
+        productStore.fetchProducts({ is_active: 1, all: true }),
+        loadDepartments(),
+      ]
       if (isEdit.value) {
         startupRequests.push(orderStore.fetchOrder(route.params.id))
       }
@@ -404,6 +421,7 @@ export function usePurchaseOrderFormLogic() {
           order_number: cur.order_number || '',
           supplier_id: cur.supplier_id || '',
           requisition_id: cur.requisition_id || null,
+          department_id: cur.department_id || (cur.requisition?.department_id ?? ''),
           currency_id: cur.currency_id || 1,
           exchange_rate: parseFloat(cur.exchange_rate) || 1.0,
           order_date: cur.order_date
@@ -475,6 +493,9 @@ export function usePurchaseOrderFormLogic() {
           }
         })
       } else if (!isEdit.value) {
+        if (authStore.user?.department_id) {
+          form.value.department_id = authStore.user.department_id
+        }
         items.value = [createEmptyRow()]
       }
     } catch (err) {
@@ -485,7 +506,7 @@ export function usePurchaseOrderFormLogic() {
     }
   })
 
-  // تجهيز حمولة أمر الشراء وإرسال الطلب
+  // تجهيز حمولة أمر الشراء وإرسال الطلب (مع بقاء القسم اختيارياً nullable)
   const handleSubmit = async (confirmDirectly = false) => {
     if (!form.value.supplier_id) {
       toast.error('يجب اختيار المورد أولاً.')
@@ -521,6 +542,7 @@ export function usePurchaseOrderFormLogic() {
     const finalPayload = {
       supplier_id: Number(form.value.supplier_id),
       requisition_id: form.value.requisition_id ? Number(form.value.requisition_id) : null,
+      department_id: form.value.department_id ? Number(form.value.department_id) : null,
       currency_id: Number(form.value.currency_id),
       exchange_rate: parseFloat(form.value.exchange_rate) || 1.0,
       order_date: form.value.order_date,
@@ -599,6 +621,7 @@ export function usePurchaseOrderFormLogic() {
     isEdit,
     form,
     items,
+    departmentsList,
     detailSchema,
     visibleTableSchema,
     isRequisitionLinked,

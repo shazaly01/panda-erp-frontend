@@ -43,6 +43,7 @@
     <!-- 1. منطقة الترويسة الذكية -->
     <BillHeaderForm
       v-model="form"
+      :departments="departmentsList"
       :validation-errors="billStore.validationErrors"
       :is-receipt-linked="isReceiptLinked"
       :is-direct-inventory-purchase="isDirectInventoryPurchase"
@@ -65,7 +66,7 @@
         :decrement-quantity="decrementQuantity"
         :remove-row="removeRow"
         :trigger-add-new-empty-line="triggerAddNewEmptyLine"
-        :select-product-for-row="selectProductForRow"
+        :selectProductForRow="selectProductForRow"
         :handle-global-item-select="handleGlobalItemSelect"
         :is-form-loaded="isFormLoaded"
       />
@@ -157,9 +158,11 @@
         ></span>
         <span>
           {{
-            isDirectInventoryPurchase
-              ? 'الشراء المباشر يقوم بتحديث المخزون وقيد ذمة المورد فورياً عند الترحيل.'
-              : 'الفاتورة المرتبطة بسند استلام تقوم بإقفال وسيط الاستلام وإثبات ذمة المورد.'
+            form.status === 'posted'
+              ? 'تعديل الفاتورة المرحلة سيقوم بتحديث القيد المحاسبي وحركة المخزون تلقائياً في مكانهما.'
+              : isDirectInventoryPurchase
+                ? 'الشراء المباشر يقوم بتحديث المخزون وقيد ذمة المورد فورياً عند الترحيل.'
+                : 'الفاتورة المرتبطة بسند استلام تقوم بإقفال وسيط الاستلام وإثبات ذمة المورد.'
           }}
         </span>
       </div>
@@ -184,9 +187,22 @@
           سداد دفعة مالية بسند صرف
         </AppButton>
 
+        <!-- زر حفظ التعديلات للفاتورة المرحلة -->
+        <AppButton
+          v-if="form.status === 'posted'"
+          type="button"
+          size="sm"
+          :disabled="billStore.loading || !isFormLoaded"
+          @click="handleSubmit(false)"
+          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
+        >
+          <span v-if="billStore.loading">جاري حفظ التعديلات وتحديث القيد والمخزون...</span>
+          <span v-else>حفظ وتحديث الفاتورة</span>
+        </AppButton>
+
         <!-- زر الحفظ كمسودة -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           variant="outline"
           size="sm"
@@ -200,7 +216,7 @@
 
         <!-- زر الحفظ والترحيل المباشر -->
         <AppButton
-          v-if="form.status === 'draft'"
+          v-if="form.status === 'draft' || !form.status"
           type="button"
           size="sm"
           :disabled="billStore.loading || !isFormLoaded"
@@ -233,6 +249,7 @@ const {
   isEdit,
   form,
   items,
+  departmentsList,
   visibleTableSchema,
   isReceiptLinked,
   isDirectInventoryPurchase,
@@ -268,7 +285,7 @@ const {
 
 const formPageTitle = computed(() => {
   if (isEdit.value) {
-    return 'تعديل مسودة فاتورة مشتريات'
+    return form.status === 'posted' ? 'تعديل فاتورة مشتريات مرحلة' : 'تعديل مسودة فاتورة مشتريات'
   }
   if (isReceiptLinked.value) {
     return 'إصدار فاتورة مشتريات مرتبطة بسند استلام مخزني'

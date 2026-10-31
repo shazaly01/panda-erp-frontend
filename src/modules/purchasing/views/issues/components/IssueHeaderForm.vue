@@ -11,7 +11,7 @@
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-gray-300">مسار إذن الصرف:</span>
         <span
-          class="px-3 py-1 text-xs font-black rounded-lg border flex items-center gap-1.5 transition-all duration-300"
+          class="px-2.5 py-0.5 text-xs font-black rounded-lg border flex items-center gap-1.5 transition-all duration-300"
           :class="routeBadgeClass"
         >
           <span
@@ -27,7 +27,7 @@
         class="flex items-center gap-4 text-xs font-mono text-gray-400"
       >
         <div
-          class="flex items-center gap-1.5 bg-[#16171b] px-3 py-1 rounded-lg border border-[#3e414c]"
+          class="flex items-center gap-1.5 bg-[#16171b] px-2.5 py-0.5 rounded-lg border border-[#3e414c]"
         >
           <span class="text-gray-400 text-[11px]">طلب الاحتياج الداخلي:</span>
           <span class="text-sky-400 font-bold">#{{ formData.requisition_id }}</span>
@@ -35,13 +35,13 @@
       </div>
     </div>
 
-    <!-- شبكة الحقول الأساسية: 4 أعمدة متناسقة -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- 1. رقم إذن الصرف التسلسلي (issue_number) - مقفل ومولّد تلقائياً -->
+    <!-- شبكة الحقول الأساسية: 5 أعمدة متناسقة بارتفاع موحد 36px -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
+      <!-- 1. رقم إذن الصرف التسلسلي (issue_number) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300">رقم الإذن</label>
         <div
-          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed overflow-hidden"
         >
           <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,13 +67,13 @@
         </p>
       </div>
 
-      <!-- 2. المستودع المصروف منه (warehouse_id) - إلزامي -->
+      <!-- 2. المستودع المصروف منه (warehouse_id) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300">
           مستودع الصرف <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span
             class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
@@ -87,7 +87,7 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <WarehouseDropdown
               id="issue-warehouse-id"
               v-model="formData.warehouse_id"
@@ -101,18 +101,61 @@
         </p>
       </div>
 
-      <!-- 3. تاريخ الصرف (issue_date) - إلزامي -->
+      <!-- 3. القسم المستفيد مع دعم البحث (department_id) -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-gray-300"> القسم المستفيد </label>
+          <span
+            v-if="isRequisitionLinked && formData.department_id"
+            class="text-[10px] text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800"
+          >
+            محدد من طلب الاحتياج
+          </span>
+        </div>
+
+        <AppDropdown
+          id="issue-department-id"
+          v-model="formData.department_id"
+          :options="departmentOptions"
+          option-label="name"
+          option-value="id"
+          :disabled="isRequisitionLinked && Boolean(formData.department_id)"
+          :show-clear="!(isRequisitionLinked && Boolean(formData.department_id))"
+          :filter="true"
+          filter-placeholder="ابحث عن القسم..."
+          placeholder="اختر القسم المستفيد..."
+          accent-color="orange"
+        >
+          <template #icon>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </template>
+        </AppDropdown>
+
+        <p v-if="getFieldError('department_id')" class="text-rose-400 text-[10px] font-bold pr-1">
+          {{ getFieldError('department_id') }}
+        </p>
+      </div>
+
+      <!-- 4. تاريخ الصرف (issue_date) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300">
           تاريخ الصرف <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <input
             type="date"
             v-model="formData.issue_date"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            style="color-scheme: dark"
+            class="block w-full h-full py-0 pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
           />
           <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,11 +173,11 @@
         </p>
       </div>
 
-      <!-- 4. رقم طلب الاحتياج المرتبط (اختياري) -->
+      <!-- 5. رقم طلب الاحتياج المرتبط (اختياري) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> رقم طلب الاحتياج </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span class="absolute right-3 text-sky-400 pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,15 +205,25 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import WarehouseDropdown from '@/modules/inventory/forms/WarehouseDropdown.vue'
+import AppDropdown from '@/components/ui/AppDropdown.vue'
 
 const formData = defineModel({ type: Object, required: true })
 
 const props = defineProps({
+  departments: { type: Array, default: () => [] },
   validationErrors: { type: Object, default: () => null },
   isRequisitionLinked: { type: Boolean, default: false },
   routeBadgeText: { type: String, default: '' },
   routeBadgeClass: { type: String, default: '' },
+})
+
+const departmentOptions = computed(() => {
+  return props.departments.map((dept) => ({
+    id: dept.id,
+    name: dept.dropdownName || dept.name,
+  }))
 })
 
 const getFieldError = (path) => {
@@ -186,12 +239,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   opacity: 0.6;
 }
 
-select option {
-  background-color: #16171b !important;
-  color: #f8fafc !important;
-}
-
-/* إلغاء الإطار والخلفية للقائمة المنسدلة المدمجة داخل الحاوية المخصصة */
+/* ضبط وتوحيد قائمة مستودع الصرف بارتفاع 36px */
 :deep(.header-dropdown .p-dropdown),
 :deep(.header-dropdown [data-pc-name='dropdown']),
 :deep(.header-dropdown [data-pc-section='root']),
@@ -201,6 +249,8 @@ select option {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  height: 36px !important;
+  min-height: 36px !important;
 }
 
 :deep(.header-dropdown .p-dropdown-label),
@@ -208,7 +258,9 @@ select option {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   color: #ffffff !important;
-  padding-right: 0.25rem !important;
+  padding: 0 0.5rem 0 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 :deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {

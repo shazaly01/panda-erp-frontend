@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePurchaseBillStore } from '@/modules/purchasing/stores/purchaseBillStore'
 import { useProductStore } from '@/modules/inventory/stores/productStore'
+import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from 'vue-toastification'
 
@@ -13,11 +14,15 @@ export function usePurchaseBillFormLogic() {
 
   const billStore = usePurchaseBillStore()
   const productStore = useProductStore()
+  const departmentStore = useDepartmentStore()
   const authStore = useAuthStore()
 
   const isEdit = computed(() => !!route.params.id)
   const isFormLoaded = ref(false)
   const activeBillId = ref(null)
+
+  // ربط مباشر مع القائمة المسطحة الهرمية للأقسام
+  const departmentsList = computed(() => departmentStore.flatDepartments)
 
   // =========================================================
   // 0. إدارة الإفصاح التدريجي للأعمدة (Progressive Disclosure)
@@ -41,6 +46,7 @@ export function usePurchaseBillFormLogic() {
     supplier_bill_number: '',
     supplier_id: '',
     warehouse_id: '',
+    department_id: '',
     purchase_order_id: null,
     receipt_id: null,
     currency_id: 1,
@@ -533,117 +539,134 @@ export function usePurchaseBillFormLogic() {
   // =========================================================
   // 8. تحميل البيانات والحفظ
   // =========================================================
+  const loadDepartments = async () => {
+    if (departmentStore.flatDepartments.length === 0) {
+      await departmentStore.fetchDepartments()
+    }
+  }
+
   onMounted(async () => {
     isFormLoaded.value = false
     try {
+      const startupRequests = [loadDepartments()]
+
       if (isEdit.value) {
         activeBillId.value = route.params.id
-        await billStore.fetchBill(route.params.id)
-        if (billStore.currentBill) {
-          const cur = billStore.currentBill
+        startupRequests.push(billStore.fetchBill(route.params.id))
+      }
 
-          form.value = {
-            bill_number: cur.bill_number || '',
-            supplier_bill_number: cur.supplier_bill_number || '',
-            supplier_id: cur.supplier_id || '',
-            warehouse_id: cur.warehouse_id || '',
-            purchase_order_id: cur.purchase_order_id || null,
-            receipt_id: cur.receipt_id || null,
-            currency_id: cur.currency_id || 1,
-            exchange_rate: parseFloat(cur.exchange_rate) || 1.0,
-            bill_date: cur.bill_date
-              ? cur.bill_date.substring(0, 10)
-              : new Date().toISOString().substring(0, 10),
-            due_date: cur.due_date
-              ? cur.due_date.substring(0, 10)
-              : new Date().toISOString().substring(0, 10),
-            status: cur.status?.value || cur.status || 'draft',
-            discount_type: cur.discount_type || 'fixed',
-            discount_value: parseFloat(cur.discount_value) || 0,
-            shipping_cost: parseFloat(cur.shipping_cost) || 0,
-            notes: cur.notes || '',
-            paid_amount: parseFloat(cur.paid_amount) || 0,
-            remaining_amount: parseFloat(cur.remaining_amount) || 0,
+      await Promise.all(startupRequests)
+
+      if (isEdit.value && billStore.currentBill) {
+        const cur = billStore.currentBill
+
+        form.value = {
+          bill_number: cur.bill_number || '',
+          supplier_bill_number: cur.supplier_bill_number || '',
+          supplier_id: cur.supplier_id || '',
+          warehouse_id: cur.warehouse_id || '',
+          department_id:
+            cur.department_id ||
+            (cur.purchase_order?.department_id ?? cur.receipt?.department_id ?? ''),
+          purchase_order_id: cur.purchase_order_id || null,
+          receipt_id: cur.receipt_id || null,
+          currency_id: cur.currency_id || 1,
+          exchange_rate: parseFloat(cur.exchange_rate) || 1.0,
+          bill_date: cur.bill_date
+            ? cur.bill_date.substring(0, 10)
+            : new Date().toISOString().substring(0, 10),
+          due_date: cur.due_date
+            ? cur.due_date.substring(0, 10)
+            : new Date().toISOString().substring(0, 10),
+          status: cur.status?.value || cur.status || 'draft',
+          discount_type: cur.discount_type || 'fixed',
+          discount_value: parseFloat(cur.discount_value) || 0,
+          shipping_cost: parseFloat(cur.shipping_cost) || 0,
+          notes: cur.notes || '',
+          paid_amount: parseFloat(cur.paid_amount) || 0,
+          remaining_amount: parseFloat(cur.remaining_amount) || 0,
+        }
+
+        items.value = (cur.items || []).map((it) => {
+          const qty = parseFloat(it.quantity) || 1
+          const price = parseFloat(it.unit_price) || 0
+          const discount = parseFloat(it.discount_percentage) || 0
+          const tax = parseFloat(it.tax_rate) !== undefined ? parseFloat(it.tax_rate) : 15
+          const gross = qty * price
+          const discAmount = gross * (discount / 100)
+          const lineSub = gross - discAmount
+          const lineTotal = lineSub + lineSub * (tax / 100)
+
+          const stockVal = parseFloat(
+            it.current_quantity ||
+              it.product?.available_quantity ||
+              it.product?.current_stock ||
+              it.product?.stock ||
+              0,
+          )
+
+          return {
+            id: it.id,
+            product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
+            product_name: it.product?.name || it.product_name || '',
+            product_id: it.product_id,
+            product_unit_id: it.product_unit_id,
+            unit_name: it.product_unit?.unit?.name || it.unit_name || '',
+            purchase_order_item_id: it.purchase_order_item_id || null,
+            receipt_item_id: it.receipt_item_id || null,
+            current_quantity: stockVal,
+            quantity: qty,
+            unit_price: price,
+            discount_percentage: discount,
+            tax_rate: tax,
+            subtotal: parseFloat(it.subtotal) || parseFloat(lineSub.toFixed(4)),
+            total: parseFloat(it.total) || parseFloat(lineTotal.toFixed(4)),
+            available_units: it.product?.units || [],
+            notes: it.notes || '',
           }
+        })
 
-          items.value = (cur.items || []).map((it) => {
-            const qty = parseFloat(it.quantity) || 1
-            const price = parseFloat(it.unit_price) || 0
-            const discount = parseFloat(it.discount_percentage) || 0
-            const tax = parseFloat(it.tax_rate) !== undefined ? parseFloat(it.tax_rate) : 15
-            const gross = qty * price
-            const discAmount = gross * (discount / 100)
-            const lineSub = gross - discAmount
-            const lineTotal = lineSub + lineSub * (tax / 100)
+        // فحص ذكي: إذا كانت الفاتورة تحتوي على خصم بنود أو ضريبة مخصصة، نظهر الأعمدة تلقائياً
+        const hasAnyLineDiscount = items.value.some((row) => row.discount_percentage > 0)
+        if (hasAnyLineDiscount) {
+          showLineDiscount.value = true
+        }
 
-            const stockVal = parseFloat(
-              it.current_quantity ||
-                it.product?.available_quantity ||
-                it.product?.current_stock ||
-                it.product?.stock ||
-                0,
-            )
+        const hasAnyCustomLineTax = items.value.some(
+          (row) => row.tax_rate !== undefined && row.tax_rate !== 15,
+        )
+        if (hasAnyCustomLineTax) {
+          showLineTax.value = true
+        }
 
-            return {
-              id: it.id,
-              product_id_display: it.product_id ? `PRD-${it.product_id}` : '',
-              product_name: it.product?.name || it.product_name || '',
-              product_id: it.product_id,
-              product_unit_id: it.product_unit_id,
-              unit_name: it.product_unit?.unit?.name || it.unit_name || '',
-              purchase_order_item_id: it.purchase_order_item_id || null,
-              receipt_item_id: it.receipt_item_id || null,
-              current_quantity: stockVal,
-              quantity: qty,
-              unit_price: price,
-              discount_percentage: discount,
-              tax_rate: tax,
-              subtotal: parseFloat(it.subtotal) || parseFloat(lineSub.toFixed(4)),
-              total: parseFloat(it.total) || parseFloat(lineTotal.toFixed(4)),
-              available_units: it.product?.units || [],
-              notes: it.notes || '',
-            }
+        if (cur.warehouse_id) {
+          await productStore.fetchProducts({
+            is_active: 1,
+            store_id: cur.warehouse_id,
+            all: true,
           })
 
-          // فحص ذكي: إذا كانت الفاتورة تحتوي على خصم بنود أو ضريبة مخصصة، نظهر الأعمدة تلقائياً
-          const hasAnyLineDiscount = items.value.some((row) => row.discount_percentage > 0)
-          if (hasAnyLineDiscount) {
-            showLineDiscount.value = true
-          }
-
-          const hasAnyCustomLineTax = items.value.some(
-            (row) => row.tax_rate !== undefined && row.tax_rate !== 15,
-          )
-          if (hasAnyCustomLineTax) {
-            showLineTax.value = true
-          }
-
-          if (cur.warehouse_id) {
-            await productStore.fetchProducts({
-              is_active: 1,
-              store_id: cur.warehouse_id,
-              all: true,
-            })
-
-            items.value.forEach((row) => {
-              const matchedStoreItem = productStore.products?.find((p) => p.id === row.product_id)
-              if (matchedStoreItem) {
-                row.available_units = matchedStoreItem.units || []
-                if (row.current_quantity === 0) {
-                  row.current_quantity = parseFloat(
-                    matchedStoreItem.available_quantity ||
-                      matchedStoreItem.current_stock ||
-                      matchedStoreItem.stock ||
-                      0,
-                  )
-                }
+          items.value.forEach((row) => {
+            const matchedStoreItem = productStore.products?.find((p) => p.id === row.product_id)
+            if (matchedStoreItem) {
+              row.available_units = matchedStoreItem.units || []
+              if (row.current_quantity === 0) {
+                row.current_quantity = parseFloat(
+                  matchedStoreItem.available_quantity ||
+                    matchedStoreItem.current_stock ||
+                    matchedStoreItem.stock ||
+                    0,
+                )
               }
-            })
-          }
+            }
+          })
         }
       } else {
         if (authStore.user) {
           form.value.warehouse_id = authStore.user.warehouse_id || authStore.user.store_id || ''
+          if (authStore.user.department_id) {
+            form.value.department_id = authStore.user.department_id
+          }
         }
         if (form.value.warehouse_id) {
           await productStore.fetchProducts({
@@ -719,6 +742,7 @@ export function usePurchaseBillFormLogic() {
     const finalPayload = {
       supplier_id: Number(form.value.supplier_id),
       warehouse_id: form.value.warehouse_id ? Number(form.value.warehouse_id) : null,
+      department_id: form.value.department_id ? Number(form.value.department_id) : null,
       purchase_order_id: form.value.purchase_order_id ? Number(form.value.purchase_order_id) : null,
       receipt_id: form.value.receipt_id ? Number(form.value.receipt_id) : null,
       currency_id: Number(form.value.currency_id),
@@ -807,6 +831,7 @@ export function usePurchaseBillFormLogic() {
     isEdit,
     form,
     items,
+    departmentsList,
     detailSchema,
     visibleTableSchema,
     // إدارة الإفصاح التدريجي
@@ -851,5 +876,6 @@ export function usePurchaseBillFormLogic() {
     handleGlobalItemSelect,
     billStore,
     productStore,
+    departmentStore,
   }
 }

@@ -115,9 +115,9 @@
             </svg>
           </button>
 
-          <!-- زر تعديل الإذن: للمسودات فقط -->
+          <!-- زر تعديل الإذن: متاح للمسودات والأذونات المؤكدة -->
           <button
-            v-if="isDraft(item)"
+            v-if="canEdit(item)"
             @click="$emit('edit-issue', item)"
             class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
             title="تعديل بيانات إذن الصرف"
@@ -192,10 +192,16 @@ const isDraft = (item) => {
   return status === 'draft'
 }
 
+const canEdit = (item) => {
+  const status = item.status?.value || item.status
+  return status === 'draft' || status === 'confirmed' || status === 'issued'
+}
+
 const getStatusLabel = (status) => {
   const map = {
     draft: 'مسودة قيد التجهيز',
     confirmed: 'تم الصرف والخصم',
+    issued: 'تم الصرف والخصم',
     cancelled: 'إذن ملغي',
   }
   return map[status] || status || 'غير محدد'
@@ -205,6 +211,7 @@ const getStatusBadgeClass = (status) => {
   const map = {
     draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
     confirmed: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
+    issued: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
     cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
   }
   return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'

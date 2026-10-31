@@ -4,14 +4,14 @@
     class="p-4 sm:p-5 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl space-y-4 text-right font-sans"
     dir="rtl"
   >
-    <!-- شريط التوجيه الذكي ومسار الاستلام المخزني -->
+    <!-- شريط التوجيه ومسار الاستلام المخزني -->
     <div
       class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-surface-border/60"
     >
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-gray-300">مسار الاستلام:</span>
         <span
-          class="px-3 py-1 text-xs font-black rounded-lg border flex items-center gap-1.5 transition-all duration-300"
+          class="px-2.5 py-0.5 text-xs font-black rounded-lg border flex items-center gap-1.5 transition-all duration-300"
           :class="routeBadgeClass"
         >
           <span
@@ -28,7 +28,7 @@
         class="flex items-center gap-4 text-xs font-mono text-gray-400"
       >
         <div
-          class="flex items-center gap-1.5 bg-[#16171b] px-3 py-1 rounded-lg border border-[#3e414c]"
+          class="flex items-center gap-1.5 bg-[#16171b] px-2.5 py-0.5 rounded-lg border border-[#3e414c]"
         >
           <span class="text-gray-400 text-[11px]">مستند لأمر شراء:</span>
           <span class="text-[#e05e2b] font-bold">#{{ formData.purchase_order_id }}</span>
@@ -36,13 +36,13 @@
       </div>
     </div>
 
-    <!-- الشبكة الأساسية للحقول اللوجستية -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- الشبكة الأساسية للحقول (بارتفاع موحد 36px) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
       <!-- 1. رقم سند الاستلام التسلسلي (receipt_number) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> رقم سند الاستلام </label>
         <div
-          class="relative w-full h-11 bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#121316] border border-[#3e414c] rounded-xl flex items-center shadow-inner cursor-not-allowed overflow-hidden"
         >
           <span class="absolute right-3 text-sky-400 pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@
           المستودع المستلم <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span
             class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
@@ -88,7 +88,7 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <WarehouseDropdown
               id="receipt-warehouse-id"
               v-model="formData.warehouse_id"
@@ -108,7 +108,7 @@
           المورد / جهة التوريد <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10 flex items-center">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +120,7 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <SupplierDropdown
               id="receipt-supplier-id"
               v-model="formData.supplier_id"
@@ -135,18 +135,61 @@
         </p>
       </div>
 
-      <!-- 4. تاريخ الاستلام المخزني (receipt_date) -->
+      <!-- 4. القسم المستفيد / الطالب (department_id) مع دعم البحث -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-gray-300"> القسم المستفيد </label>
+          <span
+            v-if="isOrderLinked && formData.department_id"
+            class="text-[10px] text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800"
+          >
+            محدد من أمر الشراء
+          </span>
+        </div>
+
+        <AppDropdown
+          id="receipt-department-id"
+          v-model="formData.department_id"
+          :options="departmentOptions"
+          option-label="name"
+          option-value="id"
+          :disabled="isOrderLinked && Boolean(formData.department_id)"
+          :show-clear="!(isOrderLinked && Boolean(formData.department_id))"
+          :filter="true"
+          filter-placeholder="ابحث عن القسم..."
+          placeholder="اختر القسم المستفيد..."
+          accent-color="orange"
+        >
+          <template #icon>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </template>
+        </AppDropdown>
+
+        <p v-if="getFieldError('department_id')" class="text-rose-400 text-[10px] font-bold pr-1">
+          {{ getFieldError('department_id') }}
+        </p>
+      </div>
+
+      <!-- 5. تاريخ الاستلام المخزني (receipt_date) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300">
           تاريخ الاستلام <span class="text-rose-500">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <input
             type="date"
             v-model="formData.receipt_date"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            style="color-scheme: dark"
+            class="block w-full h-full py-0 pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
           />
           <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,11 +207,11 @@
         </p>
       </div>
 
-      <!-- 5. رقم إذن تسليم المورد (supplier_delivery_note) -->
+      <!-- 6. رقم إذن تسليم المورد (supplier_delivery_note) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> رقم إذن تسليم المورد </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,11 +239,11 @@
         </p>
       </div>
 
-      <!-- 6. رقم بوليصة الشحن (waybill_number) -->
+      <!-- 7. رقم بوليصة الشحن (waybill_number) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-bold text-gray-300"> رقم بوليصة الشحن / الناقل </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 min-h-[36px] max-h-[36px] bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30 overflow-hidden"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,16 +272,26 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import SupplierDropdown from '@/modules/purchasing/forms/SupplierDropdown.vue'
 import WarehouseDropdown from '@/modules/inventory/forms/WarehouseDropdown.vue'
+import AppDropdown from '@/components/ui/AppDropdown.vue'
 
 const formData = defineModel({ type: Object, required: true })
 
 const props = defineProps({
+  departments: { type: Array, default: () => [] },
   validationErrors: { type: Object, default: () => null },
   isOrderLinked: { type: Boolean, default: false },
   routeBadgeText: { type: String, default: '' },
   routeBadgeClass: { type: String, default: '' },
+})
+
+const departmentOptions = computed(() => {
+  return props.departments.map((dept) => ({
+    id: dept.id,
+    name: dept.dropdownName || dept.name,
+  }))
 })
 
 const getFieldError = (path) => {
@@ -254,12 +307,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   opacity: 0.6;
 }
 
-select option {
-  background-color: #16171b !important;
-  color: #f8fafc !important;
-}
-
-/* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
+/* ضبط وتوحيد القوائم المنسدلة المدمجة داخل الحاويات المخصصة بارتفاع 36px */
 :deep(.header-dropdown .p-dropdown),
 :deep(.header-dropdown [data-pc-name='dropdown']),
 :deep(.header-dropdown [data-pc-section='root']),
@@ -269,6 +317,8 @@ select option {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  height: 36px !important;
+  min-height: 36px !important;
 }
 
 :deep(.header-dropdown .p-dropdown-label),
@@ -276,7 +326,9 @@ select option {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   color: #ffffff !important;
-  padding-right: 0.25rem !important;
+  padding: 0 0.5rem 0 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 :deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
