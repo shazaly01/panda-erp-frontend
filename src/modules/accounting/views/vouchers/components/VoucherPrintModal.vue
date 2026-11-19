@@ -135,21 +135,21 @@
           <tbody>
             <!-- الأسطر المسجلة -->
             <tr v-for="(detail, idx) in normalizedDetails" :key="'item-' + idx">
-              <td class="col-code">{{ detail.description || '---' }}</td>
+              <td class="col-code">{{ voucherDescriptionCode }}</td>
               <td class="col-desc">{{ detail.account_name || '---' }}</td>
               <td class="col-amount">{{ formatAmount(detail.amount) }}</td>
             </tr>
 
             <!-- أسطر فارغة تكميلية لمطابقة الدفتر الورقي -->
             <tr v-for="emptyIdx in emptyRowsCount" :key="'empty-' + emptyIdx" class="empty-row">
-              <td class="col-code">&nbsp;</td>
-              <td class="col-desc">&nbsp;</td>
-              <td class="col-amount">&nbsp;</td>
+              <td class="col-code"> </td>
+              <td class="col-desc"> </td>
+              <td class="col-amount"> </td>
             </tr>
 
             <!-- سطر الإجمالي -->
             <tr class="total-row">
-              <td class="col-code border-none">&nbsp;</td>
+              <td class="col-code border-none"> </td>
               <td class="col-desc total-label">Total</td>
               <td class="col-amount total-val">{{ formatAmount(totalAmount) }}</td>
             </tr>
@@ -176,13 +176,13 @@
         <div v-if="!isBank" class="sig-block">
           <span class="sig-label">Checked by:</span>
           <div class="sig-space"></div>
-          <div class="sig-user-name">&nbsp;</div>
+          <div class="sig-user-name"> </div>
         </div>
 
         <div class="sig-block">
           <span class="sig-label">{{ isBank ? 'Approved By:' : 'Approved by:' }}</span>
           <div class="sig-space"></div>
-          <div class="sig-user-name">&nbsp;</div>
+          <div class="sig-user-name"> </div>
         </div>
 
         <div class="sig-block">
@@ -190,7 +190,7 @@
             isReceipt ? 'Received By / Cashier:' : isBank ? 'Received By:' : 'Received BY:'
           }}</span>
           <div class="sig-space"></div>
-          <div class="sig-user-name">&nbsp;</div>
+          <div class="sig-user-name"> </div>
         </div>
       </div>
 
@@ -310,6 +310,14 @@ const chequeNumber = computed(() => {
     voucherData.value?.reference_number ||
     '---'
   )
+})
+
+// استخراج الكود فقط من بداية البيان العام للسند لعرضه في عمود A/C CODE
+const voucherDescriptionCode = computed(() => {
+  const desc = String(voucherData.value?.description || '').trim()
+  if (!desc) return '---'
+  const codeMatch = desc.match(/^([A-Za-z0-9\u0660-\u0669]+(?:[./_-][A-Za-z0-9\u0660-\u0669]+)*)/)
+  return codeMatch ? codeMatch[1] : '---'
 })
 
 const totalAmount = computed(() => {

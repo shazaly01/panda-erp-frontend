@@ -252,12 +252,13 @@ const formatDate = (dateStr) => {
 }
 
 const getAccountCode = (voucher) => {
-  if (!voucher) return '---'
-  const detailDesc =
-    Array.isArray(voucher.details) && voucher.details.length > 0
-      ? voucher.details[0]?.description
-      : null
-  return detailDesc || voucher.description || '---'
+  if (!voucher || !voucher.description) return '---'
+  const desc = String(voucher.description).trim()
+  if (!desc) return '---'
+
+  // استخراج الكود من بداية البيان العام للسند فقط دون بقية النص
+  const codeMatch = desc.match(/^([A-Za-z0-9\u0660-\u0669]+(?:[./_-][A-Za-z0-9\u0660-\u0669]+)*)/)
+  return codeMatch ? codeMatch[1] : '---'
 }
 
 const executePrint = () => {
