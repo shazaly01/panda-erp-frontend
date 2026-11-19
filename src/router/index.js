@@ -34,7 +34,7 @@ import DashboardView from '@/views/dashboard/DashboardView.vue'
 // ==============================================================
 // 🌟 استيراد مسارات الموديولات (المحاسبة، الموارد البشرية، المخازن، المشتريات، المبيعات)
 // ==============================================================
-import accountingRoutes from '@/modules/accounting/router'
+import accountingRoutes, { accountingStandaloneRoutes } from '@/modules/accounting/router'
 import { hrDashboardRoutes, hrPublicRoutes } from '@/modules/hr/router'
 import inventoryRoutes from '@/modules/inventory/router'
 import purchasingRoutes from '@/modules/purchasing/router'
@@ -139,6 +139,7 @@ const routes = [
     ],
   },
 
+  ...accountingStandaloneRoutes,
   ...salesPosStandaloneRoutes,
   ...hrPublicRoutes,
   { path: '/:pathMatch(.*)*', redirect: '/' },

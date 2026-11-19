@@ -14,8 +14,9 @@
       </div>
       <div v-if="reportData" class="no-print">
         <button
-          @click="window.print()"
-          class="px-6 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-all font-bold border border-slate-700 flex items-center gap-2"
+          type="button"
+          @click="printReport"
+          class="px-6 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-all font-bold border border-slate-700 flex items-center gap-2 cursor-pointer"
         >
           <PrinterIcon class="w-5 h-5" />
           طباعة التقرير
@@ -316,6 +317,30 @@ const loadReport = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// دالة فتح صفحة الطباعة المستقلة ثنائية اللغة
+const printReport = () => {
+  if (!selectedAccount.value || !reportData.value) return
+
+  const payload = {
+    account: {
+      id: selectedAccount.value.id,
+      name: selectedAccount.value.name,
+      code: selectedAccount.value.code,
+    },
+    filters: {
+      from_date: filters.from_date,
+      to_date: filters.to_date,
+      include_drafts: Boolean(filters.include_drafts),
+    },
+    reportData: reportData.value,
+  }
+
+  sessionStorage.setItem('printAccountStatementPayload', JSON.stringify(payload))
+
+  const routeData = router.resolve({ name: 'account-statement.print' })
+  window.open(routeData.href, '_blank')
 }
 
 // [جديد] جلب قائمة الحسابات عند التشغيل لتمكين البحث

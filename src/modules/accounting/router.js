@@ -23,6 +23,7 @@ const JournalEntryFormPage = () => import('./views/journal-entries/JournalEntryF
 
 // --- استيراد شاشات التقارير ---
 const AccountStatement = () => import('./views/reports/AccountStatement.vue')
+const AccountStatementPrint = () => import('./views/reports/AccountStatementPrint.vue')
 const TrialBalance = () => import('./views/reports/TrialBalance.vue')
 const IncomeStatement = () => import('./views/reports/IncomeStatement.vue')
 const BalanceSheet = () => import('./views/reports/BalanceSheet.vue')
@@ -30,6 +31,21 @@ const BalanceSheet = () => import('./views/reports/BalanceSheet.vue')
 // --- استيراد شاشات الموازنات التقديرية ---
 const BudgetsList = () => import('./views/budgets/BudgetsList.vue')
 const BudgetBuilderView = () => import('./views/budgets/BudgetBuilderView.vue')
+
+// ==========================================
+// مسارات الطباعة المستقلة لموديول المحاسبة (تعمل خارج AppLayout)
+// ==========================================
+export const accountingStandaloneRoutes = [
+  {
+    path: '/accounting/reports/account-statement/print',
+    name: 'account-statement.print',
+    component: AccountStatementPrint,
+    meta: {
+      requiresAuth: true,
+      permission: 'report.statement.view',
+    },
+  },
+]
 
 export default [
   {
