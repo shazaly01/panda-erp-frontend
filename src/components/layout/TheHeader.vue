@@ -1,26 +1,30 @@
 <!--src/components/layout/TheHeader.vue-->
 <template>
   <header
-    class="flex h-16 items-center justify-between bg-surface-section border-b border-surface-border px-4 sm:px-6 lg:px-8 flex-shrink-0 transition-colors duration-200"
+    class="flex h-16 items-center justify-between bg-surface-section border-b border-surface-border px-2.5 sm:px-6 lg:px-8 gap-1.5 sm:gap-3 flex-shrink-0 transition-colors duration-200"
   >
     <!-- زر فتح القائمة على الشاشات الصغيرة -->
     <button
       @click="$emit('open-sidebar')"
-      class="lg:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-ground transition-colors cursor-pointer"
+      class="lg:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-ground transition-colors cursor-pointer shrink-0"
       aria-label="فتح القائمة"
     >
       <Bars3Icon class="h-6 w-6" />
     </button>
 
     <!-- أزرار التبديل بين موديولات الـ ERP -->
-    <div class="flex-1 flex justify-center gap-2 sm:gap-4 px-4 overflow-x-auto">
+    <nav
+      aria-label="أقسام النظام"
+      class="flex-1 min-w-0 flex items-center justify-start lg:justify-center gap-1.5 sm:gap-3 px-1 sm:px-4 overflow-x-auto no-scrollbar scroll-smooth"
+    >
       <button
+        :ref="(el) => setModuleRef('accounting', el)"
         @click="appStore.setActiveModule('accounting')"
         :class="[
           appStore.activeModule === 'accounting'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
             : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer',
+          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
         ]"
       >
         <BanknotesIcon class="w-5 h-5 hidden sm:block" />
@@ -28,12 +32,13 @@
       </button>
 
       <button
+        :ref="(el) => setModuleRef('sales', el)"
         @click="appStore.setActiveModule('sales')"
         :class="[
           appStore.activeModule === 'sales'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
             : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer',
+          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
         ]"
       >
         <ReceiptPercentIcon class="w-5 h-5 hidden sm:block" />
@@ -41,12 +46,13 @@
       </button>
 
       <button
+        :ref="(el) => setModuleRef('purchasing', el)"
         @click="appStore.setActiveModule('purchasing')"
         :class="[
           appStore.activeModule === 'purchasing'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
             : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer',
+          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
         ]"
       >
         <ShoppingCartIcon class="w-5 h-5 hidden sm:block" />
@@ -54,12 +60,13 @@
       </button>
 
       <button
+        :ref="(el) => setModuleRef('inventory', el)"
         @click="appStore.setActiveModule('inventory')"
         :class="[
           appStore.activeModule === 'inventory'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
             : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer',
+          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
         ]"
       >
         <CubeIcon class="w-5 h-5 hidden sm:block" />
@@ -67,21 +74,22 @@
       </button>
 
       <button
+        :ref="(el) => setModuleRef('hr', el)"
         @click="appStore.setActiveModule('hr')"
         :class="[
           appStore.activeModule === 'hr'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
             : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer',
+          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
         ]"
       >
         <UserGroupIcon class="w-5 h-5 hidden sm:block" />
         <span>الموارد البشرية</span>
       </button>
-    </div>
+    </nav>
 
     <!-- عناصر التحكم ومعلومات المستخدم -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
       <!-- زر التبديل بين الوضع الفاتح والداكن -->
       <button
         @click="themeStore.toggleTheme"
@@ -117,6 +125,7 @@
 </template>
 
 <script setup>
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useAppStore } from '@/stores/appStore'
 import { useThemeStore } from '@/stores/themeStore'
@@ -135,4 +144,37 @@ defineEmits(['open-sidebar'])
 const authStore = useAuthStore()
 const appStore = useAppStore()
 const themeStore = useThemeStore()
+
+const moduleRefs = ref({})
+
+const setModuleRef = (key, el) => {
+  if (el) {
+    moduleRefs.value[key] = el
+  }
+}
+
+const scrollToActiveModule = async (smooth = true) => {
+  await nextTick()
+  const activeEl = moduleRefs.value[appStore.activeModule]
+  if (activeEl && typeof activeEl.scrollIntoView === 'function') {
+    activeEl.scrollIntoView({
+      behavior: smooth ? 'smooth' : 'auto',
+      block: 'nearest',
+      inline: 'center',
+    })
+  }
+}
+
+watch(
+  () => appStore.activeModule,
+  () => {
+    scrollToActiveModule(true)
+  },
+)
+
+onMounted(() => {
+  setTimeout(() => {
+    scrollToActiveModule(false)
+  }, 60)
+})
 </script>

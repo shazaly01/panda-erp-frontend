@@ -509,3 +509,15 @@ html:not(.dark) .bg-primary:hover {
 .animate-qty-pop {
   animation: invoiceQtyPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* =========================================================
+   4. إخفاء شريط التمرير مع إبقاء التمرير باللمس والفأرة فعالاً
+   ========================================================= */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
