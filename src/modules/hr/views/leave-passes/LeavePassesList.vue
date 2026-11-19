@@ -1,15 +1,26 @@
+<!-- src/modules/hr/views/leave-passes/LeavePassesList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">أذونات الخروج المؤقت</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إصدار وإدارة أذونات الخروج المؤقت للموظفين أثناء ساعات الدوام الرسمي وتوثيق الحركات
-          اللحظية للبوابة.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>أذونات الخروج المؤقت</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
+
       <AppButton
         v-if="authStore.can('hr_leave_passes.create')"
+        size="sm"
         @click="openCreateModal"
         icon="plus"
       >
@@ -17,6 +28,7 @@
       </AppButton>
     </div>
 
+    <!-- شريط البحث والفلترة -->
     <LeavePassesFilter
       v-model:searchQuery="searchQuery"
       v-model:statusFilter="statusFilter"
@@ -26,6 +38,7 @@
       @update:dateFilter="handlePageChange(1)"
     />
 
+    <!-- جدول بيانات أذونات الخروج -->
     <LeavePassesTable
       :leave-passes="leavePasses"
       :pagination="pagination"
@@ -35,6 +48,7 @@
       @delete="openDeleteDialog"
     />
 
+    <!-- نافذة إصدار / تعديل إذن الخروج -->
     <LeavePassModal
       v-if="isModalOpen"
       v-model="isModalOpen"
@@ -42,6 +56,7 @@
       @saved="onLeavePassSaved"
     />
 
+    <!-- نافذة تأكيد الإلغاء -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد إلغاء إذن الخروج"
@@ -76,12 +91,11 @@ const { leavePasses, pagination, loading } = storeToRefs(leavePassStore)
 // -- الفلاتر والبحث اللحظي --
 const searchQuery = ref('')
 const statusFilter = ref('')
-const dateFilter = ref('') // تعريف المتغير الموحد لتاريخ التصفية
+const dateFilter = ref('')
 let searchTimeout = null
 
 const onSearch = () => {
   clearTimeout(searchTimeout)
-  // تأخير البحث بمقدار 500 ملي ثانية لتخفيف الضغط على السيرفر (Debounce)
   searchTimeout = setTimeout(() => {
     handlePageChange(1)
   }, 500)
@@ -93,7 +107,7 @@ const handlePageChange = async (page = 1) => {
     page,
     search: searchQuery.value,
     status: statusFilter.value,
-    date: dateFilter.value, // توجيه تاريخ الفلترة للباكيند ليطابق فحص المتحكم $request->date
+    date: dateFilter.value,
   }
 
   try {
@@ -117,9 +131,8 @@ const openCreateModal = () => {
 }
 
 const openEditModal = (leavePass) => {
-  // حماية: لا يمكن تعديل إذن تم استغلاله حركياً بالخروج الفعلي
   if (leavePass.status === 'out' || leavePass.status === 'returned') {
-    toast.warning('لا يمكن تعديل إذن خروج تم استخدمه وتوثيقه عند البوابة.')
+    toast.warning('لا يمكن تعديل إذن خروج تم استخدامه وتوثيقه عند البوابة.')
     return
   }
   leavePassToEdit.value = leavePass
@@ -127,7 +140,6 @@ const openEditModal = (leavePass) => {
 }
 
 const onLeavePassSaved = () => {
-  // المزامنة التلقائية والبقاء في نفس الصفحة الحالية بعد الحفظ
   handlePageChange(pagination.value?.current_page || 1)
 }
 
@@ -136,7 +148,6 @@ const isDeleteDialogOpen = ref(false)
 const leavePassToDelete = ref(null)
 
 const openDeleteDialog = (leavePass) => {
-  // حماية جنائية: منع حذف الأذونات التي دخلت حيز التنفيذ الفعلي لحماية سلامة التقارير
   if (leavePass.status === 'out' || leavePass.status === 'returned') {
     toast.warning('حماية أمنية: لا يمكن إلغاء إذن خروج مسجل كحركة فعلية في المنشأة.')
     return
@@ -152,7 +163,6 @@ const confirmDelete = async () => {
     await leavePassStore.deleteLeavePass(leavePassToDelete.value.id)
     toast.success('تم إلغاء وحذف إذن الخروج بنجاح.')
 
-    // حساب الصفحة المستهدفة في حال حذف العنصر الأخير بالصفحة الحالية
     const targetPage =
       leavePasses.value.length === 1 && pagination.value?.current_page > 1
         ? pagination.value.current_page - 1

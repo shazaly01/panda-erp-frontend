@@ -1,64 +1,74 @@
+<!-- src/modules/hr/views/pay-periods/components/PayPeriodsTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="periods" :is-loading="loading">
+      <!-- 1. اسم الفترة -->
       <template #cell-name="{ item }">
-        <div class="flex flex-col gap-1 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex flex-col items-start gap-0.5 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.name }}
           </span>
-          <span class="text-[10px] text-text-muted">
-            تاريخ التوليد: {{ item.created_at?.split(' ')[0] || '---' }}
+          <span class="text-[11px] text-text-muted">
+            تاريخ التوليد:
+            <span class="font-mono font-semibold text-text-secondary">
+              {{ item.created_at?.split(' ')[0] || '---' }}
+            </span>
           </span>
         </div>
       </template>
 
+      <!-- 2. مجموعة الدفع -->
       <template #cell-group="{ item }">
-        <div class="flex flex-col">
-          <span class="text-sm font-medium text-primary">
+        <div class="flex flex-col items-start gap-0.5 text-right" dir="rtl">
+          <AppBadge variant="primary" size="xs">
             {{ item.pay_group?.name || '---' }}
-          </span>
-          <span class="text-[10px] text-text-muted"> دورة الصرف المرتبطة </span>
+          </AppBadge>
+          <span class="text-[10px] text-text-muted">دورة الصرف المرتبطة</span>
         </div>
       </template>
 
+      <!-- 3. النطاق الزمني -->
       <template #cell-range="{ item }">
-        <div class="flex flex-col gap-1">
-          <div class="flex items-center gap-1.5 text-xs text-text-primary">
-            <span class="text-text-muted w-4">من:</span>
-            <span class="font-mono bg-surface-ground px-1.5 rounded border border-surface-border">
+        <div class="flex flex-col gap-1 text-xs text-right" dir="rtl">
+          <div class="flex items-center gap-1.5">
+            <span class="text-text-muted text-[11px] w-7">من:</span>
+            <span
+              class="font-mono font-bold text-text-primary bg-surface-ground px-2 py-0.5 rounded-md border border-surface-border"
+            >
               {{ item.start_date }}
             </span>
           </div>
-          <div class="flex items-center gap-1.5 text-xs text-text-primary">
-            <span class="text-text-muted w-4">إلى:</span>
-            <span class="font-mono bg-surface-ground px-1.5 rounded border border-surface-border">
+          <div class="flex items-center gap-1.5">
+            <span class="text-text-muted text-[11px] w-7">إلى:</span>
+            <span
+              class="font-mono font-bold text-text-secondary bg-surface-ground px-2 py-0.5 rounded-md border border-surface-border"
+            >
               {{ item.end_date }}
             </span>
           </div>
         </div>
       </template>
 
+      <!-- 4. الحالة -->
       <template #cell-status="{ item }">
-        <div class="flex flex-col gap-1 items-start">
-          <span
-            class="px-2.5 py-0.5 text-[11px] font-bold rounded-full flex items-center gap-1.5"
-            :class="getStatusClass(item.status)"
-          >
-            <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.status)"></span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="getStatusVariant(item.status)" size="xs" pill>
             {{ getStatusLabel(item.status) }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
+      <!-- 5. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('hr.pay_periods.manage') && item.status !== 'closed'"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل الفترة (لتفعيلها أو تأجيلها)"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -73,11 +83,12 @@
               authStore.can('hr.pay_periods.manage') &&
               (item.status === 'open' || item.status === 'pending')
             "
-            @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('delete', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف الفترة"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -87,7 +98,7 @@
             </svg>
           </button>
 
-          <span v-if="item.status === 'closed'" class="text-[10px] text-text-muted italic px-2">
+          <span v-if="item.status === 'closed'" class="text-[11px] text-text-muted italic px-2">
             مؤرشفة
           </span>
         </div>
@@ -107,31 +118,30 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
-import AppPagination from '@/components/ui/AppPagination.vue' // تأكد من استيراده
+import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
-const props = defineProps({
+defineProps({
   periods: { type: Array, required: true },
-  pagination: { type: Object, default: null }, // 🚀 أضفنا الـ prop الخاص بالترقيم
+  pagination: { type: Object, default: null },
   loading: { type: Boolean, default: false },
 })
 
-// 🚀 أضفنا حدث تغيير الصفحة
 defineEmits(['edit', 'delete', 'page-change'])
 
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'name', label: 'اسم الفترة', class: 'min-w-[180px]' },
-  { key: 'group', label: 'مجموعة الدفع', class: 'min-w-[150px]' },
+  { key: 'group', label: 'مجموعة الدفع', class: 'min-w-[160px]' },
   { key: 'range', label: 'النطاق الزمني', class: 'min-w-[180px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[130px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 
-// --- دوال مساعدة للحالة (تم تحديثها لتشمل pending) ---
 const getStatusLabel = (status) => {
   const labels = {
-    pending: 'مجدولة', // 🚀 الإضافة الجديدة
+    pending: 'مجدولة',
     open: 'مفتوحة للصرف',
     processing: 'قيد المعالجة',
     closed: 'مغلقة ومرحّلة',
@@ -139,23 +149,13 @@ const getStatusLabel = (status) => {
   return labels[status] || status
 }
 
-const getStatusClass = (status) => {
-  const classes = {
-    pending: 'bg-sky-50 text-sky-700 border border-sky-100', // 🚀 الإضافة الجديدة (لون أزرق فاتح)
-    open: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-    processing: 'bg-amber-50 text-amber-700 border border-amber-100',
-    closed: 'bg-slate-50 text-slate-700 border border-slate-100',
+const getStatusVariant = (status) => {
+  const map = {
+    pending: 'info',
+    open: 'success',
+    processing: 'warning',
+    closed: 'secondary',
   }
-  return classes[status] || 'bg-surface-ground text-text-secondary border border-surface-border'
-}
-
-const getStatusDotClass = (status) => {
-  const classes = {
-    pending: 'bg-sky-500', // 🚀 الإضافة الجديدة
-    open: 'bg-emerald-500',
-    processing: 'bg-amber-500',
-    closed: 'bg-slate-500',
-  }
-  return classes[status] || 'bg-gray-400'
+  return map[status] || 'secondary'
 }
 </script>

@@ -1,31 +1,32 @@
 <!--src/modules/accounting/views/budgets/BudgetBuilderView.vue-->
 <template>
   <div class="space-y-5 text-right font-sans" dir="rtl">
-    <!-- ترويسة علوية مدمجة وصغيرة لتوفير المساحة الرأسية -->
-    <div class="flex items-center justify-between pb-2 border-b border-[#3e414c]">
+    <!-- ترويسة علوية مدمجة لتوفير المساحة الرأسية -->
+    <div class="flex items-center justify-between pb-2.5 border-b border-surface-border">
       <div class="flex items-center gap-3">
         <router-link
           :to="{ name: 'budgets.index' }"
-          class="p-1.5 rounded-lg bg-[#16171b] text-gray-400 hover:text-[#e05e2b] border border-[#3e414c] hover:border-[#e05e2b]/50 transition-all"
+          class="p-2 rounded-xl bg-surface-card text-text-secondary hover:text-primary border border-surface-border hover:border-primary/50 shadow-2xs transition-all"
           title="العودة للقائمة"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
+              stroke-width="2.2"
               d="M9 5l7 7-7 7"
             />
           </svg>
         </router-link>
         <div>
-          <h1 class="text-base md:text-lg font-black text-white flex items-center gap-2">
+          <h1 class="text-base md:text-lg font-black text-text-primary flex items-center gap-2">
+            <span class="w-2 h-5 rounded-full bg-primary inline-block"></span>
             <span>{{
               isEditMode ? `تعديل الموازنة التقديرية #${budgetId}` : 'بناء موازنة تقديرية جديدة'
             }}</span>
           </h1>
-          <p class="text-[11px] text-gray-400">
-            حدد بيانات الموازنة العامة، ثم وزّع اعتمادات الحسابات ومراكز التكلفة عبر المصفوفة.
+          <p class="text-xs text-text-muted mt-0.5">
+            حدد بيانات الموازنة العامة، ثم ابحث وأضف الحسابات أو مراكز التكلفة مباشرة داخل المصفوفة.
           </p>
         </div>
       </div>
@@ -34,27 +35,30 @@
     <!-- مؤشر التحميل -->
     <div
       v-if="isLoading"
-      class="flex flex-col items-center justify-center py-20 gap-3 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl"
+      class="flex flex-col items-center justify-center py-20 gap-3 bg-surface-section rounded-xl border border-surface-border shadow-xs"
     >
-      <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-[#e05e2b]"></div>
-      <span class="text-xs text-gray-400 font-bold"
-        >جاري تحميل بيانات الموازنة ومراكز التكلفة...</span
-      >
+      <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-primary"></div>
+      <span class="text-xs text-text-muted font-bold">
+        جاري تحميل بيانات الموازنة ومراكز التكلفة...
+      </span>
     </div>
 
     <div v-else class="space-y-5">
-      <!-- 1. بطاقة الإعدادات والبيانات الأساسية للموازنة -->
+      <!-- 1. بطاقة الإعدادات والبيانات الأساسية للموازنة (متطابقة مع ترويسة المبيعات) -->
       <div
-        class="p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-3.5 text-right font-sans"
+        class="budget-header-card bg-surface-header/60 p-4 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs space-y-3.5 transition-all duration-200"
       >
         <!-- الصف الأول: اسم الموازنة + السنة المالية -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
           <!-- اسم الموازنة -->
-          <div class="relative w-full md:col-span-2">
+          <div class="md:col-span-8">
+            <label for="builder-name" class="block text-xs font-bold text-text-secondary mb-1.5">
+              اسم الموازنة التقديرية *
+            </label>
             <div
-              class="relative w-full h-10 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+              class="relative w-full h-10 bg-surface-card border border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
             >
-              <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+              <span class="absolute right-3 text-primary pointer-events-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
@@ -69,19 +73,25 @@
                 id="builder-name"
                 type="text"
                 v-model="form.name"
-                placeholder="اسم الموازنة التقديرية (مثال: موازنة المصروفات التشغيلية 2026)... *"
-                class="block w-full h-full pr-9 pl-4 bg-transparent text-white focus:outline-none text-xs font-bold placeholder-gray-500"
+                placeholder="مثال: موازنة المصروفات التشغيلية 2026..."
+                class="block w-full h-full pr-9 pl-3 bg-transparent text-text-primary focus:outline-none text-xs font-black placeholder:text-text-muted placeholder:font-normal"
                 required
               />
             </div>
           </div>
 
           <!-- السنة المالية -->
-          <div class="relative w-full">
-            <div
-              class="relative w-full h-10 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] rounded-lg flex items-center transition-all duration-200"
+          <div class="md:col-span-4">
+            <label
+              for="builder-fiscal-year"
+              class="block text-xs font-bold text-text-secondary mb-1.5"
             >
-              <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+              السنة المالية (اختياري)
+            </label>
+            <div
+              class="relative w-full h-10 bg-surface-card border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
+            >
+              <span class="absolute right-3 text-text-muted pointer-events-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
@@ -95,35 +105,42 @@
               <select
                 id="builder-fiscal-year"
                 v-model="form.fiscal_year_id"
-                style="color-scheme: dark"
-                class="block w-full h-full pr-9 pl-8 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+                class="block w-full h-full pr-9 pl-7 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
               >
-                <option :value="null" class="bg-[#16171b] text-gray-400">
-                  اختر السنة المالية (اختياري)...
+                <option :value="null" class="bg-surface-section text-text-muted">
+                  -- بدون ربط بسنة محددة --
                 </option>
                 <option
                   v-for="year in fiscalYears"
                   :key="year.id"
                   :value="year.id"
-                  class="bg-[#16171b] text-white"
+                  class="bg-surface-section text-text-primary font-bold"
                 >
                   {{ year.name }}
                 </option>
               </select>
 
-              <span class="absolute left-3 text-gray-500 pointer-events-none text-[10px]">▼</span>
+              <span class="absolute left-2.5 text-text-muted pointer-events-none text-[9px]"
+                >▼</span
+              >
             </div>
           </div>
         </div>
 
         <!-- الصف الثاني: نوع الدورية + نمط الرقابة + تاريخ البداية + تاريخ النهاية -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3.5 items-start">
           <!-- دورية الموازنة -->
-          <div class="relative w-full">
-            <div
-              class="relative w-full h-10 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] rounded-lg flex items-center transition-all duration-200"
+          <div class="md:col-span-3">
+            <label
+              for="builder-period-type"
+              class="block text-xs font-bold text-text-secondary mb-1.5"
             >
-              <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+              دورية الموازنة *
+            </label>
+            <div
+              class="relative w-full h-10 bg-surface-card border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
+            >
+              <span class="absolute right-3 text-text-muted pointer-events-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
@@ -137,30 +154,37 @@
               <select
                 id="builder-period-type"
                 v-model="form.period_type"
-                style="color-scheme: dark"
-                class="block w-full h-full pr-9 pl-8 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+                class="block w-full h-full pr-9 pl-7 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
                 required
               >
                 <option
                   v-for="opt in periodTypeOptions"
                   :key="opt.id"
                   :value="opt.id"
-                  class="bg-[#16171b] text-white"
+                  class="bg-surface-section text-text-primary font-bold"
                 >
-                  الدورية: {{ opt.name }}
+                  {{ opt.name }}
                 </option>
               </select>
 
-              <span class="absolute left-3 text-gray-500 pointer-events-none text-[10px]">▼</span>
+              <span class="absolute left-2.5 text-text-muted pointer-events-none text-[9px]"
+                >▼</span
+              >
             </div>
           </div>
 
           <!-- نمط الرقابة والمنع -->
-          <div class="relative w-full">
-            <div
-              class="relative w-full h-10 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] rounded-lg flex items-center transition-all duration-200"
+          <div class="md:col-span-3">
+            <label
+              for="builder-control-mode"
+              class="block text-xs font-bold text-text-secondary mb-1.5"
             >
-              <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+              نمط الرقابة والمنع *
+            </label>
+            <div
+              class="relative w-full h-10 bg-surface-card border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
+            >
+              <span class="absolute right-3 text-primary pointer-events-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
@@ -174,89 +198,79 @@
               <select
                 id="builder-control-mode"
                 v-model="form.control_mode"
-                style="color-scheme: dark"
-                class="block w-full h-full pr-9 pl-8 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+                class="block w-full h-full pr-9 pl-7 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
                 required
               >
                 <option
                   v-for="opt in controlModeOptions"
                   :key="opt.id"
                   :value="opt.id"
-                  class="bg-[#16171b] text-white"
+                  class="bg-surface-section text-text-primary font-bold"
                 >
-                  الرقابة: {{ opt.name }}
+                  {{ opt.name }}
                 </option>
               </select>
 
-              <span class="absolute left-3 text-gray-500 pointer-events-none text-[10px]">▼</span>
+              <span class="absolute left-2.5 text-text-muted pointer-events-none text-[9px]"
+                >▼</span
+              >
             </div>
           </div>
 
           <!-- تاريخ البداية -->
-          <div class="relative w-full">
+          <div class="md:col-span-3">
+            <label
+              for="builder-start-date"
+              class="block text-xs font-bold text-text-secondary mb-1.5"
+            >
+              من تاريخ *
+            </label>
             <div
-              class="relative w-full h-10 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] rounded-lg flex items-center transition-all duration-200"
+              class="relative w-full h-10 bg-surface-card border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
             >
               <input
                 id="builder-start-date"
                 type="date"
                 v-model="form.start_date"
-                class="block w-full h-full pr-3 pl-14 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+                class="block w-full h-full px-3 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold cursor-pointer"
+                dir="ltr"
                 required
               />
-
-              <span
-                class="absolute left-2.5 text-gray-400 pointer-events-none flex items-center gap-1 text-xs z-10"
-              >
-                <span class="text-gray-400 font-medium text-[10px]">من</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </span>
             </div>
           </div>
 
           <!-- تاريخ النهاية -->
-          <div class="relative w-full">
+          <div class="md:col-span-3">
+            <label
+              for="builder-end-date"
+              class="block text-xs font-bold text-text-secondary mb-1.5"
+            >
+              إلى تاريخ *
+            </label>
             <div
-              class="relative w-full h-10 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] rounded-lg flex items-center transition-all duration-200"
+              class="relative w-full h-10 bg-surface-card border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
             >
               <input
                 id="builder-end-date"
                 type="date"
                 v-model="form.end_date"
-                class="block w-full h-full pr-3 pl-14 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+                class="block w-full h-full px-3 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold cursor-pointer"
+                dir="ltr"
                 required
               />
-
-              <span
-                class="absolute left-2.5 text-gray-400 pointer-events-none flex items-center gap-1 text-xs z-10"
-              >
-                <span class="text-gray-400 font-medium text-[10px]">إلى</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </span>
             </div>
           </div>
         </div>
 
         <!-- الصف الثالث: الملاحظات -->
-        <div class="relative w-full">
+        <div>
+          <label for="builder-notes" class="block text-xs font-bold text-text-secondary mb-1.5">
+            ملاحظات توجيهية (اختياري)
+          </label>
           <div
-            class="relative w-full h-10 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] rounded-lg flex items-center transition-all duration-200"
+            class="relative w-full h-10 bg-surface-card border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-lg flex items-center transition-all shadow-2xs"
           >
-            <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+            <span class="absolute right-3 text-text-muted pointer-events-none">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -271,38 +285,29 @@
               id="builder-notes"
               type="text"
               v-model="form.notes"
-              placeholder="ملاحظات توجيهية أو تعليمات وأهداف خاصة بهذه الموازنة (اختياري)..."
-              class="block w-full h-full pr-9 pl-4 bg-transparent text-white focus:outline-none text-xs font-medium placeholder-gray-500"
+              placeholder="ملاحظات توجيهية أو تعليمات وأهداف خاصة بهذه الموازنة..."
+              class="block w-full h-full pr-9 pl-3 bg-transparent text-text-primary focus:outline-none text-xs font-semibold placeholder:text-text-muted placeholder:font-normal"
             />
           </div>
         </div>
       </div>
 
-      <!-- 2. مصفوفة الشهور والبنود التفاعلية -->
+      <!-- 2. مصفوفة الشهور والبنود التفاعلية بالبحث السطري الذكي -->
       <BudgetMatrixGrid
         v-model="matrixRows"
         :periods="generatedPeriods"
         :cost-centers="activeCostCenters"
       />
 
-      <!-- 3. شريط أزرار الحفظ والإلغاء في أسفل الصفحة -->
+      <!-- 3. شريط أزرار الحفظ والإلغاء في أسفل الصفحة بتدفق طبيعي من اليمين إلى اليسار -->
       <div
-        class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#23252e] p-4 rounded-xl border-2 border-[#5d6170] shadow-2xl"
+        class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface-section p-4 rounded-xl border border-surface-border shadow-xs"
       >
-        <button
-          type="button"
-          @click="router.push({ name: 'budgets.index' })"
-          :disabled="isSaving"
-          class="w-full sm:w-auto px-5 py-2.5 bg-[#16171b] border border-[#3e414c] text-gray-300 hover:text-white hover:border-gray-500 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          إلغاء والعودة للقائمة
-        </button>
-
         <button
           type="button"
           @click="handleSubmit"
           :disabled="isSaving || isLoading"
-          class="w-full sm:w-auto px-8 py-2.5 bg-[#e05e2b] hover:bg-[#e05e2b]/90 text-white rounded-lg text-xs font-bold shadow-[0_0_15px_rgba(224,94,43,0.35)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <svg
             v-if="isSaving"
@@ -323,6 +328,15 @@
           <span>{{
             isSaving ? 'جاري الحفظ...' : isEditMode ? 'تحديث الموازنة' : 'حفظ الموازنة كمسودة'
           }}</span>
+        </button>
+
+        <button
+          type="button"
+          @click="router.push({ name: 'budgets.index' })"
+          :disabled="isSaving"
+          class="w-full sm:w-auto px-5 py-2.5 bg-surface-card border border-surface-border text-text-secondary hover:text-text-primary hover:border-primary/50 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          إلغاء والعودة للقائمة
         </button>
       </div>
     </div>
@@ -613,9 +627,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-input[type='date']::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
-  opacity: 0.6;
+.budget-header-card input[type='date'] {
+  color-scheme: inherit;
 }
 </style>

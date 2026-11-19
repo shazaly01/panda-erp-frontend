@@ -1,3 +1,4 @@
+<!-- src/modules/auth/views/RegisterView.vue -->
 <template>
   <AuthCardWrapper
     title="إنشاء حساب جديد"
@@ -7,6 +8,7 @@
     max-width="lg"
   >
     <form v-if="!successMessage" @submit.prevent="handleRegister" class="space-y-4">
+      <!-- الاسم الكامل -->
       <div class="relative">
         <input
           type="text"
@@ -31,6 +33,7 @@
         </svg>
       </div>
 
+      <!-- اسم المستخدم المستعار -->
       <div class="relative">
         <input
           type="text"
@@ -49,22 +52,23 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="1.5"
-            d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21 Grama8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+            d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
           />
         </svg>
       </div>
 
-      <div class="space-y-1 relative">
+      <!-- رقم الهاتف وإرسال الرمز -->
+      <div class="space-y-1.5 relative">
         <div class="flex items-center justify-between text-xs px-1">
-          <span class="text-slate-400">رقم الهاتف</span>
+          <span class="text-text-secondary font-medium">رقم الهاتف</span>
           <div class="flex items-center space-x-1 space-x-reverse">
-            <span :class="form.phone.length === 10 ? 'text-green-400 font-bold' : 'text-slate-500'">
+            <span :class="form.phone.length === 10 ? 'text-success font-bold' : 'text-text-muted'">
               {{ form.phone.length }}/10
             </span>
             <svg
               v-if="isValidPhone"
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-green-500 animate-fade-in"
+              class="h-4 w-4 text-success animate-fade-in"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -88,7 +92,7 @@
               :disabled="otpSent"
               class="form-input transition-all duration-300"
               :class="{
-                'border-green-500 focus:border-green-500 focus:ring-green-500/20': isValidPhone,
+                '!border-success focus:!ring-success/20': isValidPhone,
               }"
             />
             <svg
@@ -111,7 +115,7 @@
             type="button"
             @click="sendVerificationCode"
             :disabled="isSendingOtp || countdown > 0 || !isValidPhone"
-            class="otp-send-btn px-4 text-xs font-bold rounded-lg text-white transition-all duration-200"
+            class="otp-send-btn px-4 text-xs font-bold rounded-xl text-white transition-all duration-200 whitespace-nowrap"
           >
             <span v-if="isSendingOtp">انتظر...</span>
             <span v-else-if="countdown > 0">إعادة إرسال ({{ countdown }}ث)</span>
@@ -121,6 +125,7 @@
         </div>
       </div>
 
+      <!-- حقل كود التحقق -->
       <div class="relative transition-all duration-300" v-if="otpSent">
         <input
           type="text"
@@ -128,10 +133,10 @@
           placeholder="أدخل رمز التحقق المكون من 6 أرقام"
           required
           maxlength="6"
-          class="form-input border-dashed border-blue-500/50"
+          class="form-input border-dashed !border-primary/60 text-center tracking-widest font-bold"
         />
         <svg
-          class="input-icon text-blue-400"
+          class="input-icon !text-primary"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -144,9 +149,12 @@
             d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286z"
           />
         </svg>
-        <p class="text-xs text-green-400 mt-1 px-1">تم إرسال كود التحقق بنجاح إلى هاتفك.</p>
+        <p class="text-xs text-success font-semibold mt-1 px-1">
+          تم إرسال كود التحقق بنجاح إلى هاتفك.
+        </p>
       </div>
 
+      <!-- كلمة المرور الجديدة -->
       <div class="relative">
         <input
           :type="showPassword ? 'text' : 'password'"
@@ -159,7 +167,7 @@
         <button
           type="button"
           @click="showPassword = !showPassword"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none cursor-pointer"
         >
           <svg
             v-if="showPassword"
@@ -199,6 +207,7 @@
         </button>
       </div>
 
+      <!-- تأكيد كلمة المرور -->
       <div class="relative">
         <input
           :type="showConfirmPassword ? 'text' : 'password'"
@@ -211,7 +220,7 @@
         <button
           type="button"
           @click="showConfirmPassword = !showConfirmPassword"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none cursor-pointer"
         >
           <svg
             v-if="showConfirmPassword"
@@ -256,16 +265,16 @@
         <span v-else>تقديم طلب التسجيل للإدارة</span>
       </button>
 
-      <div class="mt-4 text-center text-sm text-slate-400">
+      <div class="mt-4 text-center text-sm text-text-muted">
         لديك حساب بالفعل؟
-        <router-link to="/login" class="login-link font-semibold">تسجيل الدخول من هنا</router-link>
+        <router-link to="/login" class="login-link font-bold"> تسجيل الدخول من هنا </router-link>
       </div>
     </form>
 
     <div v-else class="mt-4">
-      <router-link to="/login" class="submit-button block text-center pt-2"
-        >الانتقال لصفحة الدخول</router-link
-      >
+      <router-link to="/login" class="submit-button block text-center">
+        الانتقال لصفحة الدخول
+      </router-link>
     </div>
   </AuthCardWrapper>
 </template>
@@ -358,37 +367,28 @@ onUnmounted(() => {
 
 <style scoped>
 .otp-send-btn {
-  background: linear-gradient(135deg, #1e40af, #2563eb);
-  border: 1px solid rgba(55, 65, 81, 0.5);
+  background: linear-gradient(135deg, rgb(var(--color-primary)), rgb(var(--color-primary-dark)));
+  border: 1px solid rgba(var(--color-primary), 0.4);
   cursor: pointer;
 }
 .otp-send-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 14px rgba(var(--color-primary), 0.35);
+  filter: brightness(1.05);
 }
 .otp-send-btn:disabled {
-  background: #374151;
-  color: #9ca3af;
+  background: rgb(var(--color-secondary) / 0.35);
+  color: rgb(var(--color-text-muted));
+  border-color: rgb(var(--color-surface-border));
   cursor: not-allowed;
 }
+
 .login-link {
-  color: #3b82f6;
+  color: rgb(var(--color-primary));
   text-decoration: none;
   transition: color 0.2s ease;
 }
 .login-link:hover {
-  color: #60a5fa;
+  color: rgb(var(--color-primary-dark));
   text-decoration: underline;
-}
-
-/* حل مشكلة الخلفية البيضاء عند الإدخال التلقائي من المتصفح للمظهر الداكن */
-:deep(input:-webkit-autofill),
-:deep(input:-webkit-autofill:hover),
-:deep(input:-webkit-autofill:focus),
-:deep(input:-webkit-autofill:active) {
-  -webkit-text-fill-color: #f8fafc !important;
-  box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  -webkit-box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  transition: background-color 5000s ease-in-out 0s;
 }
 </style>

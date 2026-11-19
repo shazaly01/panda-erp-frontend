@@ -1,80 +1,92 @@
+<!-- src/modules/hr/views/shift-overrides/components/ShiftOverridesTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="overrides" :is-loading="loading">
-      <!-- الموظف -->
+      <!-- 1. الموظف -->
       <template #cell-employee="{ item }">
-        <div class="flex flex-col py-1">
-          <span class="font-bold text-sm text-text-primary">{{
-            item.employee?.full_name || 'غير محدد'
-          }}</span>
-          <span class="text-xs font-mono text-text-muted"
-            >#{{ item.employee?.employee_number }}</span
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
+            {{ item.employee?.full_name || 'غير محدد' }}
+          </span>
+          <AppBadge
+            v-if="item.employee?.employee_number"
+            variant="primary"
+            size="xs"
+            class="font-mono"
           >
+            #{{ item.employee.employee_number }}
+          </AppBadge>
         </div>
       </template>
 
-      <!-- التاريخ -->
+      <!-- 2. التاريخ -->
       <template #cell-date="{ item }">
-        <span class="font-mono font-medium text-text-primary">
-          {{ new Date(item.date).toLocaleDateString('ar-EG') }}
-        </span>
-      </template>
-
-      <!-- الوردية الجديدة (القرار) -->
-      <template #cell-new_shift="{ item }">
-        <span
-          v-if="!item.new_shift_id"
-          class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200"
-        >
-          إعفاء (يوم راحة)
-        </span>
-        <div v-else class="flex flex-col">
-          <span class="text-sm font-bold text-blue-600">
-            {{ item.newShift?.name }}
-          </span>
-          <span v-if="item.newShift" class="text-[10px] text-text-muted font-mono">
-            {{ item.newShift.start_time?.substring(0, 5) }} -
-            {{ item.newShift.end_time?.substring(0, 5) }}
+        <div class="text-center" dir="rtl">
+          <span class="font-mono font-bold text-xs text-text-primary">
+            {{ new Date(item.date).toLocaleDateString('ar-EG') }}
           </span>
         </div>
       </template>
 
-      <!-- السبب -->
-      <template #cell-reason="{ item }">
-        <span
-          class="text-xs text-text-muted truncate max-w-[200px] inline-block"
-          :title="item.reason"
-        >
-          {{ item.reason || '—' }}
-        </span>
+      <!-- 3. الوردية الجديدة (القرار) -->
+      <template #cell-new_shift="{ item }">
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge v-if="!item.new_shift_id" variant="warning" size="xs" pill>
+            إعفاء (يوم راحة)
+          </AppBadge>
+
+          <div v-else class="flex flex-col items-center gap-0.5">
+            <span class="text-xs font-black text-info">
+              {{ item.newShift?.name }}
+            </span>
+            <span v-if="item.newShift" class="text-[11px] text-text-secondary font-mono">
+              {{ item.newShift.start_time?.substring(0, 5) }} -
+              {{ item.newShift.end_time?.substring(0, 5) }}
+            </span>
+          </div>
+        </div>
       </template>
 
-      <!-- الإجراءات -->
+      <!-- 4. السبب -->
+      <template #cell-reason="{ item }">
+        <div class="text-right" dir="rtl">
+          <span
+            class="text-xs text-text-secondary truncate max-w-[220px] inline-block"
+            :title="item.reason"
+          >
+            {{ item.reason || '—' }}
+          </span>
+        </div>
+      </template>
+
+      <!-- 5. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('hr.shift_overrides.update')"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل التجاوز"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
           </button>
 
           <button
             v-if="authStore.can('hr.shift_overrides.delete')"
-            @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('delete', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="إلغاء التجاوز"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -87,7 +99,7 @@
       </template>
     </AppTable>
 
-    <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
+    <AppPagination :meta="pagination || {}" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
 
@@ -97,10 +109,11 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
-const props = defineProps({
+defineProps({
   overrides: { type: Array, required: true },
-  pagination: { type: Object, required: true },
+  pagination: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 })
 
@@ -110,9 +123,9 @@ const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'employee', label: 'الموظف', class: 'min-w-[200px]' },
-  { key: 'date', label: 'تاريخ التجاوز', class: 'min-w-[130px]' },
-  { key: 'new_shift', label: 'القرار (الوردية)', class: 'min-w-[160px]' },
+  { key: 'date', label: 'تاريخ التجاوز', class: 'min-w-[130px] text-center' },
+  { key: 'new_shift', label: 'القرار (الوردية)', class: 'min-w-[170px] text-center' },
   { key: 'reason', label: 'السبب', class: 'min-w-[200px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 </script>

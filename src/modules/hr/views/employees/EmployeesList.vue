@@ -1,18 +1,34 @@
-<!--src\modules\hr\views\employees\EmployeesList.vue--->
+<!-- src/modules/hr/views/employees/EmployeesList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12 font-sans">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">شؤون الموظفين</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إدارة سجلات الموظفين، بياناتهم الشخصية، ومراكزهم الوظيفية.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>شؤون الموظفين</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
-      <AppButton v-if="authStore.can('hr.employees.create')" @click="goToCreate" icon="plus">
+
+      <AppButton
+        v-if="authStore.can('hr.employees.create')"
+        size="sm"
+        @click="goToCreate"
+        icon="plus"
+      >
         تسجيل موظف جديد
       </AppButton>
     </div>
 
+    <!-- شريط البحث والفلاتر -->
     <EmployeesFilter
       v-model:searchQuery="filters.search"
       v-model:departmentId="filters.department_id"
@@ -29,6 +45,7 @@
       @manage-shift="openShiftModal"
     />
 
+    <!-- جدول بيانات الموظفين -->
     <EmployeesTable
       :employees="employees"
       :pagination="pagination"
@@ -42,6 +59,7 @@
       @manage-documents="openDocumentsModal"
     />
 
+    <!-- نافذة تأكيد الحذف -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف سجل الموظف"
@@ -51,35 +69,81 @@
       @confirmed="confirmDelete"
     />
 
+    <!-- نافذة كشف الحساب المالي -->
     <EmployeeStatementModal
       v-model="isStatementModalOpen"
       :employee-id="selectedEmployeeIdForStatement"
     />
 
+    <!-- نافذة معاينة وطباعة بطاقة الهوية -->
     <div
       v-if="isCardModalOpen"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 hide-on-print"
+      class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center z-[60] p-2 sm:p-4 hide-on-print"
+      dir="rtl"
       @click.self="isCardModalOpen = false"
     >
       <div
-        class="bg-slate-900 rounded-[3rem] p-2 max-w-4xl w-full relative shadow-[0_0_50px_rgba(0,0,0,0.3)]"
+        class="bg-surface-section border border-surface-border rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
       >
-        <button
-          @click="isCardModalOpen = false"
-          class="absolute -top-12 left-0 text-white hover:text-rose-400 font-bold flex items-center gap-2"
+        <!-- شريط التحكم العلوي للنافذة -->
+        <div
+          class="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between border-b border-slate-800 shrink-0"
         >
-          إغلاق المعاينة ✕
-        </button>
-        <EmployeeIdentityCard :employee="selectedEmployeeForCard" />
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+            <h3 class="text-xs sm:text-sm font-black tracking-wide text-slate-100">
+              بطاقة الهوية الوظيفية — {{ selectedEmployeeForCard?.full_name }}
+            </h3>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <AppButton size="sm" @click="printIdentityCard">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                  />
+                </svg>
+                <span>طباعة البطاقة</span>
+              </span>
+            </AppButton>
+
+            <button
+              type="button"
+              @click="isCardModalOpen = false"
+              class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              title="إغلاق المعاينة"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- محتوى بطاقة الهوية -->
+        <div class="p-3 sm:p-5 overflow-y-auto bg-surface-ground flex-1">
+          <EmployeeIdentityCard :employee="selectedEmployeeForCard" />
+        </div>
       </div>
     </div>
 
+    <!-- نافذة إدارة الوردية -->
     <EmployeeShiftModal
       v-model="isShiftModalOpen"
       :employee="selectedEmployeeForShift"
       @updated="handlePageChange(pagination.current_page)"
     />
 
+    <!-- نافذة الأرشيف الإلكتروني والوثائق -->
     <DocumentsManagerModal
       v-model="isDocumentsModalOpen"
       :owner="selectedEmployeeForDocuments"
@@ -109,7 +173,6 @@ import EmployeeIdentityCard from './components/EmployeeIdentityCard.vue'
 
 import DocumentsManagerModal from '@/modules/core/views/documents/DocumentsManagerModal.vue'
 
-// -- تهيئة --
 const router = useRouter()
 const toast = useToast()
 const authStore = useAuthStore()
@@ -120,7 +183,6 @@ const positionStore = usePositionStore()
 
 const { employees, pagination, loading } = storeToRefs(employeeStore)
 
-// -- الفلاتر --
 const filters = reactive({
   search: '',
   department_id: '',
@@ -139,7 +201,6 @@ const onFilterChange = () => {
   }, 500)
 }
 
-// -- جلب البيانات مع تحويل معلمات العقود --
 const handlePageChange = async (page = 1) => {
   try {
     const params = {
@@ -164,7 +225,6 @@ onMounted(async () => {
   if (positionStore.flatPositions.length === 0) await positionStore.fetchPositions()
 })
 
-// -- التوجيه (Navigation) --
 const goToCreate = () => {
   router.push({ name: 'employees.create' })
 }
@@ -173,7 +233,6 @@ const goToEdit = (employee) => {
   router.push({ name: 'employees.edit', params: { id: employee.id } })
 }
 
-// -- إدارة الحذف --
 const isDeleteDialogOpen = ref(false)
 const employeeToDelete = ref(null)
 
@@ -203,7 +262,6 @@ const confirmDelete = async () => {
   }
 }
 
-// -- إدارة كشف الحساب المالي والأوراق الثبوتية --
 const isStatementModalOpen = ref(false)
 const selectedEmployeeIdForStatement = ref(null)
 const isCardModalOpen = ref(false)
@@ -212,6 +270,10 @@ const selectedEmployeeForCard = ref(null)
 const openCardModal = (employee) => {
   selectedEmployeeForCard.value = employee
   isCardModalOpen.value = true
+}
+
+const printIdentityCard = () => {
+  window.print()
 }
 
 const openStatementModal = (employee) => {
@@ -227,7 +289,6 @@ const openShiftModal = (employee) => {
   isShiftModalOpen.value = true
 }
 
-// -- إدارة نافذة الأرشيف الإلكتروني --
 const isDocumentsModalOpen = ref(false)
 const selectedEmployeeForDocuments = ref(null)
 

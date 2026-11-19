@@ -8,86 +8,90 @@
       :row-clickable="true"
       @row-click="$emit('row-clicked', $event)"
     >
-      <!-- رقم الطلب والمُنشئ -->
+      <!-- 1. رقم الطلب والمُنشئ -->
       <template #cell-requisition_number="{ item }">
-        <div class="flex flex-col gap-1 text-right font-mono" dir="rtl">
-          <span class="font-bold text-[#e05e2b] bg-[#e05e2b]/10 px-2 py-0.5 rounded w-fit text-xs">
+        <div class="flex flex-col items-start gap-1 text-right" dir="rtl">
+          <AppBadge variant="primary" size="sm">
             {{ item.requisition_number || `#${item.id}` }}
-          </span>
+          </AppBadge>
           <span class="text-[10px] text-text-muted">
             بواسطة: {{ item.creator?.name || item.requester?.name || 'النظام' }}
           </span>
         </div>
       </template>
 
-      <!-- القسم ومقدم الطلب -->
+      <!-- 2. القسم ومقدم الطلب -->
       <template #cell-department_and_requester="{ item }">
         <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-bold text-xs text-text-primary">
             {{ item.department?.name || 'القسم العام' }}
           </span>
-          <span class="text-[10px] text-gray-400">
+          <span class="text-[10px] text-text-muted mt-0.5">
             مقدم الطلب: {{ item.requester?.name || '-' }}
           </span>
         </div>
       </template>
 
-      <!-- التواريخ (تاريخ الطلب وتاريخ الحاجة) -->
+      <!-- 3. التواريخ (تاريخ الطلب وتاريخ الحاجة) -->
       <template #cell-dates="{ item }">
-        <div class="flex flex-col gap-1 py-1 text-right font-mono" dir="rtl">
-          <div class="text-xs text-text-muted">
-            <span>طلب: {{ item.request_date || '-' }}</span>
-          </div>
-          <div v-if="item.required_date" class="text-[10px] text-amber-400/90 font-semibold">
-            <span>احتياج: {{ item.required_date }}</span>
-          </div>
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
+          <span class="text-xs text-text-secondary font-mono font-semibold">
+            طلب: {{ item.request_date ? String(item.request_date).substring(0, 10) : '-' }}
+          </span>
+          <span v-if="item.required_date" class="text-[10px] font-mono text-warning font-bold">
+            احتياج: {{ String(item.required_date).substring(0, 10) }}
+          </span>
         </div>
       </template>
 
-      <!-- مستوى الأولوية -->
+      <!-- 4. مستوى الأولوية -->
       <template #cell-priority="{ item }">
         <div class="flex justify-center items-center" dir="rtl">
-          <span
-            class="px-2.5 py-0.5 text-[10px] font-black rounded-full border"
-            :class="getPriorityBadgeClass(item.priority?.value || item.priority)"
+          <AppBadge
+            :variant="getPriorityBadgeVariant(item.priority?.value || item.priority)"
+            size="xs"
+            pill
+            :class="{
+              'font-black animate-pulse': (item.priority?.value || item.priority) === 'urgent',
+            }"
           >
             {{ getPriorityLabel(item.priority?.value || item.priority) }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
-      <!-- حالة الطلب -->
+      <!-- 5. حالة الطلب -->
       <template #cell-status="{ item }">
         <div class="flex justify-center items-center" dir="rtl">
-          <span
-            class="px-2.5 py-0.5 text-[10px] font-black rounded-full border"
-            :class="getStatusBadgeClass(item.status?.value || item.status)"
+          <AppBadge
+            :variant="getStatusBadgeVariant(item.status?.value || item.status)"
+            size="xs"
+            pill
           >
             {{ getStatusLabel(item.status?.value || item.status) }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
-      <!-- عدد البنود المسجلة -->
+      <!-- 6. عدد البنود المسجلة -->
       <template #cell-items_count="{ item }">
-        <div
-          class="flex justify-center items-center font-mono text-xs font-bold text-gray-300"
-          dir="rtl"
-        >
-          <span class="bg-[#181d28] px-2.5 py-1 rounded-lg border border-[#374158]">
+        <div class="flex justify-center items-center" dir="rtl">
+          <span
+            class="px-2.5 py-0.5 rounded-lg bg-surface-ground/80 border border-surface-border text-xs font-mono font-bold text-text-primary shadow-2xs"
+          >
             {{ item.items_count ?? (item.items ? item.items.length : 0) }} بنود
           </span>
         </div>
       </template>
 
-      <!-- أزرار الإجراءات التخصصية -->
+      <!-- 7. أزرار الإجراءات التخصصية -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <!-- زر فرز وتوجيه الطلب (للطلبات المعتمدة فقط) -->
           <button
             v-if="canTriage(item)"
             @click="$emit('triage-requisition', item)"
-            class="p-1.5 text-[#e05e2b] hover:text-[#f06e3b] hover:bg-[#e05e2b]/15 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="فرز وتوجيه البنود للمخزن أو الشراء"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,7 +108,7 @@
           <button
             v-if="isDraft(item)"
             @click="$emit('submit-requisition', item)"
-            class="p-1.5 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-info hover:bg-info/10 rounded-lg transition-colors cursor-pointer"
             title="تقديم طلب الشراء للاعتماد"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,7 +125,7 @@
           <button
             v-if="canApproveOrReject(item)"
             @click="$emit('approve-requisition', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors cursor-pointer"
             title="اعتماد طلب الشراء"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,7 +142,7 @@
           <button
             v-if="canApproveOrReject(item)"
             @click="$emit('reject-requisition', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="رفض طلب الشراء وتوضيح السبب"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +159,7 @@
           <button
             v-if="isDraft(item)"
             @click="$emit('edit-requisition', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل مسودة الطلب"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,7 +176,7 @@
           <button
             v-if="isDraft(item)"
             @click="$emit('delete-requisition', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف مسودة الطلب"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -197,6 +201,7 @@ import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 defineProps({
   requisitions: { type: Array, required: true },
@@ -254,18 +259,18 @@ const getStatusLabel = (status) => {
   return map[status] || status || 'غير محدد'
 }
 
-const getStatusBadgeClass = (status) => {
+const getStatusBadgeVariant = (status) => {
   const map = {
-    draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-    pending_approval: 'bg-sky-950/40 text-sky-400 border-sky-500/30',
-    pending: 'bg-sky-950/40 text-sky-400 border-sky-500/30',
-    submitted: 'bg-sky-950/40 text-sky-400 border-sky-500/30',
-    approved: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
-    ordered: 'bg-indigo-950/40 text-indigo-400 border-indigo-500/30',
-    rejected: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
-    cancelled: 'bg-gray-800 text-gray-400 border-gray-600',
+    draft: 'warning',
+    pending_approval: 'info',
+    pending: 'info',
+    submitted: 'info',
+    approved: 'success',
+    ordered: 'primary',
+    rejected: 'danger',
+    cancelled: 'secondary',
   }
-  return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'
+  return map[status] || 'secondary'
 }
 
 const getPriorityLabel = (priority) => {
@@ -278,13 +283,13 @@ const getPriorityLabel = (priority) => {
   return map[priority] || priority || 'عادية'
 }
 
-const getPriorityBadgeClass = (priority) => {
+const getPriorityBadgeVariant = (priority) => {
   const map = {
-    low: 'bg-slate-900/60 text-slate-400 border-slate-700/50',
-    medium: 'bg-blue-950/40 text-blue-400 border-blue-500/30',
-    high: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-    urgent: 'bg-rose-950/50 text-rose-400 border-rose-500/40 font-black animate-pulse',
+    low: 'secondary',
+    medium: 'info',
+    high: 'warning',
+    urgent: 'danger',
   }
-  return map[priority] || 'bg-gray-800 text-gray-300 border-gray-600'
+  return map[priority] || 'secondary'
 }
 </script>

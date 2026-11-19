@@ -1,12 +1,19 @@
-<!--src\modules\hr\views\employees\components\EmployeeIdentityCard.vue--->
+<!-- src/modules/hr/views/employees/components/EmployeeIdentityCard.vue -->
 <template>
   <div
-    class="p-8 bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl"
+    class="p-4 sm:p-6 bg-surface-header/70 rounded-2xl border border-surface-border border-t-4 border-t-primary shadow-sm text-right font-sans transition-colors duration-200"
+    dir="rtl"
   >
-    <div class="flex justify-between items-center mb-8 hide-on-print">
+    <!-- ترويسة المعاينة (تختفي عند الطباعة) -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-2 pb-3 mb-6 border-b border-primary/15 hide-on-print"
+    >
       <div>
-        <h3 class="text-xl font-black text-white drop-shadow-md">معاينة بطاقة الهوية</h3>
-        <p class="text-xs text-slate-400 mt-1">
+        <h3 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+          <span>معاينة بطاقة الهوية</span>
+        </h3>
+        <p class="text-xs text-text-secondary mt-0.5 pr-4">
           {{
             isPublic
               ? 'تصميم رقمي موحد ومحسن للعرض والمشاركة عبر الهواتف الذكية'
@@ -14,13 +21,26 @@
           }}
         </p>
       </div>
+
+      <span
+        class="px-2.5 py-1 rounded-lg text-[11px] font-bold border"
+        :class="
+          isIntern
+            ? 'bg-warning/10 text-warning border-warning/30'
+            : 'bg-primary/10 text-primary border-primary/25'
+        "
+      >
+        {{ isIntern ? 'بطاقة متدرب' : 'بطاقة موظف رسمي' }}
+      </span>
     </div>
 
-    <div id="id-card-content" class="flex flex-col md:flex-row gap-10 items-center justify-center">
-      <!-- 🟢 الوجه الأمامي للبطاقة (Front Side) -->
+    <!-- محتوى بطاقتي الهوية (الأمامية والخلفية) -->
+    <div id="id-card-content" class="flex flex-col md:flex-row gap-8 items-center justify-center">
+      <!-- 1. الوجه الأمامي للبطاقة (Front Side) -->
       <div
-        class="w-[340px] h-[540px] bg-white rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.4)] overflow-hidden border border-slate-200/80 relative flex flex-col items-center text-center group"
+        class="w-[340px] h-[540px] bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(15,23,42,0.18)] overflow-hidden border border-slate-200 relative flex flex-col items-center text-center group"
       >
+        <!-- خلفية نقطية خفيفة -->
         <div
           class="absolute inset-0 opacity-[0.03] pointer-events-none"
           style="
@@ -29,16 +49,19 @@
           "
         ></div>
 
+        <!-- الترويسة العلوية للبطاقة -->
         <div
           class="absolute top-0 left-0 w-full h-[160px] bg-gradient-to-br transition-all duration-500"
           :class="
             isIntern
-              ? 'from-purple-900 via-indigo-800 to-purple-950'
-              : 'from-slate-900 via-blue-900 to-indigo-950'
+              ? 'from-slate-900 via-amber-900 to-orange-950'
+              : 'from-slate-900 via-slate-800 to-slate-950'
           "
         >
+          <!-- شريط الهوية البرتقالي العلوي -->
+          <div class="absolute top-0 inset-x-0 h-1.5 bg-orange-500"></div>
           <div
-            class="absolute inset-0 bg-white/10"
+            class="absolute inset-0 bg-white/5"
             style="clip-path: polygon(0 0, 100% 0, 100% 35%, 0 95%)"
           ></div>
           <svg
@@ -54,9 +77,10 @@
           </svg>
         </div>
 
+        <!-- شعار واسم المنشأة -->
         <div class="z-10 mt-5 flex items-center justify-center gap-3 max-w-[90%] px-4">
           <div
-            class="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-white/20 flex-shrink-0 logo-holder"
+            class="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-orange-500/30 flex-shrink-0 logo-holder"
           >
             <img
               :src="brandingStore.logoMiniUrl || '/MainLogo2.png'"
@@ -71,18 +95,18 @@
           </h4>
         </div>
         <p
-          class="text-white/50 text-[8px] font-black uppercase tracking-widest z-10 mt-1 w-full text-center"
+          class="text-orange-300/80 text-[8px] font-black uppercase tracking-widest z-10 mt-1 w-full text-center"
         >
           {{ isIntern ? 'Official Intern Identity' : 'Official Employee Identity' }}
         </p>
 
+        <!-- الصورة الشخصية -->
         <div class="z-10 mt-5 relative">
           <div
-            class="absolute inset-0 blur-2xl opacity-25 rounded-full transition-all duration-500"
-            :class="isIntern ? 'bg-purple-500' : 'bg-indigo-500'"
+            class="absolute inset-0 blur-2xl opacity-25 rounded-full transition-all duration-500 bg-orange-500"
           ></div>
           <div
-            class="w-36 h-36 rounded-full border-[5px] border-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] bg-slate-50 overflow-hidden relative z-10"
+            class="w-36 h-36 rounded-full border-[5px] border-white ring-2 ring-orange-500/40 shadow-[0_10px_30px_rgba(0,0,0,0.15)] bg-slate-50 overflow-hidden relative z-10"
           >
             <img
               v-if="employee.profile_photo?.url || employee.photo_url || employee.avatar"
@@ -103,39 +127,30 @@
           </div>
         </div>
 
+        <!-- الاسم والرقم الوظيفي -->
         <div class="mt-4 w-full px-6 flex flex-col items-center">
           <h2 class="text-xl font-black text-slate-800 tracking-tight leading-tight">
             {{ employee.full_name }}
           </h2>
 
-          <!-- <p
-            class="font-black text-xs mt-1.5 uppercase tracking-wider px-3 py-0.5 rounded-full border transition-colors duration-500"
-            :class="
-              isIntern
-                ? 'text-purple-600 bg-purple-50 border-purple-100'
-                : 'text-blue-600 bg-blue-50 border-blue-100'
-            "
-          >
-            {{ employee.position?.name || (isIntern ? 'متدرب' : 'موظف') }}
-          </p> -->
-
           <div class="mt-3 flex gap-2 justify-center w-full">
             <div
-              class="bg-slate-50 px-3 py-1 rounded-xl border border-slate-100 shadow-sm flex items-center gap-2"
+              class="bg-orange-50/70 px-3.5 py-1 rounded-xl border border-orange-200/80 shadow-2xs flex items-center gap-2"
             >
-              <span class="text-[8px] text-slate-400 font-black uppercase tracking-wider"
-                >System ID</span
-              >
-              <span class="text-xs font-mono font-black text-slate-700">{{
-                employee.employee_number
-              }}</span>
+              <span class="text-[8px] text-orange-600 font-black uppercase tracking-wider">
+                System ID
+              </span>
+              <span class="text-xs font-mono font-black text-slate-800">
+                {{ employee.employee_number }}
+              </span>
             </div>
           </div>
         </div>
 
+        <!-- رمز QR والباركود -->
         <div class="mt-auto pb-4 z-10 flex flex-col items-center justify-center w-full">
           <div
-            class="p-2.5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-102"
+            class="p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-2xs transition-transform duration-300 group-hover:scale-102"
           >
             <qrcode-vue
               :value="String(scanValue)"
@@ -146,47 +161,37 @@
             />
           </div>
 
-          <!-- 🌟 حقن الباركود الخطي في الوجه الأمامي فقط عند التصفح العام الخارجي -->
+          <!-- الباركود الخطي في الوجه الأمامي عند التصفح العام الخارجي -->
           <div v-if="isPublic" class="w-full flex justify-center px-6 mt-3">
             <svg ref="barcodeElementFront" class="w-full h-auto max-h-[35px]"></svg>
           </div>
         </div>
       </div>
 
-      <!-- 🔴 الوجه الخلفي للبطاقة (Back Side) - يختفي تماماً في العرض الخارجي العام للمدربين -->
+      <!-- 2. الوجه الخلفي للبطاقة (Back Side) -->
       <div
         v-if="!isPublic"
-        class="w-[340px] h-[540px] rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.4)] overflow-hidden relative flex flex-col items-center text-center text-white border transition-all duration-500"
-        :class="
-          isIntern
-            ? 'bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 border-purple-900/40'
-            : 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 border-slate-800'
-        "
+        class="w-[340px] h-[540px] rounded-[2.5rem] shadow-[0_20px_50px_rgba(15,23,42,0.18)] overflow-hidden relative flex flex-col items-center text-center text-white border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 transition-all duration-500"
       >
+        <div class="absolute top-0 inset-x-0 h-1.5 bg-orange-500"></div>
         <div
-          class="absolute top-[-10%] right-[-10%] w-60 h-60 rounded-full blur-[70px] transition-colors duration-500"
-          :class="isIntern ? 'bg-purple-600/15' : 'bg-blue-600/15'"
+          class="absolute top-[-10%] right-[-10%] w-60 h-60 rounded-full blur-[70px] bg-orange-500/15"
         ></div>
         <div
-          class="absolute bottom-[20%] left-[-15%] w-52 h-52 rounded-full blur-[60px] transition-colors duration-500"
-          :class="isIntern ? 'bg-pink-600/10' : 'bg-indigo-600/10'"
+          class="absolute bottom-[20%] left-[-15%] w-52 h-52 rounded-full blur-[60px] bg-amber-500/10"
         ></div>
 
         <div class="mt-10 px-8 z-10 relative flex-1">
           <div
-            class="w-10 h-1 mx-auto mb-5 rounded-full bg-gradient-to-r transition-all duration-500"
-            :class="isIntern ? 'from-purple-500 to-pink-500' : 'from-blue-500 to-indigo-500'"
+            class="w-12 h-1 mx-auto mb-5 rounded-full bg-gradient-to-r from-orange-500 to-amber-400"
           ></div>
           <h4 class="font-black text-lg text-white tracking-wide">تعليمات الاستخدام</h4>
 
           <p
-            class="text-[11px] text-slate-400 mt-6 leading-relaxed font-medium text-justify px-2 bg-slate-950/30 p-4 rounded-2xl border border-slate-800/60 shadow-inner"
+            class="text-[11px] text-slate-300 mt-6 leading-relaxed font-medium text-justify px-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-700/60 shadow-inner"
           >
             هذه البطاقة تعتبر مستنداً رسمياً يثبت هوية حاملها وتبقى ملكاً لشركة
-            <strong
-              class="font-bold transition-colors duration-500"
-              :class="isIntern ? 'text-purple-400' : 'text-blue-400'"
-            >
+            <strong class="font-bold text-orange-400">
               {{ brandingStore.appName || 'محطة مياه المنارة' }} </strong
             >. يلتزم حاملها بإبرازها وحملها بشكل دائم طوال فترة تواجده داخل مرافق وفروع المنشأة.
             تُستخدم لتسجيل الحضور والانصراف التلقائي وضبط أمن السلامة المهنية. في حال فقدانها، يرجى
@@ -195,17 +200,17 @@
         </div>
 
         <div
-          class="mt-auto w-full flex flex-col items-center z-10 bg-white pt-5 pb-5 rounded-b-[2.5rem] border-t border-slate-100"
+          class="mt-auto w-full flex flex-col items-center z-10 bg-white pt-5 pb-5 rounded-b-[2.5rem] border-t-2 border-orange-500"
         >
           <div class="w-full flex justify-center px-4 mb-3">
             <svg ref="barcodeElementBack" class="w-full h-auto max-h-[50px]"></svg>
           </div>
 
           <div class="w-full flex justify-between items-center px-6 border-t border-slate-100 pt-3">
-            <p class="text-[9px] text-slate-400 font-mono tracking-widest uppercase">
+            <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase font-bold">
               {{ brandingStore.appName ? 'SYSTEM-IDENTITY' : 'PANDA-ERP-SYS' }}
             </p>
-            <p class="text-[9px] text-slate-400 font-mono tracking-widest font-black">
+            <p class="text-[9px] text-slate-500 font-mono tracking-widest font-black">
               {{ new Date().getFullYear() }} ©
             </p>
           </div>
@@ -216,55 +221,51 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import JsBarcode from 'jsbarcode'
 import QrcodeVue from 'qrcode.vue'
 import { useBrandingStore } from '@/stores/brandingStore'
 
 const props = defineProps({
   employee: { type: Object, required: true },
-  isPublic: { type: Boolean, default: false }, // 🌟 معامل تحديد نوع الواجهة
+  isPublic: { type: Boolean, default: false },
 })
 
 const brandingStore = useBrandingStore()
 const barcodeElementFront = ref(null)
 const barcodeElementBack = ref(null)
 
-/**
- * 🌟 محرك الفحص الذكي لتحديد نوع الموظف (متدرب أم موظف رسمي)
- */
 const isIntern = computed(() => {
   const type = props.employee.employment_type?.value || props.employee.employment_type
   return type === 'intern' || props.employee.employee_number?.toUpperCase().startsWith('INT-')
 })
 
-// القيمة الحقيقية للمسح المشترك بين الـ QR والـ Barcode
 const scanValue = computed(() => {
   return props.employee.barcode || props.employee.employee_number || ''
 })
 
-// دالة توليد الباركود التناظري الخطي المدمج بالخلف أو بالأمام ديناميكياً
 const generateBarcode = () => {
-  const targetElement = props.isPublic ? barcodeElementFront.value : barcodeElementBack.value
+  nextTick(() => {
+    const targetElement = props.isPublic ? barcodeElementFront.value : barcodeElementBack.value
 
-  if (targetElement && scanValue.value) {
-    JsBarcode(targetElement, String(scanValue.value), {
-      format: 'CODE128',
-      width: 2.0,
-      height: props.isPublic ? 35 : 40, // تكييف الارتفاع حسب مكان العرض
-      displayValue: false,
-      margin: 0,
-      background: 'transparent',
-      lineColor: '#0f172a',
-    })
-  }
+    if (targetElement && scanValue.value) {
+      JsBarcode(targetElement, String(scanValue.value), {
+        format: 'CODE128',
+        width: 2.0,
+        height: props.isPublic ? 35 : 40,
+        displayValue: false,
+        margin: 0,
+        background: 'transparent',
+        lineColor: '#0f172a',
+      })
+    }
+  })
 }
 
 onMounted(() => {
   generateBarcode()
 })
 
-// مراقبة تغيير قيمة البطاقة اللحظية لإعادة التوليد والترقيع الآلي
 watch(scanValue, () => {
   generateBarcode()
 })

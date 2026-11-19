@@ -3,7 +3,7 @@
   <button
     :class="buttonClasses"
     :disabled="disabled"
-    class="inline-flex items-center justify-center font-bold rounded-lg shadow-md focus:outline-none transition-all duration-200 ease-in-out"
+    class="inline-flex items-center justify-center font-bold rounded-lg shadow-sm focus:outline-none transition-all duration-200 ease-in-out cursor-pointer"
   >
     <slot />
   </button>
@@ -15,7 +15,7 @@ import { computed } from 'vue'
 const props = defineProps({
   variant: {
     type: String,
-    default: 'primary', // primary, secondary, danger, outline
+    default: 'primary', // primary, secondary, success, warning, danger, outline
   },
   size: {
     type: String,
@@ -30,7 +30,7 @@ const props = defineProps({
 const buttonClasses = computed(() => {
   const classes = []
 
-  // --- كلاسات الحجم (لم تتغير) ---
+  // كلاسات الحجم
   if (props.size === 'sm') {
     classes.push('px-3 py-1.5 text-sm')
   } else if (props.size === 'lg') {
@@ -40,51 +40,47 @@ const buttonClasses = computed(() => {
   }
 
   switch (props.variant) {
-    // [الإضافة الجديدة هنا]
     case 'success':
-      // لون أخضر ثابت في كلا الوضعين
       classes.push(
-        'bg-green-600 text-white focus:ring-2 focus:ring-green-500 dark:bg-green-500 dark:focus:ring-green-500',
+        'bg-success text-white hover:bg-success/90 shadow-success/20 focus:ring-2 focus:ring-success/40',
       )
       break
 
-    // [الإضافة الجديدة هنا]
     case 'warning':
-      // لون أصفر/برتقالي ثابت في كلا الوضعين
       classes.push(
-        'bg-yellow-500 text-white focus:ring-2 focus:ring-yellow-400 dark:bg-yellow-600 dark:focus:ring-yellow-600',
+        'bg-warning text-white hover:bg-warning/90 shadow-warning/20 focus:ring-2 focus:ring-warning/40',
       )
       break
 
     case 'danger':
-      // لون أحمر ثابت في كلا الوضعين
-      classes.push('bg-danger text-white focus:ring-2 focus:ring-danger')
+      classes.push(
+        'bg-danger text-white hover:bg-danger/90 shadow-danger/20 focus:ring-2 focus:ring-danger/40',
+      )
       break
+
     case 'secondary':
-      // لون رمادي في الوضع الفاتح، ولون سماوي في الوضع الليلي
       classes.push(
-        'bg-gray-200 text-gray-800 focus:ring-2 focus:ring-gray-400 dark:bg-secondary dark:text-black dark:focus:ring-secondary',
+        'bg-surface-ground text-text-primary border border-surface-border hover:bg-surface-border/40 focus:ring-2 focus:ring-secondary/40',
       )
       break
+
     case 'outline':
-      // حدود رمادية في الوضع الفاتح، وحدود داكنة في الوضع الليلي
       classes.push(
-        'bg-transparent border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-surface-border dark:text-text-secondary dark:hover:bg-surface-section dark:hover:text-primary dark:focus:ring-primary',
+        'bg-transparent border border-surface-border text-text-secondary hover:bg-surface-ground hover:text-primary hover:border-primary focus:ring-2 focus:ring-primary/30',
       )
       break
+
     default: // primary
-      // لون أزرق في الوضع الفاتح، ولون بنفسجي في الوضع الليلي
       classes.push(
-        'bg-blue-600 text-white focus:ring-2 focus:ring-blue-500 dark:bg-primary dark:focus:ring-primary',
+        'bg-primary text-white hover:bg-primary-dark shadow-md shadow-primary/20 focus:ring-2 focus:ring-primary/40',
       )
       break
   }
 
-  // --- حالة التعطيل ---
+  // حالة التعطيل والحركة
   if (props.disabled) {
-    classes.push('opacity-50 cursor-not-allowed')
+    classes.push('opacity-50 !cursor-not-allowed pointer-events-none')
   } else {
-    // تأثير حركة عند المرور
     classes.push('hover:-translate-y-0.5')
   }
 

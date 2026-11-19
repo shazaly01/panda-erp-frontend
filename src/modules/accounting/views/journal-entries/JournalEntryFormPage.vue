@@ -1,38 +1,63 @@
 <!--src\modules\accounting\views\journal-entries\JournalEntryFormPage.vue-->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-24">
+  <div class="space-y-5 max-w-7xl mx-auto pb-24 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة العلوية المدمجة -->
     <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-section p-4 rounded-xl border border-surface-border sticky top-0 z-10 shadow-sm"
+      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-surface-section p-4 rounded-xl border border-surface-border shadow-xs sticky top-0 z-20"
     >
       <div class="flex items-center gap-3">
         <button
+          type="button"
           @click="$router.push({ name: 'journal-entries.index' })"
-          class="p-2 text-text-muted hover:text-text-primary hover:bg-surface-border rounded-lg transition-colors"
+          class="p-2 rounded-xl bg-surface-card text-text-secondary hover:text-primary border border-surface-border hover:border-primary/50 shadow-2xs transition-all cursor-pointer"
+          title="العودة للقائمة"
         >
-          <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              stroke-width="2.2"
+              d="M9 5l7 7-7 7"
             />
           </svg>
         </button>
         <div>
-          <h1 class="text-xl font-bold text-text-primary">
-            {{ isEditMode ? `تعديل القيد #${form.entry_number || ''}` : 'قيد يومية جديد' }}
+          <h1 class="text-base md:text-lg font-black text-text-primary flex items-center gap-2">
+            <span class="w-2 h-5 rounded-full bg-primary inline-block"></span>
+            <span>{{
+              isEditMode ? `تعديل القيد المحاسبي #${form.entry_number || ''}` : 'قيد يومية جديد'
+            }}</span>
           </h1>
           <p class="text-xs text-text-muted mt-0.5">
             {{
-              isEditMode ? 'تعديل مسودة القيد المحددة' : 'إدخال عملية محاسبية يدوية بنظام الكاشير'
+              isEditMode
+                ? 'تعديل بيانات وأطراف مسودة القيد المحددة'
+                : 'إدخال عملية محاسبية مزدوجة بالبحث السطري السريع'
             }}
           </p>
         </div>
       </div>
+
+      <!-- شارة حالة القيد العلوية -->
+      <span
+        class="px-3 py-1 rounded-full text-xs font-black border"
+        :class="
+          isBalanced && totalDebit > 0
+            ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+            : 'bg-amber-500/12 text-amber-700 dark:text-amber-300 border-amber-500/30'
+        "
+      >
+        {{ isBalanced && totalDebit > 0 ? 'متزن وجاهز للحفظ ✓' : 'قيد الإدخال والموازنة' }}
+      </span>
     </div>
 
-    <div v-if="isLoadingData" class="flex justify-center items-center py-20">
+    <!-- حالة التحميل -->
+    <div
+      v-if="isLoadingData"
+      class="flex flex-col justify-center items-center py-20 gap-3 bg-surface-section rounded-xl border border-surface-border shadow-xs"
+    >
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      <span class="text-xs text-text-muted font-bold">جاري تحميل بيانات القيد المحاسبي...</span>
     </div>
 
     <template v-else>
@@ -50,31 +75,66 @@
       />
     </template>
 
+    <!-- شريط الحفظ والإلغاء المثبت أسفل الشاشة -->
     <div
-      class="fixed bottom-0 left-0 w-full bg-surface-section border-t border-surface-border p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40"
+      class="fixed bottom-0 left-0 w-full bg-surface-section/95 backdrop-blur-md border-t border-surface-border p-3.5 shadow-[0_-6px_20px_-4px_rgba(15,23,42,0.12)] z-40"
     >
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div
-          class="hidden md:block text-xs font-medium"
-          :class="
-            isBalanced && totalDebit > 0 && form.description ? 'text-emerald-500' : 'text-amber-500'
-          "
-        >
-          {{
-            isBalanced && totalDebit > 0 && form.description
-              ? '✓ بيانات القيد مكتملة ومتزنة'
-              : '⚠ تأكد من تعبئة البيان وموازنة الأطراف'
-          }}
+      <div
+        class="max-w-7xl mx-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3"
+      >
+        <!-- يمين: أزرار الإجراءات -->
+        <div class="flex items-center gap-2.5 justify-start">
+          <button
+            type="button"
+            @click="submitForm"
+            :disabled="isSaving"
+            class="px-7 py-2.5 bg-primary text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <svg
+              v-if="isSaving"
+              class="animate-spin h-4 w-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>{{ isSaving ? 'جاري الحفظ...' : isEditMode ? 'تحديث القيد' : 'حفظ القيد' }}</span>
+          </button>
+
+          <button
+            type="button"
+            @click="$router.push({ name: 'journal-entries.index' })"
+            :disabled="isSaving"
+            class="px-5 py-2.5 bg-surface-card border border-surface-border text-text-secondary hover:text-text-primary hover:border-primary/50 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            إلغاء
+          </button>
         </div>
 
-        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-          <AppButton variant="secondary" @click="$router.push({ name: 'journal-entries.index' })">
-            إلغاء
-          </AppButton>
-          <AppButton @click="submitForm" :disabled="isSaving">
-            <span v-if="isSaving">جاري الحفظ...</span>
-            <span v-else>حفظ القيد</span>
-          </AppButton>
+        <!-- يسار: مؤشر اكتمال البيانات والاتزان -->
+        <div
+          class="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold"
+          :class="
+            isBalanced && totalDebit > 0 && form.description
+              ? 'bg-emerald-500/12 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+              : 'bg-amber-500/12 border-amber-500/30 text-amber-700 dark:text-amber-300'
+          "
+        >
+          <span>
+            {{
+              isBalanced && totalDebit > 0 && form.description
+                ? '✓ بيانات القيد مكتملة ومتزنة'
+                : '⚠ تأكد من تعبئة البيان العام وموازنة الأطراف'
+            }}
+          </span>
         </div>
       </div>
     </div>
@@ -93,7 +153,6 @@ import { useCostCenterStore } from '@/modules/accounting/stores/costCenterStore'
 import { useCurrencyStore } from '@/modules/accounting/stores/currencyStore'
 import { useFiscalYearStore } from '@/modules/accounting/stores/fiscalYearStore'
 
-import AppButton from '@/components/ui/AppButton.vue'
 import JournalEntryHeader from './components/JournalEntryHeader.vue'
 import JournalEntryLines from './components/JournalEntryLines.vue'
 
@@ -121,7 +180,7 @@ const form = ref({
   reference_number: '',
   cost_center_id: '',
   description: '',
-  details: [], // شبكة فارغة افتراضياً لنظام الكاشير
+  details: [],
 })
 
 const transactionalAccounts = computed(() => accountStore.transactionalAccounts || [])
@@ -135,14 +194,11 @@ const fetchRequiredData = async () => {
 
   await Promise.all(promises)
 
-  // حالة "إنشاء قيد جديد" (ليس تعديلاً)
   if (!isEditMode.value) {
-    // 1. العملة الافتراضية
     if (currencyStore.baseCurrency) {
       form.value.currency_id = currencyStore.baseCurrency.id
     }
 
-    // 2. 🌟 السحر هنا: مركز التكلفة الافتراضي للمستخدم
     if (authStore.user && authStore.user.default_cost_center_id) {
       form.value.cost_center_id = authStore.user.default_cost_center_id
     }
@@ -212,7 +268,6 @@ watch(
   },
 )
 
-// حساب المجاميع
 const totalDebit = computed(() =>
   form.value.details.reduce((sum, line) => sum + (Number(line.debit) || 0), 0),
 )
@@ -222,7 +277,6 @@ const totalCredit = computed(() =>
 const isBalanced = computed(() => Math.abs(totalDebit.value - totalCredit.value) < 0.001)
 
 const submitForm = async () => {
-  // 1. التحقق من صحة البيانات وإصدار تنبيهات واضحة للمستخدم
   if (fiscalYearError.value) {
     return toast.error('لا يمكن الحفظ: ' + fiscalYearError.value)
   }
@@ -236,12 +290,11 @@ const submitForm = async () => {
     return toast.error('الرجاء كتابة البيان العام للقيد.')
   }
 
-  // تصفية الأسطر الصالحة (التي بها حساب ومبلغ)
   const cleanDetails = form.value.details
     .filter((line) => line.account_id && (Number(line.debit) > 0 || Number(line.credit) > 0))
     .map((line) => ({
       account_id: line.account_id,
-      cost_center_id: form.value.cost_center_id || null, // التوريث الافتراضي
+      cost_center_id: line.cost_center_id || form.value.cost_center_id || null,
       debit: Number(line.debit),
       credit: Number(line.credit),
       description: line.description || null,
@@ -260,7 +313,6 @@ const submitForm = async () => {
     return toast.error(`القيد غير متزن! هناك فرق بقيمة ${diff} بين المدين والدائن.`)
   }
 
-  // 2. تجهيز البيانات للإرسال
   const payload = {
     date: form.value.date,
     currency_id: form.value.currency_id,

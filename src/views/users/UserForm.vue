@@ -48,10 +48,10 @@
       <div
         class="border-b border-surface-border pb-2 flex items-center gap-2 text-primary font-bold text-sm"
       >
-        إعدادات العمليات الافتراضية للربط المحاسبي
+        إعدادات العمليات الافتراضية للربط المحاسبي والمخزني
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <AppDropdown
           id="user-default-cc"
           label="الفرع / المركز"
@@ -61,6 +61,12 @@
           option-value="id"
           placeholder="اختر الفرع..."
           :show-clear="true"
+        />
+
+        <WarehouseDropdown
+          id="user-default-warehouse"
+          label="المستودع الافتراضي"
+          v-model="form.default_warehouse_id"
         />
 
         <AppDropdown
@@ -85,6 +91,27 @@
           :show-clear="true"
         />
       </div>
+
+      <div class="pt-3 border-t border-surface-border/60 flex items-center justify-between gap-4">
+        <div>
+          <label
+            for="user-stock-control"
+            class="text-sm font-bold text-text-primary cursor-pointer"
+          >
+            تفعيل الرقابة المخزنية (منع البيع عند عدم توفر رصيد)
+          </label>
+          <p class="text-xs text-text-muted mt-0.5">
+            عند التفعيل، يُقيّد المستخدم بتوفر الكمية في المستودع قبل ترحيل فواتير المبيعات.
+          </p>
+        </div>
+
+        <input
+          id="user-stock-control"
+          type="checkbox"
+          v-model="form.stock_control"
+          class="w-5 h-5 rounded border-surface-border text-primary focus:ring-primary cursor-pointer"
+        />
+      </div>
     </div>
 
     <div class="mt-8 flex justify-end gap-3 border-t border-surface-border pt-4">
@@ -100,6 +127,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
+import WarehouseDropdown from '@/modules/inventory/forms/WarehouseDropdown.vue'
 
 import { useRoleStore } from '@/stores/roleStore'
 import { useCostCenterStore } from '@/modules/accounting/stores/costCenterStore'
@@ -143,8 +171,10 @@ const form = ref({
   email: '',
   roles: [],
   default_cost_center_id: null,
+  default_warehouse_id: null,
   default_box_id: null,
   default_bank_account_id: null,
+  stock_control: true,
 })
 
 watch(
@@ -159,8 +189,13 @@ watch(
         email: newData.email || '',
         roles: newData.roles ? newData.roles.map((r) => r.name) : [],
         default_cost_center_id: newData.default_cost_center_id || null,
+        default_warehouse_id: newData.default_warehouse_id || null,
         default_box_id: newData.default_box_id || null,
         default_bank_account_id: newData.default_bank_account_id || null,
+        stock_control:
+          newData.stock_control !== undefined && newData.stock_control !== null
+            ? Boolean(newData.stock_control)
+            : true,
       }
     } else {
       form.value = {
@@ -171,8 +206,10 @@ watch(
         email: '',
         roles: [],
         default_cost_center_id: null,
+        default_warehouse_id: null,
         default_box_id: null,
         default_bank_account_id: null,
+        stock_control: true,
       }
     }
   },
@@ -180,6 +217,10 @@ watch(
 )
 
 const handleSubmit = () => {
-  emit('submit', { ...form.value })
+  emit('submit', {
+    ...form.value,
+    default_warehouse_id: form.value.default_warehouse_id || null,
+    stock_control: Boolean(form.value.stock_control),
+  })
 }
 </script>

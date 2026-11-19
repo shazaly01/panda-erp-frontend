@@ -1,15 +1,20 @@
-/**
- * ملف أدوات التنسيق (Formatters)
- */
+// src/utils/formatters.js
 
 /**
- * يقوم بتنسيق القيمة الرقمية وإضافة رمز العملة (الافتراضي: "ج.س").
- * @param {number | string | null | undefined} value - القيمة الرقمية.
- * @param {string} currency - رمز العملة الملحق بالقيمة (القيمة الافتراضية "ج.س").
- * @returns {string} - السلسلة المنسقة، مثال: "1,500 ج.س"
+ * ملف أدوات التنسيق (Formatters)
+ * يحتوي على متحكم مركزي للعملة وإعدادات تنسيق الأرقام والتواريخ.
  */
-export function formatCurrency(value, currency = 'ج.س') {
-  // التحقق من القيم الفارغة
+
+// المتحكم المركزي للعملة - يمكنك تغيير القيمة هنا لتنعكس في كامل النظام فوراً (مثال: 'جنيه' أو 'ج.م')
+export const DEFAULT_CURRENCY = 'جنيه'
+
+/**
+ * يقوم بتنسيق القيمة الرقمية وإضافة العملة المركزية ديناميكياً.
+ * @param {number | string | null | undefined} value - القيمة الرقمية.
+ * @returns {string} - السلسلة المنسقة، مثال: "1,500 جنيه" أو "1,250.50 جنيه"
+ */
+export function formatCurrency(value) {
+  // التحقق من القيم الفارغة أو غير المعرفة
   if (value === null || value === undefined || value === '') {
     return 'N/A'
   }
@@ -17,29 +22,30 @@ export function formatCurrency(value, currency = 'ج.س') {
   // تحويل القيمة إلى رقم لضمان عمل الدالة حتى لو جاءت القيمة كنص من السيرفر
   const numValue = Number(value)
 
-  // إذا لم يكن رقماً صحيحاً (NaN)، نعيد القيمة كما هي أو صفر
+  // إذا لم يكن رقماً صحيحاً (NaN)، نعيد صفر متبوعاً بالعملة المركزية
   if (isNaN(numValue)) {
-    return `0 ${currency}`
+    return `0 ${DEFAULT_CURRENCY}`
   }
 
-  // إعدادات التنسيق (أرقام إنجليزية، فواصل آلاف)
+  // إعدادات التنسيق الافتراضية (أرقام إنجليزية، فواصل آلاف، ومع إظهار رقمين عشريين لوجود كسور)
   const options = {
     style: 'decimal',
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   }
 
-  // إزالة الكسور إذا كان الرقم صحيحاً (بدون فكة)
+  // التحقق التلقائي: إذا كان الرقم صحيحاً تماماً (بدون فكة / بدون كسور)
+  // يتم تصفير خانات الكسور تماماً ليظهر العدد صحيحاً مع الحفاظ على فواصل الآلاف
   if (numValue % 1 === 0) {
     options.maximumFractionDigits = 0
     options.minimumFractionDigits = 0
   }
 
-  // التنسيق باستخدام مكتبة المتصفح القياسية
+  // التنسيق باستخدام مكتبة المتصفح القياسية Intl بالاعتماد على الإعدادات المرنة أعلاه
   const formattedNumber = new Intl.NumberFormat('en-US', options).format(numValue)
 
-  // إرجاع الرقم مع رمز العملة
-  return `${formattedNumber} ${currency}`
+  // إرجاع الرقم المنسق متبوعاً بالعملة المركزية التي تم تحديدها في الأعلى
+  return `${formattedNumber} ${DEFAULT_CURRENCY}`
 }
 
 /**

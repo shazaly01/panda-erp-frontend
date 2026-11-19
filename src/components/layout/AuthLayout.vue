@@ -1,15 +1,10 @@
+<!--src\components\layout\AuthLayout.vue-->
 <template>
-  <!--
-    هذا المكون هو مجرد حاوية بسيطة.
-    سيتم عرض صفحة تسجيل الدخول (أو أي صفحة عامة أخرى)
-    مكان <RouterView />.
-  -->
-  <div>
+  <div class="min-h-screen bg-surface-ground text-text-primary transition-colors duration-200">
     <RouterView />
   </div>
 </template>
 
 <script setup>
 import { RouterView } from 'vue-router'
-// لا يوجد منطق برمجي معقد هنا، هو مجرد غلاف.
 </script>

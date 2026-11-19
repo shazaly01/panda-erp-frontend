@@ -1,64 +1,78 @@
+<!-- src/modules/hr/views/loans/components/LoansTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="loans" :is-loading="loading">
+      <!-- 1. الموظف وتاريخ الطلب -->
       <template #cell-employee="{ item }">
-        <div class="flex flex-col gap-1 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex flex-col items-start gap-0.5 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.employee_name }}
           </span>
-          <span class="text-xs text-text-muted">
-            تاريخ الطلب: {{ item.requested_at?.split(' ')[0] || '---' }}
+          <span class="text-[11px] text-text-muted">
+            تاريخ الطلب:
+            <span class="font-mono font-semibold text-text-secondary">
+              {{ item.requested_at?.split(' ')[0] || '---' }}
+            </span>
           </span>
         </div>
       </template>
 
+      <!-- 2. المبلغ والمبرر -->
       <template #cell-loan_info="{ item }">
-        <div class="flex flex-col gap-1">
-          <span class="font-bold font-mono text-sm text-primary">
-            {{ item.amount }}
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <span class="font-mono font-black text-xs sm:text-sm text-primary">
+            {{ formatCurrency(item.amount || 0) }}
           </span>
-          <span class="text-xs text-text-muted truncate max-w-[200px]" :title="item.reason">
-            {{ item.reason }}
+          <span class="text-xs text-text-secondary truncate max-w-[220px]" :title="item.reason">
+            {{ item.reason || '---' }}
           </span>
         </div>
       </template>
 
+      <!-- 3. خطة السداد -->
       <template #cell-installments="{ item }">
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
           <span class="text-xs font-medium text-text-primary">
-            {{ item.installments_count }} أشهر (بواقع {{ item.estimated_installment }} شهرياً)
+            <strong class="font-mono font-black">{{ item.installments_count }}</strong>
+            أشهر (بواقع
+            <strong class="font-mono font-bold text-success">
+              {{ formatCurrency(item.estimated_installment || 0) }}
+            </strong>
+            شهرياً)
           </span>
-          <span class="text-[10px] text-text-muted">
-            يبدأ الخصم: <span class="font-mono">{{ item.deduction_start_date }}</span>
+          <span class="text-[11px] text-text-muted">
+            يبدأ الخصم:
+            <span class="font-mono font-semibold text-text-secondary">
+              {{ item.deduction_start_date || '---' }}
+            </span>
           </span>
         </div>
       </template>
 
+      <!-- 4. الحالة والمعتمد -->
       <template #cell-status="{ item }">
-        <div class="flex flex-col gap-1 items-start">
-          <span
-            class="px-2.5 py-0.5 text-[11px] font-bold rounded-full flex items-center gap-1.5"
-            :class="getStatusClass(item.status)"
-          >
-            <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.status)"></span>
+        <div class="flex flex-col items-center justify-center gap-1" dir="rtl">
+          <AppBadge :variant="getStatusVariant(item.status)" size="xs" pill>
             {{ getStatusLabel(item.status) }}
-          </span>
-          <span v-if="item.approved_by_name" class="text-[10px] text-text-muted">
+          </AppBadge>
+          <span v-if="item.approved_by_name" class="text-[10px] text-text-muted text-center">
             بواسطة: {{ item.approved_by_name }}
           </span>
         </div>
       </template>
 
+      <!-- 5. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <template v-if="item.status === 'pending'">
             <button
               v-if="authStore.can('loan.update')"
-              @click.stop="$emit('edit', item)"
-              class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+              type="button"
+              @click="$emit('edit', item)"
+              class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
               title="تعديل الطلب"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -70,11 +84,12 @@
 
             <button
               v-if="authStore.can('loan.delete')"
-              @click.stop="$emit('delete', item)"
-              class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              type="button"
+              @click="$emit('delete', item)"
+              class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
               title="إلغاء الطلب"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -84,12 +99,13 @@
               </svg>
             </button>
           </template>
-          <span v-else class="text-[10px] text-text-muted italic px-2"> تمت المعالجة </span>
+
+          <span v-else class="text-[11px] text-text-muted italic px-2">تمت المعالجة</span>
         </div>
       </template>
     </AppTable>
 
-    <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
+    <AppPagination :meta="pagination || {}" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
 
@@ -99,10 +115,12 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
+import { formatCurrency } from '@/utils/formatters'
 
-const props = defineProps({
+defineProps({
   loans: { type: Array, required: true },
-  pagination: { type: Object, required: true },
+  pagination: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 })
 
@@ -111,14 +129,13 @@ defineEmits(['page-change', 'edit', 'delete'])
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
-  { key: 'employee', label: 'الموظف والتاريخ', class: 'min-w-[180px]' },
-  { key: 'loan_info', label: 'المبلغ والمبرر', class: 'min-w-[150px]' },
-  { key: 'installments', label: 'خطة السداد', class: 'min-w-[200px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'employee', label: 'الموظف والتاريخ', class: 'min-w-[190px]' },
+  { key: 'loan_info', label: 'المبلغ والمبرر', class: 'min-w-[180px]' },
+  { key: 'installments', label: 'خطة السداد', class: 'min-w-[220px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[130px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 
-// --- دوال مساعدة لتنسيق حالة السلفة ---
 const getStatusLabel = (status) => {
   const labels = {
     pending: 'قيد الانتظار',
@@ -129,23 +146,13 @@ const getStatusLabel = (status) => {
   return labels[status] || status
 }
 
-const getStatusClass = (status) => {
-  const classes = {
-    pending: 'bg-amber-50 text-amber-700 border border-amber-100',
-    approved: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-    rejected: 'bg-rose-50 text-rose-700 border border-rose-100',
-    paid: 'bg-blue-50 text-blue-700 border border-blue-100',
+const getStatusVariant = (status) => {
+  const map = {
+    pending: 'warning',
+    approved: 'success',
+    rejected: 'danger',
+    paid: 'info',
   }
-  return classes[status] || 'bg-surface-ground text-text-secondary border border-surface-border'
-}
-
-const getStatusDotClass = (status) => {
-  const classes = {
-    pending: 'bg-amber-500',
-    approved: 'bg-emerald-500',
-    rejected: 'bg-rose-500',
-    paid: 'bg-blue-500',
-  }
-  return classes[status] || 'bg-gray-400'
+  return map[status] || 'secondary'
 }
 </script>

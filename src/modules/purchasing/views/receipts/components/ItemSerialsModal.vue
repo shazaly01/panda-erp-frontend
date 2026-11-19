@@ -1,381 +1,381 @@
 <!-- src/modules/purchasing/views/receipts/components/ItemSerialsModal.vue -->
 <template>
-  <Teleport to="body">
-    <div
-      v-if="modelValue"
-      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm text-right font-sans"
-      dir="rtl"
-      @keydown.esc="handleClose"
-    >
+  <AppDialog
+    :model-value="modelValue"
+    @update:model-value="handleClose"
+    size="4xl"
+    border-color="border-primary"
+  >
+    <template #title>
       <div
-        class="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#1a1d24] border border-[#3b3f4f] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        class="flex flex-wrap items-center justify-between gap-3 w-full pl-2 text-right"
+        dir="rtl"
       >
-        <!-- 1. ترويسة النافذة المنبثقة -->
+        <div class="flex flex-col gap-0.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm sm:text-base font-black text-text-primary">
+              توثيق ومطابقة سيريالات وأوزان:
+            </span>
+            <span class="text-sm sm:text-base font-black text-primary">
+              {{ item?.product_name || 'أسطوانة الكلور' }}
+            </span>
+          </div>
+          <span class="text-[11px] font-medium text-text-muted">
+            مسح الباركود، قراءة أوزان الميزان (فارغ، قائم، صافي)، وجلب أسطوانات عهدة المورد تلقائياً
+          </span>
+        </div>
+
+        <!-- شارة حالة الاستيفاء التكيفية -->
         <div
-          class="flex items-center justify-between p-4 sm:p-5 border-b border-[#2d3240] bg-[#121316]"
+          class="px-3 py-1 rounded-full border text-xs font-mono font-bold flex items-center gap-2 shrink-0"
+          :class="
+            isQuantityMatched
+              ? 'bg-success/12 text-success border-success/35 shadow-2xs'
+              : 'bg-warning/12 text-warning border-warning/35'
+          "
         >
-          <div class="flex items-center gap-3">
+          <span
+            class="w-2 h-2 rounded-full"
+            :class="isQuantityMatched ? 'bg-success' : 'bg-warning animate-pulse'"
+          ></span>
+          <span v-if="isWeightSerial">
+            المسجل: {{ serialsList.length }} أسطوانة • {{ formatDecimal(totalNetGasWeight) }} كجم
+            غاز
+          </span>
+          <span v-else> المستوفى: {{ serialsList.length }} / {{ targetQuantity }} </span>
+        </div>
+      </div>
+    </template>
+
+    <!-- محتوى النافذة -->
+    <div class="-m-3 space-y-3.5 text-right font-sans" dir="rtl">
+      <!-- شريط مسح الباركود والإضافة السريعة -->
+      <div
+        class="p-3.5 bg-surface-header/60 border border-surface-border border-t-4 border-t-primary rounded-xl space-y-2.5 shadow-2xs"
+      >
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <div
+            class="relative flex-1 h-10 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
+          >
             <span
-              class="w-9 h-9 rounded-xl bg-[#e05e2b]/15 border border-[#e05e2b]/30 text-[#e05e2b] flex items-center justify-center shadow-sm"
+              class="absolute right-3 inset-y-0 flex items-center text-primary pointer-events-none"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
             </span>
 
-            <div>
-              <h2 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
-                <span>توثيق ومطابقة سيريالات وأوزان:</span>
-                <span class="text-[#e05e2b]">{{ item?.product_name || 'أسطوانة الكلور' }}</span>
-              </h2>
-              <p class="text-[11px] text-gray-400 mt-0.5">
-                مسح الباركود، قراءة أوزان الميزان (فارغ، قائم، صافي)، وجلب أسطوانات عهدة المورد
-                تلقائياً
-              </p>
-            </div>
+            <input
+              ref="scanInputRef"
+              type="text"
+              v-model="scannedInput"
+              @keydown.enter.prevent="handleQuickAdd"
+              placeholder="امسح باركود الأسطوانة هنا أو اكتب الرقم التسلسلي واضغط Enter..."
+              class="w-full h-full pr-9 pl-3 bg-transparent text-text-primary text-xs font-mono font-bold outline-none placeholder:font-sans placeholder:font-normal placeholder:text-text-muted"
+            />
           </div>
 
-          <!-- شارة حالة الاستيفاء التكيفية -->
-          <div class="flex items-center gap-2">
-            <div
-              class="px-3 py-1 rounded-xl border text-xs font-mono font-bold flex items-center gap-2"
-              :class="
-                isQuantityMatched
-                  ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
-                  : 'bg-amber-950/60 text-amber-400 border-amber-500/40'
-              "
-            >
-              <span
-                class="w-2 h-2 rounded-full"
-                :class="isQuantityMatched ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'"
-              ></span>
-              <span v-if="isWeightSerial">
-                المسجل: {{ serialsList.length }} أسطوانة •
-                {{ formatDecimal(totalNetGasWeight) }} كجم غاز
-              </span>
-              <span v-else> المستوفى: {{ serialsList.length }} / {{ targetQuantity }} </span>
-            </div>
-
-            <button
-              type="button"
-              @click="handleClose"
-              class="p-2 text-gray-400 hover:text-white hover:bg-[#282c37] rounded-lg transition-colors"
-              title="إغلاق النافذة"
-            >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+          <AppButton type="button" size="sm" class="h-10 px-4 shrink-0" @click="handleQuickAdd">
+            + إضافة الأسطوانة
+          </AppButton>
         </div>
 
-        <!-- 2. شريط مسح الباركود والإضافة السريعة -->
-        <div class="p-4 sm:p-5 bg-[#16171b] border-b border-[#2d3240] space-y-3">
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div class="relative flex-1">
-              <span
-                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                  />
-                </svg>
-              </span>
+        <!-- شريط تنبيه فوري لعهد الأسطوانات المعلقة لدى المورد -->
+        <div
+          v-if="pendingSerialsLoading"
+          class="text-[11px] text-text-muted flex items-center gap-2 font-semibold"
+        >
+          <span
+            class="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"
+          ></span>
+          <span>جاري فحص سجلات الأسطوانات المسجلة للمورد...</span>
+        </div>
 
-              <input
-                ref="scanInputRef"
-                type="text"
-                v-model="scannedInput"
-                @keydown.enter.prevent="handleQuickAdd"
-                placeholder="امسح باركود الأسطوانة هنا أو اكتب الرقم التسلسلي واضغط Enter..."
-                class="w-full h-11 pr-11 pl-4 bg-[#111215] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b]/40 rounded-xl text-white text-xs font-mono font-bold outline-none transition-all placeholder:font-sans placeholder:font-normal placeholder:text-gray-500"
+        <div
+          v-else-if="supplierPendingSerials.length > 0"
+          class="text-[11px] text-info bg-info/10 border border-info/30 px-3 py-1.5 rounded-lg flex flex-wrap items-center justify-between gap-2 font-semibold"
+        >
+          <span>
+            يوجد عدد ({{ supplierPendingSerials.length }}) أسطوانة مسجلة للتعبئة أو فارغة جاهزة
+            للاستلام. عند مسح أي منها سيتم التعرف عليها وجلب وزنها الفارغ تلقائياً.
+          </span>
+          <span
+            class="text-text-secondary font-mono text-[10px] bg-surface-card px-2 py-0.5 rounded border border-surface-border"
+          >
+            المورد: #{{ supplierId }}
+          </span>
+        </div>
+      </div>
+
+      <!-- قائمة الأسطوانات المسجلة وقراءات الميزان -->
+      <div class="space-y-2.5">
+        <div
+          v-if="serialsList.length === 0"
+          class="py-12 text-center bg-surface-section border border-surface-border rounded-xl space-y-2"
+        >
+          <div
+            class="w-11 h-11 mx-auto rounded-xl bg-surface-ground border border-surface-border flex items-center justify-center text-text-muted"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
-            </div>
-
-            <button
-              type="button"
-              @click="handleQuickAdd"
-              class="h-11 px-5 bg-[#e05e2b] hover:bg-[#d04f1e] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(224,94,43,0.3)] flex items-center justify-center gap-2 whitespace-nowrap"
-            >
-              <span>+ إضافة الأسطوانة</span>
-            </button>
+            </svg>
           </div>
-
-          <!-- شريط تنبيه فوري لعهد الأسطوانات المعلقة لدى المورد -->
-          <div
-            v-if="pendingSerialsLoading"
-            class="text-[11px] text-gray-400 flex items-center gap-2"
-          >
-            <span
-              class="w-3 h-3 border-2 border-[#e05e2b] border-t-transparent rounded-full animate-spin"
-            ></span>
-            <span>جاري فحص سجلات الأسطوانات المسجلة للمورد...</span>
-          </div>
-          <div
-            v-else-if="supplierPendingSerials.length > 0"
-            class="text-[11px] text-sky-400 bg-sky-950/40 border border-sky-800/40 px-3 py-1.5 rounded-lg flex items-center justify-between"
-          >
-            <span>
-              يوجد عدد ({{ supplierPendingSerials.length }}) أسطوانة مسجلة للتعبئة أو فارغة جاهزة
-              للاستلام. عند مسح أي منها سيتم التعرف عليها وجلب وزنها الفارغ تلقائياً.
-            </span>
-            <span class="text-gray-400 font-mono text-[10px]">المورد: #{{ supplierId }}</span>
-          </div>
+          <p class="text-xs font-black text-text-secondary">لم يتم إدراج أي أسطوانة بعد</p>
+          <p class="text-[11px] text-text-muted">
+            استخدم قارئ الباركود لمسح أرقام الأسطوانات تباعاً وتسجيل قراءات الميزان.
+          </p>
         </div>
 
-        <!-- 3. جدول الأسطوانات المسجلة وقراءات الميزان -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-          <div v-if="serialsList.length === 0" class="py-16 text-center text-gray-500 space-y-3">
-            <div
-              class="w-12 h-12 mx-auto rounded-2xl bg-[#232630] border border-[#3b3f4f] flex items-center justify-center text-gray-400"
+        <div
+          v-for="(row, index) in serialsList"
+          :key="row.uid || index"
+          class="p-3.5 bg-surface-card border border-surface-border hover:border-primary/45 rounded-xl shadow-2xs transition-all space-y-3"
+        >
+          <!-- السطر الأول: إدخال/تعديل كود الأسطوانة وشارة الحالة وإجراء الحذف -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1 min-w-[240px] max-w-lg">
+              <span
+                class="w-6 h-6 rounded-md bg-primary text-white text-[11px] font-mono font-black flex items-center justify-center shrink-0 shadow-2xs"
+              >
+                {{ index + 1 }}
+              </span>
+
+              <!-- حقل إدخال وتعديل كود الأسطوانة مباشرة -->
+              <div class="relative flex-1">
+                <input
+                  type="text"
+                  v-model="row.serial_number"
+                  @change="onSerialNumberChange(row)"
+                  placeholder="رقم الأسطوانة..."
+                  title="انقر لتعديل كود الأسطوانة في حال وجود خطأ"
+                  class="w-full h-8 px-3 bg-surface-ground focus:bg-surface-section border border-surface-border hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-text-primary font-mono text-xs font-black outline-none transition-all"
+                />
+              </div>
+
+              <!-- شارة نوع الأسطوانة -->
+              <AppBadge
+                v-if="row.matched_status === 'with_vendor'"
+                variant="success"
+                size="xs"
+                class="whitespace-nowrap"
+              >
+                ✓ معادة من التعبئة
+              </AppBadge>
+              <AppBadge
+                v-else-if="row.matched_status === 'empty'"
+                variant="info"
+                size="xs"
+                class="whitespace-nowrap"
+              >
+                ✓ مسجلة كفارغة بالمستودع
+              </AppBadge>
+              <AppBadge
+                v-else-if="row.replaced_serial_id"
+                variant="warning"
+                size="xs"
+                class="whitespace-nowrap"
+              >
+                ⟲ أسطوانة بديلة
+              </AppBadge>
+              <AppBadge v-else variant="primary" size="xs" class="whitespace-nowrap">
+                + وارد جديد
+              </AppBadge>
+            </div>
+
+            <!-- زر حذف الأسطوانة لإعادة مسحها -->
+            <button
+              type="button"
+              @click="removeSerial(index)"
+              class="p-1.5 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
+              title="حذف هذا السيريال لإعادة مسحه"
             >
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-            </div>
-            <p class="text-xs font-bold text-gray-400">لم يتم إدراج أي أسطوانة بعد</p>
-            <p class="text-[11px] text-gray-500">
-              استخدم قارئ الباركود لمسح أرقام الأسطوانات تباعاً وتسجيل قراءات الميزان.
-            </p>
+            </button>
           </div>
 
+          <!-- السطر الثاني: قراءات الميزان (فارغ - قائم - صافي) وخيار الاستبدال -->
           <div
-            v-for="(row, index) in serialsList"
-            :key="row.uid || index"
-            class="p-3.5 bg-[#14161b] border border-[#2d3240] hover:border-[#42485c] rounded-xl transition-all space-y-3"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 items-end pt-2 border-t border-surface-border/70"
           >
-            <!-- السطر الأول: إدخال/تعديل كود الأسطوانة وشارة الحالة وإجراء الحذف -->
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-1 max-w-md">
+            <!-- 1. الوزن الفارغ (Tare Weight) -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-text-secondary pr-1">
+                الوزن الفارغ للحديد (Tare) <span class="text-danger">*</span>
+              </label>
+              <div class="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="row.tare_weight"
+                  @input="recalculateNet(row)"
+                  placeholder="450.00"
+                  class="w-full h-8 pr-2.5 pl-9 bg-surface-ground focus:bg-surface-section border border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-text-primary font-mono text-xs font-bold outline-none transition-all"
+                />
                 <span
-                  class="w-7 h-7 rounded-lg bg-[#232630] text-gray-400 text-xs font-mono font-bold flex items-center justify-center shrink-0"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-text-muted font-bold pointer-events-none"
                 >
-                  {{ index + 1 }}
-                </span>
-
-                <!-- حقل إدخال وتعديل كود الأسطوانة مباشرة -->
-                <div class="relative flex-1">
-                  <input
-                    type="text"
-                    v-model="row.serial_number"
-                    @change="onSerialNumberChange(row)"
-                    placeholder="رقم الأسطوانة..."
-                    title="انقر لتعديل كود الأسطوانة في حال وجود خطأ"
-                    class="w-full h-8 px-3 bg-[#1c1f26] border border-[#3b3f4f] hover:border-gray-400 focus:border-[#e05e2b] rounded-lg text-white font-mono text-xs font-black outline-none transition-all shadow-inner"
-                  />
-                </div>
-
-                <!-- شارة نوع الأسطوانة (معادة من التعبئة / فارغة سابقة / بديلة / جديدة) -->
-                <span
-                  v-if="row.matched_status === 'with_vendor'"
-                  class="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 whitespace-nowrap"
-                >
-                  ✓ معادة من التعبئة
-                </span>
-                <span
-                  v-else-if="row.matched_status === 'empty'"
-                  class="text-[10px] px-2 py-0.5 rounded-md font-bold bg-cyan-950/60 text-cyan-400 border border-cyan-500/30 whitespace-nowrap"
-                >
-                  ✓ مسجلة كفارغة بالمستودع
-                </span>
-                <span
-                  v-else-if="row.replaced_serial_id"
-                  class="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-950/60 text-amber-400 border border-amber-500/30 whitespace-nowrap"
-                >
-                  ⟲ أسطوانة بديلة
-                </span>
-                <span
-                  v-else
-                  class="text-[10px] px-2 py-0.5 rounded-md font-bold bg-sky-950/60 text-sky-400 border border-sky-500/30 whitespace-nowrap"
-                >
-                  + وارد جديد
+                  كجم
                 </span>
               </div>
-
-              <!-- زر حذف الأسطوانة لإعادة مسحها -->
-              <button
-                type="button"
-                @click="removeSerial(index)"
-                class="p-1.5 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                title="حذف هذا السيريال لإعادة مسحه"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
             </div>
 
-            <!-- السطر الثاني: قراءات الميزان (فارغ - قائم - صافي) وخيار الاستبدال -->
-            <div
-              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end pt-1 border-t border-[#232630]"
-            >
-              <!-- 1. الوزن الفارغ (Tare Weight) -->
-              <div class="space-y-1">
-                <label class="block text-[11px] font-bold text-gray-400">
-                  الوزن الفارغ للحديد (Tare) <span class="text-rose-400">*</span>
-                </label>
-                <div class="relative">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    v-model.number="row.tare_weight"
-                    @input="recalculateNet(row)"
-                    placeholder="450.00"
-                    class="w-full h-8 px-2.5 bg-[#181a20] border border-[#373b49] focus:border-[#e05e2b] rounded-lg text-white font-mono text-xs font-bold outline-none"
-                  />
-                  <span
-                    class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-bold"
-                    >كجم</span
-                  >
-                </div>
-              </div>
-
-              <!-- 2. الوزن القائم الإجمالي بالميزان (Gross Weight) -->
-              <div class="space-y-1">
-                <label class="block text-[11px] font-bold text-gray-400">
-                  قراءة الميزان القائم (Gross) <span class="text-rose-400">*</span>
-                </label>
-                <div class="relative">
-                  <input
-                    :ref="(el) => setGrossInputRef(el, index)"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    v-model.number="row.gross_weight"
-                    @input="recalculateNet(row)"
-                    @keydown.enter.prevent="handleGrossWeightEnter(index)"
-                    placeholder="1350.00"
-                    class="w-full h-8 px-2.5 bg-[#181a20] border border-[#373b49] focus:border-[#e05e2b] rounded-lg text-sky-400 font-mono text-xs font-black outline-none"
-                  />
-                  <span
-                    class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-bold"
-                    >كجم</span
-                  >
-                </div>
-              </div>
-
-              <!-- 3. صافي وزن غاز الكلور المحسوب آلياً (Net Weight) -->
-              <div class="space-y-1">
-                <label class="block text-[11px] font-bold text-emerald-400">
-                  صافي وزن الغاز المحسوب
-                </label>
-                <div
-                  class="h-8 px-2.5 bg-[#13201a] border border-emerald-500/40 rounded-lg flex items-center justify-between text-emerald-400 font-mono text-xs font-black"
+            <!-- 2. الوزن القائم الإجمالي بالميزان (Gross Weight) -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-text-secondary pr-1">
+                قراءة الميزان القائم (Gross) <span class="text-danger">*</span>
+              </label>
+              <div class="relative">
+                <input
+                  :ref="(el) => setGrossInputRef(el, index)"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="row.gross_weight"
+                  @input="recalculateNet(row)"
+                  @keydown.enter.prevent="handleGrossWeightEnter(index)"
+                  placeholder="1350.00"
+                  class="w-full h-8 pr-2.5 pl-9 bg-surface-ground focus:bg-surface-section border border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-info font-mono text-xs font-black outline-none transition-all"
+                />
+                <span
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-text-muted font-bold pointer-events-none"
                 >
-                  <span>{{ formatDecimal(row.net_weight) }}</span>
-                  <span class="text-[10px] text-emerald-500 font-bold">كجم كلور</span>
-                </div>
+                  كجم
+                </span>
               </div>
+            </div>
 
-              <!-- 4. خيار الاستبدال الذكي (اختياري تماماً) -->
-              <div class="space-y-1">
-                <label class="block text-[11px] font-bold text-amber-400">
-                  بديلة عن أسطوانة لدى المورد (اختياري)
-                </label>
+            <!-- 3. صافي وزن غاز الكلور المحسوب آلياً (Net Weight) -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-success pr-1">
+                صافي وزن الغاز المحسوب
+              </label>
+              <div
+                class="h-8 px-2.5 bg-success/12 border border-success/35 rounded-lg flex items-center justify-between text-success font-mono text-xs font-black"
+              >
+                <span>{{ formatDecimal(row.net_weight) }}</span>
+                <span class="text-[10px] font-sans font-bold">كجم كلور</span>
+              </div>
+            </div>
+
+            <!-- 4. خيار الاستبدال الذكي -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-warning pr-1">
+                بديلة عن أسطوانة لدى المورد (اختياري)
+              </label>
+              <div class="relative">
                 <select
                   v-model="row.replaced_serial_id"
-                  style="color-scheme: dark"
-                  class="w-full h-8 px-2 bg-[#181a20] border border-[#373b49] focus:border-amber-500 rounded-lg text-amber-300 text-xs font-bold outline-none"
+                  class="w-full h-8 pr-2.5 pl-6 bg-surface-ground focus:bg-surface-section border border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-text-primary text-xs font-bold outline-none appearance-none cursor-pointer transition-all"
                 >
-                  <option :value="null">-- لا يوجد استبدال (توريد عادي) --</option>
+                  <option :value="null" class="bg-surface-section text-text-muted">
+                    -- لا يوجد استبدال (توريد عادي) --
+                  </option>
                   <option
                     v-for="pending in availablePendingForReplacement(row.replaced_serial_id)"
                     :key="pending.id"
                     :value="pending.id"
+                    class="bg-surface-section text-text-primary font-bold"
                   >
                     بديلة عن: {{ pending.serial_number }} (فارغ:
                     {{ pending.tare_weight || '؟' }} كجم)
                   </option>
                 </select>
+                <span
+                  class="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-[8px]"
+                >
+                  ▼
+                </span>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- 4. تذييل النافذة والإجماليات الوزنية وأزرار الاعتماد -->
-        <div
-          class="p-4 sm:p-5 border-t border-[#2d3240] bg-[#121316] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
-        >
-          <!-- ملخص الأوزان الإجمالية للشحنة -->
-          <div class="flex items-center gap-4 text-xs font-mono">
-            <div class="flex flex-col">
-              <span class="text-[10px] text-gray-500 font-sans">إجمالي وزن الغاز الصافي:</span>
-              <span class="text-sm font-black text-emerald-400">
-                {{ formatDecimal(totalNetGasWeight) }}
-                <span class="text-[10px] font-sans">كجم كلور</span>
-              </span>
-            </div>
-
-            <div class="w-px h-7 bg-[#2d3240]"></div>
-
-            <div class="flex flex-col">
-              <span class="text-[10px] text-gray-500 font-sans">إجمالي الوزن القائم:</span>
-              <span class="text-xs font-bold text-gray-300">
-                {{ formatDecimal(totalGrossWeight) }} <span class="text-[10px] font-sans">كجم</span>
-              </span>
-            </div>
-          </div>
-
-          <!-- أزرار الإجراءات -->
-          <div class="flex items-center gap-3 justify-end">
-            <button
-              type="button"
-              @click="handleClose"
-              class="h-10 px-4 text-gray-300 hover:text-white bg-[#232630] hover:bg-[#2c303d] border border-gray-700 text-xs font-bold rounded-xl transition-all"
-            >
-              إلغاء
-            </button>
-
-            <button
-              type="button"
-              :disabled="!isQuantityMatched"
-              @click="handleConfirmAndSave"
-              class="h-10 px-5 bg-[#e05e2b] hover:bg-[#d04f1e] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(224,94,43,0.35)] flex items-center gap-2"
-            >
-              <span v-if="isWeightSerial">
-                اعتماد وتثبيت الأسطوانات ({{ serialsList.length }} أسطوانة •
-                {{ formatDecimal(totalNetGasWeight) }} كجم)
-              </span>
-              <span v-else>
-                اعتماد وتثبيت السيريالات ({{ serialsList.length }} / {{ targetQuantity }})
-              </span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
-  </Teleport>
+
+    <!-- تذييل النافذة والإجماليات الوزنية وأزرار الاعتماد -->
+    <template #footer>
+      <div
+        class="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-right font-sans"
+        dir="rtl"
+      >
+        <!-- ملخص الأوزان الإجمالية للشحنة -->
+        <div class="flex items-center gap-3 text-xs font-mono flex-wrap">
+          <div
+            class="flex items-center gap-2 px-3 py-1 rounded-lg bg-success/10 border border-success/30"
+          >
+            <span class="text-[11px] text-text-secondary font-sans font-bold">
+              إجمالي وزن الغاز الصافي:
+            </span>
+            <span class="text-sm font-black text-success">
+              {{ formatDecimal(totalNetGasWeight) }}
+              <span class="text-[10px] font-sans">كجم كلور</span>
+            </span>
+          </div>
+
+          <div
+            class="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-ground border border-surface-border"
+          >
+            <span class="text-[11px] text-text-secondary font-sans font-bold">
+              إجمالي الوزن القائم:
+            </span>
+            <span class="text-xs font-black text-text-primary">
+              {{ formatDecimal(totalGrossWeight) }}
+              <span class="text-[10px] font-sans text-text-muted">كجم</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- أزرار الإجراءات -->
+        <div class="flex items-center gap-2 justify-end">
+          <AppButton type="button" variant="secondary" size="sm" @click="handleClose">
+            إلغاء
+          </AppButton>
+
+          <AppButton
+            type="button"
+            size="sm"
+            :disabled="!isQuantityMatched"
+            @click="handleConfirmAndSave"
+          >
+            <span v-if="isWeightSerial">
+              اعتماد وتثبيت الأسطوانات ({{ serialsList.length }} أسطوانة •
+              {{ formatDecimal(totalNetGasWeight) }} كجم)
+            </span>
+            <span v-else>
+              اعتماد وتثبيت السيريالات ({{ serialsList.length }} / {{ targetQuantity }})
+            </span>
+          </AppButton>
+        </div>
+      </div>
+    </template>
+  </AppDialog>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { useToast } from 'vue-toastification'
 import apiClient from '@/services/apiClient'
+import AppDialog from '@/components/ui/AppDialog.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

@@ -1,76 +1,84 @@
+<!-- src/modules/inventory/views/warehouse-locations/components/WarehouseLocationForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div>
-        <AppDropdown
-          id="loc-warehouse"
-          label="المستودع *"
-          :model-value="modelValue.warehouse_id"
-          @update:model-value="onWarehouseChange"
-          :options="warehouses"
-          option-label="name"
-          option-value="id"
-          placeholder="اختر المستودع..."
-          required
-        />
-      </div>
-
-      <div>
-        <AppDropdown
-          id="loc-parent"
-          label="الموقع الأب (الرئيسي)"
-          :model-value="modelValue.parent_id"
-          @update:model-value="updateField('parent_id', $event)"
-          :options="filteredParentLocations"
-          option-label="name"
-          option-value="id"
-          placeholder="اختر الموقع الأب (اختياري)"
-          :show-clear="true"
-          :disabled="!modelValue.warehouse_id"
-        />
-      </div>
-
-      <div>
-        <AppInput
-          id="loc-name"
-          type="text"
-          label="اسم الموقع *"
-          :model-value="modelValue.name"
-          @update:model-value="updateField('name', $event)"
-          placeholder="مثال: الممر 1، الرف أ-3، الحاوية 12..."
-          required
-        />
-      </div>
-
-      <div>
-        <AppInput
-          id="loc-code"
-          type="text"
-          label="كود/رمز الموقع"
-          :model-value="modelValue.code"
-          @update:model-value="updateField('code', $event)"
-          placeholder="مثال: AISLE-01, RACK-A3..."
-          class="font-mono text-left"
-          dir="ltr"
-        />
-      </div>
-
-      <div class="md:col-span-2">
-        <AppDropdown
-          id="loc-type"
-          label="نوع الموقع"
-          :model-value="modelValue.type"
-          @update:model-value="updateField('type', $event)"
-          :options="typeOptions"
-          option-label="name"
-          option-value="id"
-          placeholder="اختر نوع الموقع..."
-        />
-      </div>
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-2.5 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <!-- 1. المستودع -->
+    <div>
+      <AppDropdown
+        id="loc-warehouse"
+        label="المستودع *"
+        :model-value="modelValue.warehouse_id"
+        @update:model-value="onWarehouseChange"
+        :options="warehouses"
+        option-label="name"
+        option-value="id"
+        placeholder="اختر المستودع..."
+        required
+      />
     </div>
 
-    <div class="flex items-center gap-3 pt-2">
-      <label class="relative inline-flex items-center cursor-pointer">
+    <!-- 2. الموقع الأب -->
+    <div>
+      <AppDropdown
+        id="loc-parent"
+        label="الموقع الأب (الرئيسي)"
+        :model-value="modelValue.parent_id"
+        @update:model-value="updateField('parent_id', $event)"
+        :options="filteredParentLocations"
+        option-label="name"
+        option-value="id"
+        placeholder="اختر الموقع الأب (اختياري)"
+        :show-clear="true"
+        :disabled="!modelValue.warehouse_id"
+      />
+    </div>
+
+    <!-- 3. اسم الموقع -->
+    <div>
+      <AppInput
+        id="loc-name"
+        type="text"
+        label="اسم الموقع *"
+        :model-value="modelValue.name"
+        @update:model-value="updateField('name', $event)"
+        placeholder="مثال: الممر 1، الرف أ-3، الحاوية 12..."
+        required
+      />
+    </div>
+
+    <!-- 4. كود/رمز الموقع -->
+    <div>
+      <AppInput
+        id="loc-code"
+        type="text"
+        label="كود/رمز الموقع"
+        :model-value="modelValue.code"
+        @update:model-value="updateField('code', $event)"
+        placeholder="مثال: AISLE-01, RACK-A3..."
+      />
+    </div>
+
+    <!-- 5. نوع الموقع -->
+    <div>
+      <AppDropdown
+        id="loc-type"
+        label="نوع الموقع"
+        :model-value="modelValue.type"
+        @update:model-value="updateField('type', $event)"
+        :options="typeOptions"
+        option-label="name"
+        option-value="id"
+        placeholder="اختر نوع الموقع..."
+      />
+    </div>
+
+    <!-- 6. حالة التفعيل -->
+    <div
+      class="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-card border border-surface-border"
+    >
+      <label class="relative inline-flex items-center cursor-pointer select-none">
         <input
           type="checkbox"
           :checked="modelValue.is_active"
@@ -78,12 +86,23 @@
           class="sr-only peer"
         />
         <div
-          class="w-11 h-6 bg-surface-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
+          class="w-10 h-5 bg-surface-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-surface-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
         ></div>
-        <span class="ms-3 text-sm font-medium text-text-primary">
+        <span class="ms-2.5 text-xs font-bold text-text-primary">
           {{ modelValue.is_active ? 'الموقع نشط (متاح للاستخدام)' : 'الموقع موقوف' }}
         </span>
       </label>
+
+      <span
+        class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+        :class="
+          modelValue.is_active
+            ? 'bg-success/10 text-success border-success/30'
+            : 'bg-danger/10 text-danger border-danger/30'
+        "
+      >
+        {{ modelValue.is_active ? 'مفعّل' : 'معطّل' }}
+      </span>
     </div>
   </div>
 </template>

@@ -1,18 +1,30 @@
 <!-- src/modules/inventory/views/adjustments/components/AdjustmentHeader.vue -->
 <template>
   <div
-    class="p-4 sm:p-5 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl space-y-4 text-right font-sans"
+    class="p-3 bg-surface-header/60 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs space-y-2.5 text-right font-sans transition-all duration-200"
     dir="rtl"
   >
-    <!-- شبكة الحقول الأساسية: 4 أعمدة متناسقة -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- شريط عنوان القسم العلوي -->
+    <div class="flex items-center justify-between pb-1 border-b border-primary/15">
+      <span class="text-[11px] font-black text-text-secondary flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+        بيانات المستودع ووثيقة التسوية الجردية
+      </span>
+    </div>
+
+    <!-- شبكة الحقول الأساسية: 4 أعمدة متساوية -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
       <!-- 1. رقم مستند التسوية (adjustment_number) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300"> رقم وثيقة التسوية </label>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          رقم وثيقة التسوية
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span
+            class="absolute right-2.5 inset-y-0 flex items-center text-primary pointer-events-none z-10"
+          >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -27,27 +39,27 @@
             type="text"
             v-model="formData.adjustment_number"
             placeholder="رقم طلب التسوية..."
-            class="block w-full h-full pr-10 pl-4 bg-transparent text-white font-mono font-bold text-xs focus:outline-none placeholder-gray-500"
+            class="block w-full h-full pr-8 pl-3 bg-transparent text-text-primary placeholder:text-text-muted font-mono font-bold text-xs focus:outline-none"
           />
         </div>
         <p
           v-if="getFieldError('adjustment_number')"
-          class="text-rose-400 text-[10px] font-bold pr-1"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
         >
           {{ getFieldError('adjustment_number') }}
         </p>
       </div>
 
       <!-- 2. المستودع الخاضع للجرد (warehouse_id) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300">
-          المستودع الخاضع للجرد <span class="text-rose-500">*</span>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          المستودع الخاضع للجرد <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
         >
           <span
-            class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
+            class="absolute right-2.5 inset-y-0 flex items-center text-primary pointer-events-none z-10"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -58,36 +70,42 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <WarehouseDropdown
               id="adjustment-warehouse-id"
               v-model="formData.warehouse_id"
               label=""
-              class="w-full bg-transparent header-dropdown"
+              class="w-full bg-transparent header-embedded-dropdown"
             />
           </div>
         </div>
-        <p v-if="getFieldError('warehouse_id')" class="text-rose-400 text-[10px] font-bold pr-1">
+        <p
+          v-if="getFieldError('warehouse_id')"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+        >
           {{ getFieldError('warehouse_id') }}
         </p>
       </div>
 
       <!-- 3. تاريخ التسوية (adjustment_date) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300">
-          تاريخ التسوية <span class="text-rose-500">*</span>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          تاريخ التسوية <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <input
             type="date"
             v-model="formData.adjustment_date"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            class="block w-full h-full pr-3 pl-16 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right cursor-pointer"
           />
 
-          <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span
+            class="absolute left-2.5 inset-y-0 flex items-center text-text-muted pointer-events-none gap-1 text-xs z-10"
+          >
+            <span class="font-medium text-[10px]">تاريخ</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -97,25 +115,30 @@
             </svg>
           </span>
         </div>
-        <p v-if="getFieldError('adjustment_date')" class="text-rose-400 text-[10px] font-bold pr-1">
+        <p
+          v-if="getFieldError('adjustment_date')"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+        >
           {{ getFieldError('adjustment_date') }}
         </p>
       </div>
 
       <!-- 4. نوع حركة التسوية المخزنية (type) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300"> نوع حركة التسوية </label>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          نوع حركة التسوية
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border rounded-xl flex items-center transition-all duration-200"
+          class="relative w-full h-9 bg-surface-card border rounded-lg flex items-center shadow-2xs transition-all duration-200"
           :class="[
             isTypeLocked
-              ? 'border-emerald-600/50 bg-[#121316] opacity-90'
-              : 'border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30',
+              ? 'border-success/50 bg-surface-card/75 opacity-95'
+              : 'border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
           ]"
         >
           <span
-            class="absolute right-3 pointer-events-none z-10"
-            :class="isTypeLocked ? 'text-emerald-400' : 'text-gray-400'"
+            class="absolute right-2.5 inset-y-0 flex items-center pointer-events-none z-10"
+            :class="isTypeLocked ? 'text-success' : 'text-primary'"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -130,36 +153,39 @@
           <select
             v-model="formData.type"
             :disabled="isTypeLocked"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:cursor-not-allowed"
+            class="block w-full h-full pr-8 pl-8 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:cursor-not-allowed"
           >
-            <option value="physical_count" class="bg-[#16171b]">
+            <option value="physical_count" class="bg-surface-section text-text-primary">
               جرد دوري / فعلي (Physical Count)
             </option>
-            <option value="opening_balance" class="bg-[#16171b]">
+            <option value="opening_balance" class="bg-surface-section text-text-primary">
               رصيد افتتاحي (Opening Balance)
             </option>
-            <option value="general_adjustment" class="bg-[#16171b]">
+            <option value="general_adjustment" class="bg-surface-section text-text-primary">
               تسوية عامة (General Adjustment)
             </option>
-            <option value="damage" class="bg-[#16171b]">تسوية بضاعة تالفة (Damage)</option>
-            <option value="loss" class="bg-[#16171b]">تسوية فاقد وعجز (Loss)</option>
+            <option value="damage" class="bg-surface-section text-text-primary">
+              تسوية بضاعة تالفة (Damage)
+            </option>
+            <option value="loss" class="bg-surface-section text-text-primary">
+              تسوية فاقد وعجز (Loss)
+            </option>
           </select>
 
           <span
             v-if="!isTypeLocked"
-            class="absolute left-4 text-gray-500 pointer-events-none text-[10px]"
+            class="absolute left-3 inset-y-0 flex items-center text-text-muted pointer-events-none text-[9px]"
           >
             ▼
           </span>
           <span
             v-else
-            class="absolute left-3 text-[10px] font-bold text-emerald-400/80 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20 pointer-events-none"
+            class="absolute left-2 text-[9px] font-bold text-success bg-success/10 px-1.5 py-0.5 rounded border border-success/25 pointer-events-none"
           >
-            محدد تلقائياً
+            تلقائي
           </span>
         </div>
-        <p v-if="getFieldError('type')" class="text-rose-400 text-[10px] font-bold pr-1">
+        <p v-if="getFieldError('type')" class="text-danger text-[10px] font-bold mt-0.5 pr-1">
           {{ getFieldError('type') }}
         </p>
       </div>
@@ -190,39 +216,35 @@ const getFieldError = (path) => {
 </script>
 
 <style scoped>
-input[type='date']::-webkit-calendar-picker-indicator {
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
   filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
 }
 
-select option {
-  background-color: #16171b !important;
-  color: #f8fafc !important;
-}
-
 /* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
-:deep(.header-dropdown .p-dropdown),
-:deep(.header-dropdown [data-pc-name='dropdown']),
-:deep(.header-dropdown [data-pc-section='root']),
-:deep(.header-dropdown div.inline-flex) {
+:deep(.header-embedded-dropdown .p-dropdown),
+:deep(.header-embedded-dropdown [data-pc-name='dropdown']),
+:deep(.header-embedded-dropdown [data-pc-section='root']),
+:deep(.header-embedded-dropdown div.inline-flex) {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  height: 36px !important;
+  min-height: 36px !important;
 }
 
-:deep(.header-dropdown .p-dropdown-label),
-:deep(.header-dropdown [data-pc-section='input']) {
+:deep(.header-embedded-dropdown .p-dropdown-label),
+:deep(.header-embedded-dropdown [data-pc-section='input']) {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
-  padding-right: 0.25rem !important;
-}
-
-:deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
-  box-shadow: none !important;
-  border: none !important;
+  padding: 0 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 </style>

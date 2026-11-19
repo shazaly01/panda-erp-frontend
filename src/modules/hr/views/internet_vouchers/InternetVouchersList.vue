@@ -1,26 +1,39 @@
+<!-- src/modules/hr/views/internet_vouchers/InternetVouchersList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <!-- الرأس والأزرار -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">أكواد الإنترنت</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إدارة مخزون أكواد الإنترنت، رفع الملفات، ومتابعة سجلات الصرف للموظفين.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>أكواد الإنترنت</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
-      <div class="flex gap-3">
+
+      <div class="flex items-center gap-2 flex-wrap">
         <!-- زر الصرف اليدوي -->
         <AppButton
           v-if="authStore.can('internet_vouchers.assign')"
-          @click="openAssignModal"
           variant="secondary"
+          size="sm"
+          @click="openAssignModal"
           icon="user"
         >
           صرف كود يدوي
         </AppButton>
+
         <!-- زر استيراد CSV -->
         <AppButton
           v-if="authStore.can('internet_vouchers.import')"
+          size="sm"
           @click="openImportModal"
           icon="upload"
         >
@@ -29,7 +42,7 @@
       </div>
     </div>
 
-    <!-- مكون الفلترة (سنبنيه في الرد القادم) -->
+    <!-- شريط البحث والفلترة -->
     <VouchersFilter
       v-model:searchQuery="filters.search"
       v-model:status="filters.status"
@@ -37,7 +50,7 @@
       @update:status="onFilterChange"
     />
 
-    <!-- مكون الجدول -->
+    <!-- جدول بيانات الأكواد -->
     <VouchersTable
       :vouchers="vouchers"
       :pagination="pagination"
@@ -45,10 +58,10 @@
       @page-change="handlePageChange"
     />
 
-    <!-- مكون شاشة الرفع المنبثقة الكاملة (سنبنيه في الرد القادم) -->
+    <!-- نافذة رفع واستيراد ملف الأكواد -->
     <VoucherImportModal v-model="isImportModalOpen" @imported="handleImportSuccess" />
 
-    <!-- مكون شاشة الصرف اليدوي (سنبنيه في الرد القادم) -->
+    <!-- نافذة الصرف اليدوي للموظف -->
     <VoucherAssignModal v-model="isAssignModalOpen" @assigned="handleAssignSuccess" />
   </div>
 </template>
@@ -94,7 +107,7 @@ const onFilterChange = () => {
 const handlePageChange = async (page = 1) => {
   try {
     await voucherStore.fetchVouchers({ page, ...filters })
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب بيانات الأكواد.')
   }
 }
@@ -118,12 +131,12 @@ const openAssignModal = () => {
 const handleImportSuccess = async () => {
   toast.success('تم استيراد الأكواد بنجاح!')
   isImportModalOpen.value = false
-  await handlePageChange(1) // تحديث الجدول
+  await handlePageChange(1)
 }
 
 const handleAssignSuccess = async () => {
   toast.success('تم صرف الكود للموظف بنجاح!')
   isAssignModalOpen.value = false
-  await handlePageChange(1) // تحديث الجدول
+  await handlePageChange(1)
 }
 </script>

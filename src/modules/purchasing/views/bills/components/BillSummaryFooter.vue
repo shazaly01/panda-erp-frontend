@@ -1,46 +1,84 @@
-<!--src/modules/purchasing/views/bills/components/BillSummaryFooter.vue-->
+<!-- src/modules/purchasing/views/bills/components/BillSummaryFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة تفقيط الحسابات والإجماليات النهائية (5 أعمدة - ملمومة ومركزة) -->
+  <div
+    class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 text-right font-sans transition-colors duration-200 items-stretch"
+    dir="rtl"
+  >
+    <!-- 1. بطاقة الشروط والملاحظات وبيانات التوريد (7 أعمدة - الجانب الأيمن) -->
     <div
-      class="md:col-span-5 p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-3"
+      class="lg:col-span-7 p-4 bg-surface-section rounded-xl border border-surface-border shadow-xs flex flex-col justify-between space-y-2.5"
     >
-      <div class="space-y-2 text-xs font-semibold text-gray-400">
-        <h3
-          class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 flex justify-between items-center"
+      <div class="flex flex-col flex-1">
+        <div
+          class="flex items-center justify-between border-b border-surface-border/80 pb-2 mb-2.5"
         >
-          <span>ملخص الحسابات والضريبة</span>
+          <label class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+            <span>ملاحظات الفاتورة وبيانات التوريد</span>
+          </label>
+          <span class="text-[10px] text-text-muted font-bold">اختياري</span>
+        </div>
+
+        <textarea
+          v-model="formData.notes"
+          rows="5"
+          placeholder="سجل شروط الدفع، تفاصيل بوليصة الشحن، أو أي ملاحظات توثيقية تخص عملية الشراء..."
+          class="w-full flex-1 min-h-[125px] p-3 border border-surface-border hover:border-primary/50 focus:border-primary rounded-lg bg-surface-ground focus:bg-surface-section text-text-primary placeholder:text-text-muted text-xs font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none leading-relaxed"
+        ></textarea>
+      </div>
+
+      <p v-if="getFieldError('notes')" class="text-danger text-[10px] font-bold pr-1">
+        {{ getFieldError('notes') }}
+      </p>
+    </div>
+
+    <!-- 2. بطاقة تفقيط الحسابات والإجماليات النهائية (5 أعمدة - نهاية مسار العين وفوق أزرار الحفظ) -->
+    <div
+      class="lg:col-span-5 p-4 bg-surface-section rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs flex flex-col justify-between space-y-3 transition-colors duration-200"
+    >
+      <div class="space-y-2 text-xs font-semibold text-text-secondary">
+        <div class="flex items-center justify-between border-b border-surface-border/80 pb-2">
+          <h3 class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+            <span>ملخص الحسابات والضريبة</span>
+          </h3>
           <span
-            class="text-[10px] text-gray-400 font-mono bg-[#16171b] px-2 py-0.5 rounded border border-[#3e414c]"
+            class="text-[10px] text-primary font-mono font-bold bg-primary/10 px-2 py-0.5 rounded-md border border-primary/25"
           >
             {{ totalItemsCount }} بند مسجل
           </span>
-        </h3>
+        </div>
 
         <!-- المجموع الفرعي قبل الخصم والضريبة -->
-        <div class="flex items-baseline justify-between text-gray-300">
+        <div class="flex items-baseline justify-between text-text-secondary pt-0.5">
           <span class="shrink-0">المجموع الفرعي:</span>
-          <span class="flex-1 mx-2 border-b border-dotted border-gray-700/60"></span>
-          <span class="font-mono font-bold shrink-0">{{ formatCurrency(calculatedSubtotal) }}</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-surface-border"></span>
+          <span class="font-mono font-bold text-text-primary shrink-0">
+            {{ formatCurrency(calculatedSubtotal) }}
+          </span>
         </div>
 
         <!-- حقل خصم الفاتورة الإجمالي -->
-        <div class="flex flex-col gap-1 border-b border-gray-700/30 pb-1.5">
-          <div class="flex items-baseline justify-between text-amber-400">
-            <span class="shrink-0">الخصم الإجمالي:</span>
-            <span class="flex-1 mx-2 border-b border-dotted border-amber-500/20"></span>
-            <span class="font-mono font-bold shrink-0"
-              >- {{ formatCurrency(calculatedDiscountAmount) }}</span
-            >
+        <div class="flex flex-col gap-1.5 border-b border-surface-border/50 pb-2">
+          <div
+            class="flex items-baseline justify-between"
+            :class="Number(calculatedDiscountAmount) > 0 ? 'text-danger' : 'text-text-muted'"
+          >
+            <span class="shrink-0">الخصم الإجمالي (-):</span>
+            <span class="flex-1 mx-2 border-b border-dotted border-danger/30"></span>
+            <span class="font-mono font-bold shrink-0">
+              {{ formatCurrency(calculatedDiscountAmount) }}
+            </span>
           </div>
-          <div class="flex items-center gap-2 pt-0.5">
+          <div class="flex items-center gap-2">
             <select
               v-model="formData.discount_type"
-              style="color-scheme: dark"
-              class="h-7 px-2 bg-[#16171b] border border-[#3e414c] rounded text-[11px] text-gray-300 font-bold outline-none focus:border-[#e05e2b]"
+              class="h-8 px-2 bg-surface-ground border border-surface-border rounded-lg text-xs text-text-primary font-bold outline-none focus:border-primary cursor-pointer shrink-0"
             >
-              <option value="fixed">مبلغ ثابت</option>
-              <option value="percentage">نسبة مئوية %</option>
+              <option value="fixed" class="bg-surface-section text-text-primary">مبلغ ثابت</option>
+              <option value="percentage" class="bg-surface-section text-text-primary">
+                نسبة مئوية %
+              </option>
             </select>
             <input
               type="number"
@@ -48,108 +86,75 @@
               min="0"
               v-model.number="formData.discount_value"
               placeholder="قيمة الخصم..."
-              class="h-7 w-full px-2 bg-[#16171b] border border-[#3e414c] rounded text-[11px] font-mono font-bold text-white outline-none focus:border-[#e05e2b] text-left"
+              class="h-8 w-full px-2.5 bg-surface-ground border border-surface-border rounded-lg text-xs font-mono font-bold text-danger outline-none focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-left transition-all"
             />
           </div>
         </div>
 
         <!-- ضريبة القيمة المضافة -->
-        <div class="flex items-baseline justify-between text-sky-400">
-          <span class="shrink-0">ضريبة المدخلات المستردة:</span>
-          <span class="flex-1 mx-2 border-b border-dotted border-sky-500/20"></span>
-          <span class="font-mono font-bold shrink-0"
-            >+ {{ formatCurrency(calculatedTaxAmount) }}</span
-          >
+        <div class="flex items-baseline justify-between text-info">
+          <span class="shrink-0">ضريبة المدخلات المستردة (+):</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-info/30"></span>
+          <span class="font-mono font-bold shrink-0">
+            {{ formatCurrency(calculatedTaxAmount) }}
+          </span>
         </div>
 
         <!-- تكاليف الشحن والنقل المحملة -->
         <div
-          class="flex justify-between items-center border-b border-gray-700/30 pb-1 text-gray-300"
+          class="flex justify-between items-center border-b border-surface-border/50 pb-1.5 text-text-secondary"
         >
-          <span>تكلفة الشحن والنقل:</span>
-          <div class="w-28">
+          <span>تكلفة الشحن والنقل (+):</span>
+          <div class="w-32">
             <input
               type="number"
               step="0.01"
               min="0"
               v-model.number="formData.shipping_cost"
               placeholder="0.00"
-              class="h-7 w-full px-2 bg-[#16171b] border border-[#3e414c] rounded text-[11px] font-mono font-bold text-white outline-none focus:border-[#e05e2b] text-left"
+              class="h-8 w-full px-2.5 bg-surface-ground border border-surface-border rounded-lg text-xs font-mono font-bold text-text-primary outline-none focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-left transition-all"
             />
           </div>
         </div>
       </div>
 
-      <div class="pt-1 space-y-2">
+      <div class="space-y-2 pt-0.5">
         <!-- الإجمالي الصافي النهائي -->
         <div
-          class="flex justify-between items-center bg-[#16171b] border border-emerald-500/30 p-2.5 rounded-lg shadow-[inner_0_0_10px_rgba(0,0,0,0.5)] text-emerald-400"
+          class="flex justify-between items-center gap-3 bg-primary/10 border border-primary/35 px-3.5 py-2.5 rounded-xl text-primary shadow-2xs"
         >
-          <span class="font-black text-xs">صافي الفاتورة الإجمالي:</span>
-          <span class="text-xl font-mono font-black tracking-wide">
+          <span class="font-black text-xs whitespace-nowrap">صافي الفاتورة الإجمالي:</span>
+          <span class="text-xl sm:text-2xl font-mono font-black tracking-tight whitespace-nowrap">
             {{ formatCurrency(calculatedTotalAmount) }}
           </span>
         </div>
 
         <!-- في حال كانت الفاتورة مسددة جزئياً أو كلياً -->
-        <div
-          v-if="formData.paid_amount > 0"
-          class="flex justify-between items-center text-[11px] font-mono px-1"
-        >
-          <span class="text-gray-400"
-            >المدفوع:
-            <strong class="text-emerald-400">{{
-              formatCurrency(formData.paid_amount)
-            }}</strong></span
+        <div v-if="formData.paid_amount > 0" class="grid grid-cols-2 gap-2">
+          <div
+            class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-ground/70 border border-surface-border/70 text-xs"
           >
-          <span class="text-gray-400"
-            >المتبقي:
-            <strong class="text-rose-400">{{
-              formatCurrency(calculatedRemainingAmount)
-            }}</strong></span
+            <span class="text-text-secondary font-bold text-[11px]">المدفوع:</span>
+            <span class="font-mono font-black text-success">
+              {{ formatCurrency(formData.paid_amount) }}
+            </span>
+          </div>
+
+          <div
+            class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs transition-colors"
+            :class="
+              Number(calculatedRemainingAmount) > 0
+                ? 'bg-danger/10 border-danger/35 text-danger'
+                : 'bg-surface-ground/70 border-surface-border/70 text-text-muted'
+            "
           >
+            <span class="font-bold text-[11px]">المتبقي:</span>
+            <span class="font-mono font-black">
+              {{ formatCurrency(calculatedRemainingAmount) }}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- 2. بطاقة الشروط والملاحظات وبيانات التوريد (7 أعمدة - مريحة وعملية) -->
-    <div
-      class="md:col-span-7 p-4 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl flex flex-col justify-between space-y-2"
-    >
-      <div class="flex flex-col flex-1">
-        <div
-          class="text-[11px] font-black text-gray-300 border-b border-gray-700/40 pb-1.5 mb-2 flex justify-between items-center"
-        >
-          <label class="flex items-center gap-1.5">
-            <svg
-              class="w-4 h-4 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span>ملاحظات الفاتورة وبيانات التوريد</span>
-          </label>
-          <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
-        </div>
-
-        <textarea
-          v-model="formData.notes"
-          rows="6"
-          placeholder="سجل شروط الدفع، تفاصيل بوليصة الشحن، أو أي ملاحظات توثيقية تخص عملية الشراء..."
-          class="block w-full flex-1 min-h-[140px] p-3 border border-[#3e414c] hover:border-gray-500 rounded-lg bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] outline-none transition-all resize-none leading-relaxed"
-        ></textarea>
-      </div>
-
-      <p v-if="getFieldError('notes')" class="text-rose-500 text-[10px] font-bold pr-1">
-        {{ getFieldError('notes') }}
-      </p>
     </div>
   </div>
 </template>

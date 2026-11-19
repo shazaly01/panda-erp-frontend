@@ -1,68 +1,39 @@
+<!-- src/modules/hr/views/shift-overrides/components/ShiftOverrideModal.vue -->
 <template>
-  <Transition
-    enter-active-class="transition ease-out duration-200"
-    enter-from-class="opacity-0"
-    enter-to-class="opacity-100"
-    leave-active-class="transition ease-in duration-150"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
+  <AppDialog
+    :model-value="modelValue"
+    @update:model-value="close"
+    :title="title"
+    size="lg"
+    border-color="border-primary"
+    :loading="isSaving"
   >
-    <div
-      v-if="modelValue"
-      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40"
-      @click.self="close"
-    >
-      <Transition
-        appear
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 scale-95"
-        enter-to-class="opacity-100 scale-100"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 scale-100"
-        leave-to-class="opacity-0 scale-95"
-      >
-        <div
-          class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-2xl transform"
-          role="dialog"
-          aria-modal="true"
-          :aria-labelledby="title"
-        >
-          <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-            <h3 id="modal-title" class="text-lg font-semibold text-text-primary">
-              {{ title }}
-            </h3>
-            <button
-              @click="close"
-              class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-border"
-              aria-label="Close"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              </svg>
-            </button>
-          </div>
+    <ShiftOverrideForm
+      ref="formRef"
+      :initial-data="override"
+      :is-saving="isSaving"
+      :employees="employees"
+      :shifts="shifts"
+      @submit="handleFormSubmit"
+      @cancel="close"
+    />
 
-          <ShiftOverrideForm
-            :initial-data="override"
-            :is-saving="isSaving"
-            :employees="employees"
-            :shifts="shifts"
-            @submit="handleFormSubmit"
-            @cancel="close"
-          />
-        </div>
-      </Transition>
-    </div>
-  </Transition>
+    <template #footer>
+      <AppButton variant="secondary" size="sm" @click="close" :disabled="isSaving">
+        إلغاء وتراجع
+      </AppButton>
+      <AppButton size="sm" @click="triggerSubmit" :disabled="isSaving">
+        <span v-if="isSaving">جاري الحفظ...</span>
+        <span v-else>{{ override && override.id ? 'تحديث البيانات' : 'اعتماد التجاوز' }}</span>
+      </AppButton>
+    </template>
+  </AppDialog>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import AppDialog from '@/components/ui/AppDialog.vue'
+import AppButton from '@/components/ui/AppButton.vue'
 import ShiftOverrideForm from './ShiftOverrideForm.vue'
 
 const props = defineProps({
@@ -75,12 +46,19 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
+const formRef = ref(null)
+
 const title = computed(() =>
   props.override && props.override.id ? 'تعديل تجاوز الوردية' : 'إضافة تجاوز وردية جديد',
 )
 
 const close = () => {
+  if (props.isSaving) return
   emit('update:modelValue', false)
+}
+
+const triggerSubmit = () => {
+  formRef.value?.submit()
 }
 
 const handleFormSubmit = (formData) => {

@@ -1,4 +1,4 @@
-<!--src/modules/purchasing/views/issues/components/IssuesTable.vue-->
+<!-- src/modules/purchasing/views/issues/components/IssuesTable.vue -->
 <template>
   <AppCard>
     <AppTable
@@ -8,13 +8,13 @@
       :row-clickable="true"
       @row-click="$emit('row-clicked', $event)"
     >
-      <!-- المعرف ورقم إذن الصرف -->
+      <!-- 1. المعرف ورقم إذن الصرف -->
       <template #cell-issue_number="{ item }">
-        <div class="flex flex-col gap-1 text-right font-mono" dir="rtl">
-          <span class="font-bold text-[#e05e2b] bg-[#e05e2b]/10 px-2 py-0.5 rounded w-fit text-xs">
+        <div class="flex flex-col items-start gap-1 text-right" dir="rtl">
+          <AppBadge variant="primary" size="sm">
             {{ item.issue_number || `#${item.id}` }}
-          </span>
-          <span v-if="item.requisition_id" class="text-[10px] text-sky-400">
+          </AppBadge>
+          <span v-if="item.requisition_id" class="text-[10px] font-mono text-info font-bold">
             طلب احتياج: #{{ item.requisition?.requisition_number || item.requisition_id }}
           </span>
           <span class="text-[10px] text-text-muted">
@@ -23,70 +23,72 @@
         </div>
       </template>
 
-      <!-- جهة الصرف: القسم والموظف المستلم -->
+      <!-- 2. جهة الصرف: القسم والموظف المستلم -->
       <template #cell-destination="{ item }">
         <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-bold text-xs text-text-primary">
             {{ item.department?.name || 'صرف عام / بدون قسم' }}
           </span>
-          <span v-if="item.recipient?.name" class="text-[10px] text-gray-400">
+          <span v-if="item.recipient?.name" class="text-[10px] text-text-muted mt-0.5">
             المستلم: {{ item.recipient.name }}
           </span>
         </div>
       </template>
 
-      <!-- المستودع وتاريخ الصرف -->
+      <!-- 3. المستودع وتاريخ الصرف -->
       <template #cell-warehouse_and_date="{ item }">
-        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
-          <div class="flex items-center gap-1.5">
-            <span
-              class="px-2 py-0.5 text-[10px] font-black rounded border bg-emerald-950/40 text-emerald-400 border-emerald-500/30"
-            >
-              {{ item.warehouse?.name || `مستودع #${item.warehouse_id}` }}
-            </span>
-          </div>
-          <div class="flex items-center gap-2 text-xs font-mono text-text-muted">
-            <span>تاريخ: {{ item.issue_date || '-' }}</span>
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <AppBadge variant="success" size="xs">
+            {{ item.warehouse?.name || `مستودع #${item.warehouse_id}` }}
+          </AppBadge>
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono text-text-secondary font-semibold"
+          >
+            <span class="font-sans text-text-muted font-normal text-[11px]">تاريخ:</span>
+            <span>{{ item.issue_date ? String(item.issue_date).substring(0, 10) : '-' }}</span>
           </div>
         </div>
       </template>
 
-      <!-- حالة الإذن -->
+      <!-- 4. حالة الإذن -->
       <template #cell-status="{ item }">
         <div class="flex justify-center items-center" dir="rtl">
-          <span
-            class="px-2.5 py-0.5 text-[10px] font-black rounded-full border"
-            :class="getStatusBadgeClass(item.status?.value || item.status)"
+          <AppBadge
+            :variant="getStatusBadgeVariant(item.status?.value || item.status)"
+            size="xs"
+            pill
           >
             {{ item.status?.label || getStatusLabel(item.status?.value || item.status) }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
-      <!-- تكلفة الصرف الإجمالية -->
+      <!-- 5. تكلفة الصرف الإجمالية -->
       <template #cell-total_cost="{ item }">
-        <div class="flex flex-col justify-center min-w-[120px] text-right font-mono" dir="rtl">
-          <div class="flex justify-between text-xs font-bold text-text-primary">
+        <div class="flex flex-col justify-center min-w-[125px] text-right" dir="rtl">
+          <div class="flex justify-between text-[11px] text-text-secondary font-medium">
             <span>التكلفة:</span>
-            <span class="text-emerald-400">{{ formatCurrency(item.total_cost || 0) }}</span>
+            <span class="font-mono font-bold text-success">
+              {{ formatCurrency(item.total_cost || 0) }}
+            </span>
           </div>
           <div
             v-if="item.items_count !== undefined"
-            class="text-[10px] text-text-muted text-left mt-0.5"
+            class="text-[10px] font-mono text-text-muted text-left mt-0.5"
           >
             <span>{{ item.items_count }} بند</span>
           </div>
         </div>
       </template>
 
-      <!-- أزرار الإجراءات والعمليات -->
+      <!-- 6. أزرار الإجراءات والعمليات -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <!-- زر تأكيد وترحيل الصرف: متاح للمسودات فقط -->
           <button
             v-if="isDraft(item)"
             @click="$emit('confirm-issue', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors cursor-pointer"
             title="تأكيد الصرف والخصم اللحظي من المخزن"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -94,7 +96,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M5 13l4 4L19 7"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </button>
@@ -102,7 +104,7 @@
           <!-- زر طباعة إذن الصرف A4 -->
           <button
             @click="$emit('print-issue', item)"
-            class="p-1.5 text-indigo-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-info hover:bg-info/10 rounded-lg transition-colors cursor-pointer"
             title="طباعة إذن الصرف المخزني"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -119,7 +121,7 @@
           <button
             v-if="canEdit(item)"
             @click="$emit('edit-issue', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل بيانات إذن الصرف"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,7 +138,7 @@
           <button
             v-if="isDraft(item)"
             @click="$emit('delete-issue', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف مسودة إذن الصرف"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,6 +163,7 @@ import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 defineProps({
@@ -207,13 +210,13 @@ const getStatusLabel = (status) => {
   return map[status] || status || 'غير محدد'
 }
 
-const getStatusBadgeClass = (status) => {
+const getStatusBadgeVariant = (status) => {
   const map = {
-    draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-    confirmed: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
-    issued: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
-    cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
+    draft: 'warning',
+    confirmed: 'success',
+    issued: 'success',
+    cancelled: 'danger',
   }
-  return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'
+  return map[status] || 'secondary'
 }
 </script>

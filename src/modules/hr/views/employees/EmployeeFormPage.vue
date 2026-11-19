@@ -1,58 +1,70 @@
-<!--src\modules\hr\views\employees\EmployeeFormPage.vue-->
+<!-- src/modules/hr/views/employees/EmployeeFormPage.vue -->
 <template>
-  <div class="space-y-6 max-w-5xl mx-auto pb-12">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
+  <div class="space-y-3 max-w-5xl mx-auto pb-24 text-right font-sans" dir="rtl">
+    <!-- مؤشر التحميل لكامل الشاشة -->
+    <FullScreenLoader :show="isLoadingData" message="جاري تحميل بيانات الموظف..." />
+
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
         <button
+          type="button"
           @click="goBack"
-          class="p-2 rounded-lg bg-surface-section border border-surface-border hover:bg-surface-border transition-colors"
-          title="العودة للقائمة"
+          class="p-1.5 rounded-lg bg-surface-card border border-surface-border text-text-secondary hover:text-primary hover:border-primary/60 transition-colors shadow-2xs cursor-pointer"
+          title="العودة لقائمة الموظفين"
         >
-          <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              stroke-width="2.2"
+              d="M9 5l7 7-7 7"
             />
           </svg>
         </button>
-        <div>
-          <h1 class="text-2xl font-bold text-text-primary">
-            {{ isEditMode ? 'تعديل بيانات الموظف' : 'تسجيل موظف جديد' }}
-          </h1>
-          <p class="text-sm text-text-muted mt-1">
-            {{
-              isEditMode
-                ? `تحديث السجل الوظيفي لـ ${form.full_name}`
-                : 'إدخال البيانات الأساسية والوظيفية للموظف الجديد.'
-            }}
-          </p>
-        </div>
-      </div>
-    </div>
 
-    <div v-if="isLoadingData" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-    </div>
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>{{ isEditMode ? 'تعديل بيانات الموظف' : 'تسجيل موظف جديد' }}</span>
+        </h1>
 
-    <div v-else class="space-y-6">
-      <AppCard class="p-6">
-        <h2
-          class="text-lg font-bold text-text-primary mb-5 flex items-center gap-2 border-b border-surface-border pb-3"
+        <span
+          v-if="isEditMode && form.employee_number"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
         >
-          <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          البيانات الشخصية
-        </h2>
+          #{{ form.employee_number }}
+        </span>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <span v-if="isEditMode && form.full_name" class="text-xs font-bold text-text-secondary">
+        الملف الوظيفي: <strong class="text-text-primary">{{ form.full_name }}</strong>
+      </span>
+    </div>
+
+    <!-- محتوى النموذج -->
+    <div v-if="!isLoadingData" class="space-y-3">
+      <!-- 1. بطاقة البيانات الشخصية -->
+      <div
+        class="p-4 bg-surface-header/70 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm space-y-3 transition-colors duration-200"
+      >
+        <div class="flex items-center justify-between pb-1.5 border-b border-primary/15">
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            <span>البيانات الشخصية ومعلومات الاتصال</span>
+          </span>
+          <span class="text-[10px] font-bold text-text-muted">الحقول المميزة بـ * إلزامية</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div class="lg:col-span-2">
             <AppInput
               id="full_name"
@@ -62,6 +74,7 @@
               required
             />
           </div>
+
           <div>
             <AppInput
               id="national_id"
@@ -69,18 +82,27 @@
               v-model="form.national_id"
               class="font-mono text-left"
               dir="ltr"
+              placeholder="أدخل رقم الهوية..."
             />
           </div>
 
           <div>
-            <AppDropdown id="gender" label="الجنس" v-model="form.gender" :options="genderOptions" />
+            <AppDropdown
+              id="gender"
+              label="الجنس"
+              v-model="form.gender"
+              :options="genderOptions"
+              placeholder="-- اختر الجنس --"
+            />
           </div>
+
           <div>
             <AppDropdown
               id="marital_status"
               label="الحالة الاجتماعية"
               v-model="form.marital_status"
               :options="maritalStatusOptions"
+              placeholder="-- اختر الحالة الاجتماعية --"
             />
           </div>
 
@@ -94,7 +116,8 @@
               placeholder="+249..."
             />
           </div>
-          <div class="lg:col-span-2">
+
+          <div class="lg:col-span-3">
             <AppInput
               id="email"
               type="email"
@@ -102,35 +125,39 @@
               v-model="form.email"
               class="font-mono text-left"
               dir="ltr"
+              placeholder="example@domain.com"
             />
           </div>
         </div>
-      </AppCard>
+      </div>
 
-      <AppCard class="p-6">
-        <h2
-          class="text-lg font-bold text-text-primary mb-5 flex items-center gap-2 border-b border-surface-border pb-3"
-        >
-          <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-          البيانات الوظيفية
-        </h2>
+      <!-- 2. بطاقة البيانات الوظيفية والتنظيمية -->
+      <div
+        class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-xs space-y-3 transition-colors duration-200"
+      >
+        <div class="flex items-center justify-between pb-1.5 border-b border-surface-border/80">
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            <span>البيانات الوظيفية والتنظيمية</span>
+          </span>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div>
             <AppInput
               id="employee_number"
               label="الرقم الوظيفي النظامي"
               v-model="form.employee_number"
-              class="font-mono text-left font-bold placeholder-slate-400 focus:border-blue-500"
+              class="font-mono text-left font-bold"
               dir="ltr"
-              placeholder="سيتم التوليد تلقائياً عند الحفظ"
+              placeholder="يُولّد تلقائياً عند الحفظ"
               disabled
             />
           </div>
@@ -140,11 +167,12 @@
               id="barcode"
               label="رقم الباركود (اختياري)"
               v-model="form.barcode"
-              class="font-mono text-left text-blue-600 focus:border-blue-500"
+              class="font-mono text-left font-bold text-primary"
               dir="ltr"
               placeholder="أدخل رقم البطاقة هنا..."
             />
           </div>
+
           <div>
             <AppInput
               id="join_date"
@@ -154,6 +182,7 @@
               required
             />
           </div>
+
           <div>
             <AppDropdown
               id="employment_type"
@@ -173,6 +202,7 @@
               required
             />
           </div>
+
           <div>
             <AppDropdown
               id="department_id"
@@ -184,6 +214,7 @@
               placeholder="-- اختر الإدارة --"
             />
           </div>
+
           <div>
             <AppDropdown
               id="position_id"
@@ -208,7 +239,6 @@
             />
           </div>
 
-          <!-- 🌟 الحقل الجديد الخاص بربط حساب النظام -->
           <div>
             <AppDropdown
               id="user_id"
@@ -222,11 +252,22 @@
             />
           </div>
         </div>
-      </AppCard>
+      </div>
+    </div>
 
-      <div class="flex justify-end gap-3 pt-2">
-        <AppButton variant="secondary" @click="goBack" :disabled="isSaving"> إلغاء </AppButton>
-        <AppButton @click="submit" :disabled="isSaving">
+    <!-- شريط الإجراءات السفلي الثابت -->
+    <div
+      class="fixed bottom-0 right-0 left-0 bg-surface-card border-t border-surface-border p-2.5 shadow-[0_-4px_10px_rgba(0,0,0,0.06)] z-40 flex flex-wrap justify-between items-center gap-2 px-4 sm:px-6"
+    >
+      <div class="text-xs text-text-secondary font-medium">
+        <span>يتم إنشاء الرقم الوظيفي والحساب الفرعي للموظف تلقائياً عند الاعتماد.</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <AppButton type="button" variant="secondary" size="sm" @click="goBack" :disabled="isSaving">
+          إلغاء وتراجع
+        </AppButton>
+        <AppButton type="button" size="sm" @click="submit" :disabled="isSaving">
           <span v-if="isSaving">جاري الحفظ...</span>
           <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'اعتماد وتسجيل الموظف' }}</span>
         </AppButton>
@@ -243,12 +284,12 @@ import { useToast } from 'vue-toastification'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { usePositionStore } from '@/modules/hr/stores/positionStore'
-import { useUserStore } from '@/stores/userStore' // 🌟 استدعاء متجر المستخدمين
+import { useUserStore } from '@/stores/userStore'
 
-import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import FullScreenLoader from '@/components/ui/FullScreenLoader.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -257,7 +298,7 @@ const toast = useToast()
 const employeeStore = useEmployeeStore()
 const departmentStore = useDepartmentStore()
 const positionStore = usePositionStore()
-const userStore = useUserStore() // 🌟 تهيئة المتجر
+const userStore = useUserStore()
 
 const isEditMode = computed(() => route.name === 'employees.edit')
 const employeeId = computed(() => route.params.id)
@@ -265,7 +306,6 @@ const employeeId = computed(() => route.params.id)
 const isLoadingData = ref(false)
 const isSaving = ref(false)
 
-// --- خيارات القوائم المنسدلة (Enums) ---
 const genderOptions = [
   { id: 'male', name: 'ذكر' },
   { id: 'female', name: 'أنثى' },
@@ -296,14 +336,12 @@ const statusOptions = [
   { id: 'monthly_temporary_transfer', name: 'تحويل لفتره موقته شهري' },
 ]
 
-// تصفية المدراء
 const availableManagers = computed(() => {
   const allEmployees = employeeStore.allEmployees || []
   if (!isEditMode.value) return allEmployees
   return allEmployees.filter((emp) => emp.id !== Number(employeeId.value))
 })
 
-// --- بيانات النموذج ---
 const defaultForm = () => ({
   full_name: '',
   national_id: '',
@@ -319,12 +357,11 @@ const defaultForm = () => ({
   department_id: null,
   position_id: null,
   manager_id: null,
-  user_id: null, // 🌟 سيتم ربطه الآن عبر الـ Dropdown
+  user_id: null,
 })
 
 const form = ref(defaultForm())
 
-// --- تحميل البيانات الأولية ---
 onMounted(async () => {
   isLoadingData.value = true
 
@@ -332,15 +369,10 @@ onMounted(async () => {
     if (departmentStore.flatDepartments.length === 0) await departmentStore.fetchDepartments()
     if (positionStore.flatPositions.length === 0) await positionStore.fetchPositions()
 
-    // 🌟 جلب قائمة الموظفين والمستخدمين بالتوازي لتحسين الأداء
-    await Promise.all([
-      employeeStore.fetchAllEmployees(),
-      userStore.fetchUsers(), // جلب قائمة المستخدمين من الـ API
-    ])
+    await Promise.all([employeeStore.fetchAllEmployees(), userStore.fetchUsers()])
 
     if (isEditMode.value) {
       const employeeData = await employeeStore.fetchEmployeeById(employeeId.value)
-      console.log('API Response for Employee:', employeeData)
 
       form.value = {
         full_name: employeeData.full_name,
@@ -368,7 +400,6 @@ onMounted(async () => {
   }
 })
 
-// --- الإجراءات ---
 const goBack = () => {
   router.push({ name: 'EmployeesList' })
 }
@@ -396,3 +427,14 @@ const submit = async () => {
   }
 }
 </script>
+
+<style scoped>
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+}
+</style>

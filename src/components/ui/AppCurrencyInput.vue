@@ -1,16 +1,19 @@
+<!--src\components\ui\AppCurrencyInput.vue-->
 <template>
-  <div>
-    <label
-      v-if="label"
-      :for="id"
-      class="block text-sm font-medium text-gray-700 dark:text-text-secondary mb-1"
-    >
-      {{ label }}
-    </label>
+  <div class="w-full">
+    <div v-if="label" class="flex justify-between items-center mb-1">
+      <label :for="id" class="block text-sm font-medium text-text-secondary">
+        {{ label }}
+      </label>
+      <slot name="label-append"></slot>
+    </div>
 
-    <div class="relative">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <span class="text-gray-500 sm:text-sm">د.ل</span>
+    <div class="relative w-full flex items-center">
+      <div
+        v-if="symbol"
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 text-xs font-mono font-bold select-none text-text-muted"
+      >
+        <span>{{ symbol }}</span>
       </div>
 
       <input
@@ -21,9 +24,18 @@
         @input="handleInput"
         :placeholder="placeholder"
         :required="required"
+        :disabled="disabled"
         dir="ltr"
-        class="block w-full pl-12 pr-3 rounded-md shadow-sm transition-colors duration-200 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-surface-ground dark:border-surface-border dark:text-text-primary dark:placeholder:text-text-muted dark:focus:ring-primary dark:focus:border-primary text-right"
         inputmode="decimal"
+        autocomplete="off"
+        :class="[
+          'block w-full rounded-md shadow-sm py-2 text-sm font-bold text-right font-mono transition-all duration-200 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed',
+          symbol ? 'pl-12 pr-3' : 'px-3',
+          variant === 'sales'
+            ? 'bg-transparent border-0 text-text-primary placeholder:text-text-muted focus:ring-0 p-0'
+            : 'bg-surface-section border border-surface-border text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20',
+          inputClass,
+        ]"
       />
     </div>
   </div>
@@ -36,32 +48,31 @@ const props = defineProps({
   id: { type: String, required: true },
   label: { type: String, default: '' },
   modelValue: { type: [Number, String], default: '' },
+  symbol: { type: String, default: 'د.ل' },
   placeholder: { type: String, default: '0' },
   required: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false },
+  inputClass: { type: String, default: '' },
+  variant: { type: String, default: 'default' },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-// القيمة التي تظهر في الحقل (نص مع فواصل)
+const inputRef = ref(null)
 const displayValue = ref('')
 
 // دالة لتنسيق الرقم بإضافة الفواصل
 const formatNumber = (value) => {
-  if (!value) return ''
-  // 1. فصل الجزء الصحيح عن العشري
+  if (value === null || value === undefined || value === '') return ''
   let parts = value.toString().split('.')
-  // 2. إضافة الفواصل للجزء الصحيح فقط
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  // 3. إعادة دمج الأجزاء
   return parts.join('.')
 }
 
-// مراقبة القيمة القادمة من الأب (Backend) وتحديث العرض
+// مراقبة القيمة القادمة من الأب وتحديث العرض
 watch(
   () => props.modelValue,
   (newValue) => {
-    // هذا الشرط يمنع مشاكل المؤشر أثناء الكتابة
-    // نقوم بالتحديث فقط إذا كانت القيمة الجديدة مختلفة عن القيمة الحالية بعد إزالة الفواصل
     const currentRaw = displayValue.value.replace(/,/g, '')
     if (newValue != currentRaw) {
       displayValue.value = formatNumber(newValue)
@@ -73,7 +84,7 @@ watch(
 const handleInput = (event) => {
   let value = event.target.value
 
-  // 1. السماح بالأرقام والنقطة فقط (إزالة أي حروف)
+  // 1. السماح بالأرقام والنقطة فقط
   value = value.replace(/[^0-9.]/g, '')
 
   // 2. منع تكرار النقطة العشرية
@@ -82,15 +93,11 @@ const handleInput = (event) => {
     value = parts[0] + '.' + parts.slice(1).join('')
   }
 
-  // 3. إرسال القيمة "النظيفة" (رقم صافي) للأب ليحفظها في قاعدة البيانات
-  // إذا كانت القيمة تنتهي بنقطة (مثلاً "15.") نرسلها كما هي مؤقتاً لكي لا يحذف الـ v-model النقطة
+  // 3. إرسال القيمة النظيفة للأب
   const rawValue = value === '' ? null : value
   emit('update:modelValue', rawValue)
 
   // 4. تحديث العرض بالفواصل فوراً
   displayValue.value = formatNumber(value)
-
-  // الحفاظ على مكان المؤشر (اختياري لتحسين التجربة)
-  // لكن في معظم المتصفحات الحديثة، Vue يتعامل مع هذا بشكل جيد عند الربط بـ :value
 }
 </script>

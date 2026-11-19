@@ -1,69 +1,78 @@
-<!--src\modules\hr\views\leaves\components\LeavesTable.vue-->
+<!-- src/modules/hr/views/leaves/components/LeavesTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="leaves" :is-loading="loading">
+      <!-- 1. الموظف وتاريخ التقديم -->
       <template #cell-employee="{ item }">
-        <div class="flex flex-col gap-1 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex flex-col items-start gap-0.5 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.employee_name }}
           </span>
-          <span class="text-xs text-text-muted">
-            تاريخ الطلب: {{ item.requested_at?.split(' ')[0] || '---' }}
+          <span class="text-[11px] text-text-muted">
+            تاريخ الطلب:
+            <span class="font-mono font-semibold text-text-secondary">
+              {{ item.requested_at?.split(' ')[0] || '---' }}
+            </span>
           </span>
         </div>
       </template>
 
+      <!-- 2. نوع الإجازة والمدة -->
       <template #cell-leave_details="{ item }">
-        <div class="flex flex-col gap-1">
-          <span class="font-bold text-sm text-primary">
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <AppBadge variant="primary" size="xs">
             {{ item.leave_type_name }}
-          </span>
-          <span class="text-xs font-medium text-text-muted">
-            المدة: {{ item.total_days }} يوم/أيام
+          </AppBadge>
+          <span class="text-xs font-medium text-text-secondary">
+            المدة:
+            <strong class="font-mono font-black text-text-primary">{{ item.total_days }}</strong>
+            يوم/أيام
           </span>
         </div>
       </template>
 
+      <!-- 3. فترة الإجازة -->
       <template #cell-period="{ item }">
-        <div class="flex flex-col gap-1">
-          <span class="text-xs text-text-primary">
-            من: <span class="font-mono">{{ item.start_date }}</span>
-          </span>
-          <span class="text-xs text-text-primary">
-            إلى: <span class="font-mono">{{ item.end_date }}</span>
-          </span>
+        <div class="flex flex-col gap-1 text-xs text-right" dir="rtl">
+          <div class="flex items-center gap-1.5">
+            <span class="text-text-muted text-[11px] w-7">من:</span>
+            <span class="font-mono font-bold text-text-primary">{{ item.start_date }}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-text-muted text-[11px] w-7">إلى:</span>
+            <span class="font-mono font-bold text-text-secondary">{{ item.end_date }}</span>
+          </div>
         </div>
       </template>
 
+      <!-- 4. الحالة والمعتمد -->
       <template #cell-status="{ item }">
-        <div class="flex flex-col gap-1 items-start">
-          <span
-            class="px-2.5 py-0.5 text-[11px] font-bold rounded-full flex items-center gap-1.5"
-            :class="getStatusClass(item.status)"
-          >
-            <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(item.status)"></span>
+        <div class="flex flex-col items-center justify-center gap-1" dir="rtl">
+          <AppBadge :variant="getStatusVariant(item.status)" size="xs" pill>
             {{ getStatusLabel(item.status) }}
-          </span>
-          <span v-if="item.approved_by_name" class="text-[10px] text-text-muted">
+          </AppBadge>
+          <span v-if="item.approved_by_name" class="text-[10px] text-text-muted text-center">
             بواسطة: {{ item.approved_by_name }}
           </span>
         </div>
       </template>
 
+      <!-- 5. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <template v-if="item.status === 'pending'">
             <button
               v-if="authStore.can('leave.approve')"
-              @click.stop="$emit('approve', item)"
-              class="p-1.5 text-emerald-600 hover:text-white hover:bg-emerald-500 rounded-lg transition-colors"
+              type="button"
+              @click="$emit('approve', item)"
+              class="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors cursor-pointer"
               title="اعتماد الإجازة"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
+                  stroke-width="2.2"
                   d="M5 13l4 4L19 7"
                 />
               </svg>
@@ -71,15 +80,16 @@
 
             <button
               v-if="authStore.can('leave.approve')"
-              @click.stop="$emit('reject', item)"
-              class="p-1.5 text-rose-600 hover:text-white hover:bg-rose-500 rounded-lg transition-colors"
+              type="button"
+              @click="$emit('reject', item)"
+              class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
               title="رفض الإجازة"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
+                  stroke-width="2.2"
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
@@ -87,16 +97,17 @@
 
             <div
               v-if="authStore.can('leave.approve')"
-              class="w-px h-5 bg-surface-border mx-1"
+              class="w-px h-4 bg-surface-border mx-1"
             ></div>
 
             <button
               v-if="authStore.can('leave.update')"
-              @click.stop="$emit('edit', item)"
-              class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+              type="button"
+              @click="$emit('edit', item)"
+              class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
               title="تعديل الطلب"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -108,11 +119,12 @@
 
             <button
               v-if="authStore.can('leave.delete')"
-              @click.stop="$emit('delete', item)"
-              class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              type="button"
+              @click="$emit('delete', item)"
+              class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
               title="إلغاء الطلب"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -122,12 +134,13 @@
               </svg>
             </button>
           </template>
-          <span v-else class="text-[10px] text-text-muted italic px-2"> تمت المعالجة </span>
+
+          <span v-else class="text-[11px] text-text-muted italic px-2">تمت المعالجة</span>
         </div>
       </template>
     </AppTable>
 
-    <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
+    <AppPagination :meta="pagination || {}" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
 
@@ -137,27 +150,26 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
-const props = defineProps({
+defineProps({
   leaves: { type: Array, required: true },
-  pagination: { type: Object, required: true },
+  pagination: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 })
 
-// أضفنا أحداث الاعتماد والرفض لترتبط بالشاشة الرئيسية
 defineEmits(['page-change', 'edit', 'delete', 'approve', 'reject'])
 
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
-  { key: 'employee', label: 'الموظف والتقديم', class: 'min-w-[180px]' },
-  { key: 'leave_details', label: 'نوع الإجازة والمدة', class: 'min-w-[150px]' },
+  { key: 'employee', label: 'الموظف والتقديم', class: 'min-w-[190px]' },
+  { key: 'leave_details', label: 'نوع الإجازة والمدة', class: 'min-w-[160px]' },
   { key: 'period', label: 'فترة الإجازة', class: 'min-w-[160px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[140px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[130px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[150px]' },
 ])
 
-// --- دوال مساعدة لتنسيق حالة الطلب ---
 const getStatusLabel = (status) => {
   const labels = {
     pending: 'قيد الانتظار',
@@ -167,21 +179,12 @@ const getStatusLabel = (status) => {
   return labels[status] || status
 }
 
-const getStatusClass = (status) => {
-  const classes = {
-    pending: 'bg-amber-50 text-amber-700 border border-amber-100',
-    approved: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-    rejected: 'bg-rose-50 text-rose-700 border border-rose-100',
+const getStatusVariant = (status) => {
+  const map = {
+    pending: 'warning',
+    approved: 'success',
+    rejected: 'danger',
   }
-  return classes[status] || 'bg-surface-ground text-text-secondary border border-surface-border'
-}
-
-const getStatusDotClass = (status) => {
-  const classes = {
-    pending: 'bg-amber-500',
-    approved: 'bg-emerald-500',
-    rejected: 'bg-rose-500',
-  }
-  return classes[status] || 'bg-gray-400'
+  return map[status] || 'secondary'
 }
 </script>

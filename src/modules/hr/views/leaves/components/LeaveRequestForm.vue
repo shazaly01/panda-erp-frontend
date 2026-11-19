@@ -1,7 +1,11 @@
-<!--src\modules\hr\views\leaves\components\LeaveRequestForm.vue-->
+<!-- src/modules/hr/views/leaves/components/LeaveRequestForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- 1. اختيار الموظف -->
       <div class="md:col-span-2">
         <AppDropdown
           id="leave-employee"
@@ -17,6 +21,7 @@
         />
       </div>
 
+      <!-- 2. نوع الإجازة -->
       <div class="md:col-span-2">
         <AppDropdown
           id="leave-type"
@@ -31,7 +36,8 @@
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 3. تاريخ البداية -->
+      <div>
         <AppInput
           id="leave-start-date"
           type="date"
@@ -42,7 +48,8 @@
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 4. تاريخ النهاية -->
+      <div>
         <AppInput
           id="leave-end-date"
           type="date"
@@ -54,16 +61,25 @@
         />
       </div>
 
-      <div class="md:col-span-2 flex items-end pb-1" v-if="calculatedDays > 0">
+      <!-- 5. بطاقة إجمالي أيام الإجازة المحسوبة -->
+      <div v-if="calculatedDays > 0" class="md:col-span-2">
         <div
-          class="w-full bg-sky-50/50 border border-sky-100 rounded-lg p-3 flex justify-between items-center text-sky-800"
+          class="w-full bg-surface-card border border-primary/40 rounded-xl px-3.5 py-2.5 flex justify-between items-center shadow-2xs"
         >
-          <span class="text-sm font-bold">إجمالي أيام الإجازة المطلوبة:</span>
-          <span class="text-lg font-bold">{{ calculatedDays }} يوم/أيام</span>
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span>إجمالي أيام الإجازة المطلوبة:</span>
+          </span>
+          <span
+            class="px-2.5 py-0.5 rounded-lg bg-primary/10 border border-primary/25 text-primary font-mono font-black text-sm"
+          >
+            {{ calculatedDays }} يوم/أيام
+          </span>
         </div>
       </div>
     </div>
 
+    <!-- 6. سبب الإجازة -->
     <div>
       <AppTextarea
         id="leave-reason"
@@ -74,7 +90,10 @@
         rows="3"
         maxlength="500"
       />
-      <div class="text-left mt-1 text-[10px] text-text-muted">الحد الأقصى 500 حرف</div>
+      <div class="flex justify-between items-center mt-1 px-1 text-[10px] text-text-muted">
+        <span>الحد الأقصى 500 حرف</span>
+        <span class="font-mono">{{ (modelValue.reason || '').length }} / 500</span>
+      </div>
     </div>
   </div>
 </template>
@@ -94,7 +113,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const employeeStore = useEmployeeStore()
-// قائمة مؤقتة لأنواع الإجازات حتى نقوم بربطها بـ Store خاص بها إذا لزم الأمر
 const leaveTypes = ref([
   { id: 1, name: 'إجازة سنوية' },
   { id: 2, name: 'إجازة مرضية' },
@@ -114,7 +132,6 @@ const updateField = (field, value) => {
   })
 }
 
-// حساب الأيام بشكل مبدئي (تاريخ النهاية - تاريخ البداية + 1)
 const calculatedDays = computed(() => {
   if (!props.modelValue.start_date || !props.modelValue.end_date) return 0
 
@@ -126,6 +143,17 @@ const calculatedDays = computed(() => {
   const diffTime = Math.abs(end - start)
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-  return diffDays + 1 // إضافة يوم البداية كجزء من الإجازة
+  return diffDays + 1
 })
 </script>
+
+<style scoped>
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+}
+</style>

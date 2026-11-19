@@ -1,30 +1,39 @@
+<!-- src/modules/hr/views/pay-periods/components/PayPeriodGenerateForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="bg-sky-50 border border-sky-100 rounded-lg p-4 mb-4 flex gap-3 text-sky-800">
-      <svg
-        class="w-6 h-6 shrink-0 mt-0.5 text-sky-600"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <!-- بطاقة شرح التوليد التلقائي -->
+    <div
+      class="bg-surface-card border border-info/40 rounded-xl p-3 flex items-start gap-2.5 shadow-2xs"
+    >
+      <div
+        class="w-8 h-8 rounded-lg bg-info/15 border border-info/30 text-info flex items-center justify-center shrink-0 mt-0.5"
       >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <div>
-        <h4 class="font-bold text-sm">توليد الفترات التلقائي (Bulk Generation)</h4>
-        <p class="text-xs mt-1 text-sky-700 leading-relaxed">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+      <div class="space-y-0.5">
+        <h4 class="font-black text-xs text-text-primary">
+          توليد الفترات التلقائي (Bulk Generation)
+        </h4>
+        <p class="text-[11px] text-text-secondary leading-relaxed">
           سيقوم النظام آلياً باحتساب التقويم وإنشاء جميع الفترات المالية للسنة المحددة بناءً على
           دورة الصرف الخاصة بالمجموعة (مثال: 12 فترة للمجموعة الشهرية، 52 للمجموعة الأسبوعية).
         </p>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div class="md:col-span-2">
+    <div class="grid grid-cols-1 gap-3">
+      <!-- 1. مجموعة الدفع المستهدفة -->
+      <div>
         <AppDropdown
           id="generate-paygroup"
           label="مجموعة الدفع المستهدفة *"
@@ -38,7 +47,8 @@
         />
       </div>
 
-      <div class="md:col-span-2">
+      <!-- 2. السنة المالية -->
+      <div>
         <AppInput
           id="generate-year"
           type="number"
@@ -48,6 +58,8 @@
           placeholder="مثال: 2026"
           min="2020"
           max="2050"
+          class="font-mono text-left"
+          dir="ltr"
           required
         />
       </div>
@@ -68,14 +80,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const payGroupStore = usePayGroupStore()
 
-// جلب المجموعات النشطة عند فتح النافذة
 onMounted(() => {
   if (payGroupStore.groups.length === 0) {
     payGroupStore.fetchPayGroups({ is_active: 1 })
   }
 })
 
-// تحديث النموذج المربوط بالمكون الأب
 const updateField = (field, value) => {
   emit('update:modelValue', {
     ...props.modelValue,

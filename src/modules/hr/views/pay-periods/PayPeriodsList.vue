@@ -1,15 +1,26 @@
+<!-- src/modules/hr/views/pay-periods/PayPeriodsList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">إدارة الفترات المالية</h1>
-        <p class="text-sm text-text-muted mt-1">
-          توليد الفترات المالية لمجموعات الدفع، وإدارة حالاتها (مجدولة، مفتوحة، مغلقة).
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>إدارة الفترات المالية</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
 
       <AppButton
         v-if="authStore.can('hr.pay_periods.manage')"
+        size="sm"
         @click="openGenerateModal"
         icon="plus"
       >
@@ -17,6 +28,7 @@
       </AppButton>
     </div>
 
+    <!-- شريط البحث والفلترة -->
     <PayPeriodsFilter
       v-model:searchQuery="searchQuery"
       v-model:payGroupFilter="payGroupFilter"
@@ -26,6 +38,7 @@
       @update:statusFilter="handlePageChange(1)"
     />
 
+    <!-- جدول الفترات المالية -->
     <PayPeriodsTable
       :periods="periods"
       :pagination="pagination"
@@ -35,12 +48,14 @@
       @delete="openDeleteDialog"
     />
 
+    <!-- نافذة التوليد التلقائي للفترات -->
     <PayPeriodGenerateModal
       v-if="isGenerateModalOpen"
       v-model="isGenerateModalOpen"
       @saved="onPeriodsChanged"
     />
 
+    <!-- نافذة تعديل الفترة المالية -->
     <PayPeriodModal
       v-if="isEditModalOpen"
       v-model="isEditModalOpen"
@@ -48,6 +63,7 @@
       @saved="onPeriodsChanged"
     />
 
+    <!-- نافذة تأكيد الحذف -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف الفترة المالية"
@@ -77,7 +93,6 @@ const authStore = useAuthStore()
 const payPeriodStore = usePayPeriodStore()
 const toast = useToast()
 
-// إضافة pagination مع الـ state من المتجر
 const { periods, pagination, loading } = storeToRefs(payPeriodStore)
 
 // -- الفلاتر والبحث --
@@ -104,7 +119,7 @@ const handlePageChange = async (page = 1) => {
 
   try {
     await payPeriodStore.fetchPayPeriods(filters)
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب الفترات المالية.')
   }
 }
@@ -132,7 +147,6 @@ const openEditModal = (period) => {
   isEditModalOpen.value = true
 }
 
-// دالة مشتركة لتحديث الجدول بعد التوليد أو التعديل
 const onPeriodsChanged = () => {
   handlePageChange(pagination.value?.current_page || 1)
 }
@@ -156,14 +170,13 @@ const confirmDelete = async () => {
     await payPeriodStore.deletePayPeriod(periodToDelete.value.id)
     toast.success('تم حذف الفترة بنجاح.')
 
-    // التعامل مع الترقيم عند حذف عنصر
     const targetPage =
       periods.value.length === 1 && pagination.value?.current_page > 1
         ? pagination.value.current_page - 1
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error(payPeriodStore.error || 'فشل عملية الحذف.')
   } finally {
     isDeleteDialogOpen.value = false

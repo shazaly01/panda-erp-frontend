@@ -1,4 +1,4 @@
-<!--src/modules/purchasing/views/receipts/components/ReceiptsTable.vue-->
+<!-- src/modules/purchasing/views/receipts/components/ReceiptsTable.vue -->
 <template>
   <AppCard>
     <AppTable
@@ -8,18 +8,19 @@
       :row-clickable="true"
       @row-click="$emit('row-clicked', $event)"
     >
-      <!-- المعرف ورقم سند الاستلام ومستندات الشحن -->
+      <!-- 1. المعرف ورقم سند الاستلام ومستندات الشحن -->
       <template #cell-receipt_number="{ item }">
-        <div class="flex flex-col gap-1 text-right font-mono" dir="rtl">
-          <span
-            class="font-bold text-sky-400 bg-sky-950/40 px-2 py-0.5 rounded w-fit text-xs border border-sky-500/30"
-          >
+        <div class="flex flex-col items-start gap-1 text-right" dir="rtl">
+          <AppBadge variant="info" size="sm">
             {{ item.receipt_number || `#${item.id}` }}
-          </span>
-          <span v-if="item.supplier_delivery_note" class="text-[10px] text-gray-300">
+          </AppBadge>
+          <span
+            v-if="item.supplier_delivery_note"
+            class="text-[10px] font-mono text-text-secondary"
+          >
             إذن تسليم مورد: {{ item.supplier_delivery_note }}
           </span>
-          <span v-if="item.waybill_number" class="text-[10px] text-gray-400">
+          <span v-if="item.waybill_number" class="text-[10px] font-mono text-text-muted">
             بوليصة شحن: {{ item.waybill_number }}
           </span>
           <span class="text-[10px] text-text-muted">
@@ -28,97 +29,96 @@
         </div>
       </template>
 
-      <!-- بيانات المورد التجاري -->
+      <!-- 2. بيانات المورد التجاري -->
       <template #cell-supplier="{ item }">
         <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-bold text-xs text-text-primary">
             {{ item.supplier?.name || `مورد رقم #${item.supplier_id}` }}
           </span>
-          <span v-if="item.supplier?.phone" class="text-[10px] font-mono text-text-muted">
+          <span v-if="item.supplier?.phone" class="text-[10px] font-mono text-text-muted mt-0.5">
             {{ item.supplier.phone }}
           </span>
         </div>
       </template>
 
-      <!-- المستودع المستلم وأمر الشراء المرجعي -->
+      <!-- 3. المستودع المستلم وأمر الشراء المرجعي -->
       <template #cell-warehouse_and_order="{ item }">
-        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
-          <div class="flex items-center gap-1.5">
-            <span
-              class="px-2 py-0.5 text-[10px] font-black rounded border bg-[#16171b] text-emerald-400 border-emerald-500/30"
-            >
-              {{ item.warehouse?.name || `مستودع #${item.warehouse_id}` }}
-            </span>
-          </div>
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <AppBadge variant="success" size="xs">
+            {{ item.warehouse?.name || `مستودع #${item.warehouse_id}` }}
+          </AppBadge>
           <div
             v-if="item.purchase_order || item.purchase_order_id"
-            class="flex items-center gap-1 text-[10px] font-mono text-text-muted"
+            class="flex items-center gap-1 text-[10px] font-mono text-text-secondary"
           >
-            <span class="text-gray-400">أمر شراء:</span>
-            <span class="text-[#e05e2b] font-bold">
+            <span class="font-sans text-text-muted">أمر شراء:</span>
+            <span class="text-primary font-bold">
               #{{ item.purchase_order?.order_number || item.purchase_order_id }}
             </span>
           </div>
-          <div v-else class="text-[10px] text-gray-500">استلام مباشر بدون أمر شراء</div>
+          <span v-else class="text-[10px] text-text-muted">استلام مباشر بدون أمر شراء</span>
         </div>
       </template>
 
-      <!-- تاريخ الاستلام ومسؤول الاستلام الفعلي -->
+      <!-- 4. تاريخ الاستلام ومسؤول الاستلام الفعلي -->
       <template #cell-dates_and_receiver="{ item }">
-        <div class="flex flex-col gap-1 text-right font-mono" dir="rtl">
-          <div class="text-xs text-text-primary">
-            <span>تاريخ: </span>
-            <span class="font-bold">{{ item.receipt_date || '-' }}</span>
+        <div class="flex flex-col gap-1 text-right" dir="rtl">
+          <div class="text-xs text-text-secondary font-mono font-semibold">
+            <span class="font-sans text-text-muted font-normal">تاريخ: </span>
+            <span>{{ item.receipt_date ? String(item.receipt_date).substring(0, 10) : '-' }}</span>
           </div>
           <div class="text-[10px] text-text-muted">
             <span>المستلم: </span>
-            <span class="text-gray-300">{{ item.receiver?.name || 'لم يحدد' }}</span>
+            <span class="text-text-secondary font-bold">
+              {{ item.receiver?.name || 'لم يحدد' }}
+            </span>
           </div>
         </div>
       </template>
 
-      <!-- تفاصيل الكميات والتكلفة الإجمالية -->
+      <!-- 5. تفاصيل الكميات والتكلفة الإجمالية -->
       <template #cell-items_summary="{ item }">
-        <div class="flex flex-col justify-center min-w-[120px] text-right font-mono" dir="rtl">
-          <div class="flex justify-between text-xs font-bold text-text-primary">
+        <div class="flex flex-col justify-center min-w-[130px] text-right" dir="rtl">
+          <div class="flex justify-between text-[11px] text-text-secondary font-medium">
             <span>عدد البنود:</span>
-            <span class="text-sky-400"
-              >{{
-                item.items_count !== undefined ? item.items_count : item.items?.length || 0
-              }}
-              صنف</span
-            >
+            <span class="font-mono font-bold text-info">
+              {{ item.items_count !== undefined ? item.items_count : item.items?.length || 0 }}
+              صنف
+            </span>
           </div>
           <div
             v-if="item.total_cost > 0"
-            class="flex justify-between text-[10px] text-text-muted mt-0.5"
+            class="flex justify-between text-[10px] text-text-muted mt-0.5 border-t border-surface-border pt-0.5"
           >
             <span>التكلفة التقديرية:</span>
-            <span class="text-emerald-400 font-bold">{{ formatCurrency(item.total_cost) }}</span>
+            <span class="font-mono text-success font-bold">
+              {{ formatCurrency(item.total_cost) }}
+            </span>
           </div>
         </div>
       </template>
 
-      <!-- شارة حالة الاستلام المخزني -->
+      <!-- 6. شارة حالة الاستلام المخزني -->
       <template #cell-status="{ item }">
         <div class="flex justify-center items-center" dir="rtl">
-          <span
-            class="px-2.5 py-0.5 text-[10px] font-black rounded-full border"
-            :class="getStatusBadgeClass(item.status?.value || item.status)"
+          <AppBadge
+            :variant="getStatusBadgeVariant(item.status?.value || item.status)"
+            size="xs"
+            pill
           >
             {{ item.status?.label || getStatusLabel(item.status?.value || item.status) }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
-      <!-- أزرار الإجراءات والعمليات -->
+      <!-- 7. أزرار الإجراءات والعمليات -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <!-- زر تأكيد الاستلام الفعلي وترحيل حركة المخزون: متاح للمسودات فقط -->
           <button
             v-if="isDraft(item)"
             @click="$emit('receive-receipt', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors cursor-pointer"
             title="تأكيد الاستلام الفعلي وإدخال البضاعة للمخزن فوراً"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +126,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M5 13l4 4L19 7"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </button>
@@ -134,7 +134,7 @@
           <!-- زر طباعة إذن الاستلام A4 -->
           <button
             @click="$emit('print-receipt', item)"
-            class="p-1.5 text-indigo-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-info hover:bg-info/10 rounded-lg transition-colors cursor-pointer"
             title="طباعة سند الاستلام المخزني الرسمي"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,7 +151,7 @@
           <button
             v-if="canEdit(item)"
             @click="$emit('edit-receipt', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل بيانات سند الاستلام"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,7 +168,7 @@
           <button
             v-if="isDraft(item)"
             @click="$emit('delete-receipt', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف مسودة سند الاستلام"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -193,6 +193,7 @@ import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 defineProps({
@@ -239,13 +240,12 @@ const getStatusLabel = (status) => {
   return map[status] || status || 'غير محدد'
 }
 
-const getStatusBadgeClass = (status) => {
+const getStatusBadgeVariant = (status) => {
   const map = {
-    draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-    received:
-      'bg-emerald-950/40 text-emerald-400 border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.2)]',
-    cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
+    draft: 'warning',
+    received: 'success',
+    cancelled: 'danger',
   }
-  return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'
+  return map[status] || 'secondary'
 }
 </script>

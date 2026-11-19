@@ -1,177 +1,184 @@
+<!-- src/modules/hr/views/employees/components/EmployeeShiftModal.vue -->
 <template>
-  <div
-    v-if="modelValue"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
-    @click.self="close"
+  <AppDialog
+    :model-value="modelValue"
+    @update:model-value="close"
+    title="إدارة وردية الموظف"
+    size="lg"
+    border-color="border-primary"
+    :loading="isSaving"
   >
     <div
-      class="bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in duration-200"
+      class="-m-3 p-4 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3.5 text-right font-sans transition-colors duration-200"
+      dir="rtl"
     >
-      <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
-        <div class="flex items-center gap-3">
-          <div class="p-3 bg-amber-500/10 rounded-2xl text-amber-500">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+      <!-- بطاقة تعريف الموظف النشط -->
+      <div
+        v-if="employee"
+        class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-surface-card border border-surface-border shadow-2xs"
+      >
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-primary"></span>
+          <span class="text-xs font-black text-text-primary">{{ employee.full_name }}</span>
+        </div>
+        <AppBadge v-if="employee.employee_number" variant="primary" size="xs" class="font-mono">
+          #{{ employee.employee_number }}
+        </AppBadge>
+      </div>
+
+      <!-- حالة التحميل -->
+      <div v-if="isLoadingData" class="flex flex-col items-center justify-center py-8 space-y-2.5">
+        <div
+          class="w-8 h-8 border-3 border-primary/25 border-t-primary rounded-full animate-spin"
+        ></div>
+        <p class="text-xs font-bold text-text-secondary">جاري جلب إعدادات الوردية الحالية...</p>
+      </div>
+
+      <template v-else>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- 1. الوردية المعتمدة -->
+          <div class="flex flex-col space-y-1">
+            <label for="emp-shift-select" class="text-[11px] font-bold text-text-secondary pr-1">
+              الوردية المعتمدة *
+            </label>
+            <div
+              class="relative w-full h-10 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-2xs"
+            >
+              <span class="absolute right-3 text-primary pointer-events-none z-10">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </span>
+
+              <select
+                id="emp-shift-select"
+                v-model="form.shift_id"
+                class="block w-full h-full pr-9 pl-8 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+              >
+                <option :value="null" disabled class="bg-surface-section text-text-muted">
+                  -- اختر الوردية --
+                </option>
+                <option
+                  v-for="shift in shiftStore.shifts"
+                  :key="shift.id"
+                  :value="shift.id"
+                  class="bg-surface-section text-text-primary"
+                >
+                  {{ shift.name }} ({{ shift.start_time }} - {{ shift.end_time }})
+                </option>
+              </select>
+
+              <span class="absolute left-3 text-text-muted pointer-events-none text-[10px]">▼</span>
+            </div>
           </div>
-          <div>
-            <h3 class="text-xl font-bold text-white">إدارة وردية الموظف</h3>
-            <p class="text-sm text-slate-400 mt-0.5">{{ employee?.full_name }}</p>
+
+          <!-- 2. تاريخ بدء التفعيل -->
+          <div class="flex flex-col space-y-1">
+            <label
+              for="emp-shift-start-date"
+              class="text-[11px] font-bold text-text-secondary pr-1"
+            >
+              تاريخ بدء التفعيل *
+            </label>
+            <div
+              class="relative w-full h-10 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-2xs"
+            >
+              <input
+                id="emp-shift-start-date"
+                type="date"
+                v-model="form.start_date"
+                class="block w-full h-full px-3 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right cursor-pointer"
+              />
+            </div>
           </div>
         </div>
-        <button
-          @click="close"
-          class="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400"
+
+        <!-- 3. أيام الإجازة الأسبوعية -->
+        <div class="space-y-2 pt-1">
+          <label class="block text-[11px] font-bold text-text-secondary pr-1">
+            أيام الإجازة الأسبوعية (Weekend)
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <label
+              v-for="day in dayOptions"
+              :key="day.id"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all duration-150 select-none text-xs font-bold"
+              :class="
+                form.weekend_days.includes(day.id)
+                  ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30 shadow-2xs'
+                  : 'bg-surface-card border-surface-border text-text-secondary hover:border-primary/50 hover:text-primary'
+              "
+            >
+              <input type="checkbox" :value="day.id" v-model="form.weekend_days" class="hidden" />
+              <div
+                class="w-4 h-4 rounded border flex items-center justify-center transition-all"
+                :class="
+                  form.weekend_days.includes(day.id)
+                    ? 'bg-primary border-primary'
+                    : 'bg-surface-ground border-surface-border'
+                "
+              >
+                <svg
+                  v-if="form.weekend_days.includes(day.id)"
+                  class="w-3 h-3 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <span>{{ day.name }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ملاحظة إرشادية -->
+        <div
+          class="p-2.5 rounded-lg bg-info/10 border border-info/30 text-info text-[11px] font-bold flex items-center gap-2"
         >
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-        </button>
-      </div>
-
-      <div class="p-8 space-y-8">
-        <div v-if="isLoadingData" class="flex flex-col items-center py-10 space-y-4">
-          <div
-            class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"
-          ></div>
-          <p class="text-slate-400 text-sm italic">جاري جلب إعدادات الوردية الحالية...</p>
+          <span>ملاحظة: يعرض النظام تلقائياً الوردية النشطة حالياً للموظف إن وجدت.</span>
         </div>
-
-        <template v-else>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="block text-sm font-bold text-slate-300">الوردية المعتمدة *</label>
-              <div class="relative">
-                <select
-                  v-model="form.shift_id"
-                  class="w-full h-12 px-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
-                >
-                  <option :value="null" disabled class="bg-slate-800">-- اختر الوردية --</option>
-                  <option
-                    v-for="shift in shiftStore.shifts"
-                    :key="shift.id"
-                    :value="shift.id"
-                    class="bg-slate-800"
-                  >
-                    {{ shift.name }} ({{ shift.start_time }} - {{ shift.end_time }})
-                  </option>
-                </select>
-                <div
-                  class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-sm font-bold text-slate-300">تاريخ بدء التفعيل *</label>
-              <input
-                type="date"
-                v-model="form.start_date"
-                class="w-full h-12 px-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-mono custom-date-input"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <label class="block text-sm font-bold text-slate-300"
-              >أيام الإجازة الأسبوعية (Weekend)</label
-            >
-            <div class="flex flex-wrap gap-3">
-              <label
-                v-for="day in dayOptions"
-                :key="day.id"
-                class="group flex items-center gap-3 px-4 py-3 rounded-2xl border cursor-pointer transition-all duration-200 select-none"
-                :class="
-                  form.weekend_days.includes(day.id)
-                    ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-lg shadow-blue-500/5'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:border-slate-500'
-                "
-              >
-                <input type="checkbox" :value="day.id" v-model="form.weekend_days" class="hidden" />
-                <div
-                  class="w-5 h-5 rounded-md border flex items-center justify-center transition-all"
-                  :class="
-                    form.weekend_days.includes(day.id)
-                      ? 'bg-blue-600 border-blue-500'
-                      : 'bg-transparent border-slate-600'
-                  "
-                >
-                  <svg
-                    v-if="form.weekend_days.includes(day.id)"
-                    class="w-3.5 h-3.5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="3"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <span class="text-sm font-bold">{{ day.name }}</span>
-              </label>
-            </div>
-            <div
-              class="bg-blue-500/5 border border-dashed border-blue-500/20 p-4 rounded-2xl text-center"
-            >
-              <p class="text-xs text-slate-500 leading-relaxed italic">
-                ملاحظة: النظام سيعرض لك الوردية النشطة حالياً للموظف إن وجدت.
-              </p>
-            </div>
-          </div>
-        </template>
-      </div>
-
-      <div class="p-6 border-t border-slate-800 bg-slate-900/50 flex justify-end gap-4">
-        <button
-          @click="close"
-          class="px-6 py-3 rounded-xl text-slate-400 font-bold hover:bg-slate-800 transition-colors"
-          :disabled="isSaving"
-        >
-          إلغاء
-        </button>
-        <button
-          @click="save"
-          class="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-xl shadow-blue-600/20 transition-all flex items-center gap-2"
-          :disabled="isSaving || isLoadingData"
-        >
-          <span
-            v-if="isSaving"
-            class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-          ></span>
-          {{ isSaving ? 'جاري المعالجة...' : 'اعتماد الوردية' }}
-        </button>
-      </div>
+      </template>
     </div>
-  </div>
+
+    <template #footer>
+      <AppButton variant="secondary" size="sm" @click="close" :disabled="isSaving">
+        إلغاء وتراجع
+      </AppButton>
+      <AppButton size="sm" @click="save" :disabled="isSaving || isLoadingData">
+        <span v-if="isSaving">جاري المعالجة...</span>
+        <span v-else>اعتماد الوردية</span>
+      </AppButton>
+    </template>
+  </AppDialog>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useShiftStore } from '@/modules/hr/stores/shiftStore'
+import AppDialog from '@/components/ui/AppDialog.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -202,11 +209,9 @@ const form = ref({
   weekend_days: [],
 })
 
-// الدالة المسؤولة عن تصفير وتحميل البيانات
 const resetAndFetchData = async () => {
   if (!props.employee) return
 
-  // 1. تصفير النموذج وتعيين المعرف
   form.value.employee_id = Number(props.employee.id)
   form.value.shift_id = null
   form.value.weekend_days = []
@@ -214,17 +219,12 @@ const resetAndFetchData = async () => {
 
   isLoadingData.value = true
   try {
-    // 2. جلب سجل ورديات الموظف من الباك-إند عبر المتجر
     const history = await shiftStore.fetchEmployeeShifts(form.value.employee_id)
-
-    // 3. البحث عن الوردية النشطة (التي ليس لها تاريخ نهاية)
     const activeShift = history.find((s) => s.end_date === null)
 
     if (activeShift) {
       form.value.shift_id = activeShift.shift_id
       form.value.weekend_days = activeShift.weekend_days || []
-      // يمكنك أيضاً عرض تاريخ البدء الأصلي إذا أردت
-      // form.value.start_date = activeShift.start_date
     }
   } catch {
     console.error('فشل جلب الوردية الحالية للموظف')
@@ -233,7 +233,6 @@ const resetAndFetchData = async () => {
   }
 }
 
-// مراقبة فتح النافذة
 watch(
   () => props.modelValue,
   (isOpen) => {
@@ -250,6 +249,7 @@ onMounted(async () => {
 })
 
 const close = () => {
+  if (isSaving.value) return
   emit('update:modelValue', false)
 }
 
@@ -259,7 +259,7 @@ const save = async () => {
   isSaving.value = true
   try {
     await shiftStore.assignEmployeeToShift(form.value)
-    toast.success(`تم اعتماد الوردية بنجاح.`)
+    toast.success('تم اعتماد الوردية بنجاح.')
     emit('updated')
     close()
   } catch (error) {
@@ -272,7 +272,12 @@ const save = async () => {
 </script>
 
 <style scoped>
-.custom-date-input {
-  color-scheme: dark;
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
 }
 </style>

@@ -1,16 +1,26 @@
-<!--src\modules\hr\views\working-schedules\WorkingSchedulesList.vue-->
+<!-- src/modules/hr/views/working-schedules/WorkingSchedulesList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <!-- الترويسة -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">قوالب الجدولة ودورات العمل</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إدارة قوالب الدوام، دورات العمل، وتعيين الورديات للأيام.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>قوالب الجدولة ودورات العمل</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
+
       <AppButton
         v-if="authStore.can('hr.working_schedules.create')"
+        size="sm"
         @click="goToCreate"
         icon="plus"
       >
@@ -18,7 +28,7 @@
       </AppButton>
     </div>
 
-    <!-- الفلتر -->
+    <!-- شريط البحث والفلترة -->
     <WorkingSchedulesFilter
       v-model:searchQuery="filters.search"
       v-model:type="filters.type"
@@ -26,7 +36,7 @@
       @update:type="onFilterChange"
     />
 
-    <!-- الجدول -->
+    <!-- جدول قوالب الجدولة -->
     <WorkingSchedulesTable
       :schedules="schedules"
       :pagination="pagination"
@@ -73,7 +83,7 @@ const { schedules, pagination, loading } = storeToRefs(workingScheduleStore)
 // -- الفلاتر --
 const filters = reactive({
   search: '',
-  type: '', // مثلاً fixed, rotating
+  type: '',
 })
 
 let searchTimeout = null
@@ -90,7 +100,7 @@ const onFilterChange = () => {
 const handlePageChange = async (page = 1) => {
   try {
     await workingScheduleStore.fetchSchedules({ page, ...filters })
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب قوالب الجدولة.')
   }
 }
@@ -130,7 +140,7 @@ const confirmDelete = async () => {
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error(workingScheduleStore.error || 'فشل عملية الحذف، قد يكون القالب مستخدماً.')
   } finally {
     isDeleteDialogOpen.value = false

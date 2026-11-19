@@ -1,3 +1,4 @@
+//src\modules\inventory\stores\warehouseStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import warehouseService from '../services/warehouse.service'

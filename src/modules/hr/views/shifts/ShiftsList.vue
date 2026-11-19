@@ -1,17 +1,34 @@
+<!-- src/modules/hr/views/shifts/ShiftsList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">إعدادات الورديات</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إدارة أوقات الدوام الأساسية وفترات السماح ليتم تطبيقها على الموظفين.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>إعدادات الورديات</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
-      <AppButton v-if="authStore.can('hr.shifts.create')" @click="openCreateModal" icon="plus">
+
+      <AppButton
+        v-if="authStore.can('hr.shifts.create')"
+        size="sm"
+        @click="openCreateModal"
+        icon="plus"
+      >
         إضافة وردية جديدة
       </AppButton>
     </div>
 
+    <!-- جدول الورديات -->
     <ShiftsTable
       :shifts="shifts"
       :pagination="pagination"
@@ -21,6 +38,7 @@
       @delete="openDeleteDialog"
     />
 
+    <!-- نافذة إضافة / تعديل وردية -->
     <ShiftModal
       v-if="isModalOpen"
       v-model="isModalOpen"
@@ -28,6 +46,7 @@
       @saved="onShiftSaved"
     />
 
+    <!-- نافذة تأكيد الحذف -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف الوردية"
@@ -61,7 +80,7 @@ const { shifts, pagination, loading } = storeToRefs(shiftStore)
 const handlePageChange = async (page = 1) => {
   try {
     await shiftStore.fetchShifts({ page })
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب قائمة الورديات.')
   }
 }
@@ -110,7 +129,7 @@ const confirmDelete = async () => {
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error(shiftStore.error || 'فشل عملية الحذف.')
   } finally {
     isDeleteDialogOpen.value = false

@@ -16,23 +16,27 @@ export default {
         sans: ['Cairo', ...defaultTheme.fontFamily.sans],
       },
       colors: {
-        // هذه هي البنية الصحيحة التي تسمح لنا بإنشاء التدرج
         primary: {
-          light: '#3B82F6', // أزرق ناصع (للجزء اللامع) - Blue-500
-          DEFAULT: '#2563EB', // اللون الأساسي الافتراضي - Blue-600
-          dark: '#1D4ED8', // أزرق أغمق (للجزء السفلي/الظل) - Blue-700
+          light: 'rgb(var(--color-primary-light) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+          dark: 'rgb(var(--color-primary-dark) / <alpha-value>)',
         },
 
-        secondary: '#4B5563',
-        danger: '#EF4444',
-        success: '#22C55E',
-        warning: '#F97316',
-        'surface-ground': '#1F2937',
-        'surface-section': '#374151',
-        'surface-border': '#4B5563',
-        'text-primary': '#F9FAFB',
-        'text-secondary': '#D1D5DB',
-        'text-muted': '#9CA3AF',
+        secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
+        danger: 'rgb(var(--color-danger) / <alpha-value>)',
+        success: 'rgb(var(--color-success) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
+        info: 'rgb(var(--color-info) / <alpha-value>)',
+
+        'surface-ground': 'rgb(var(--color-surface-ground) / <alpha-value>)',
+        'surface-header': 'rgb(var(--color-surface-header) / <alpha-value>)',
+        'surface-section': 'rgb(var(--color-surface-section) / <alpha-value>)',
+        'surface-card': 'rgb(var(--color-surface-card) / <alpha-value>)',
+        'surface-border': 'rgb(var(--color-surface-border) / <alpha-value>)',
+
+        'text-primary': 'rgb(var(--color-text-primary) / <alpha-value>)',
+        'text-secondary': 'rgb(var(--color-text-secondary) / <alpha-value>)',
+        'text-muted': 'rgb(var(--color-text-muted) / <alpha-value>)',
       },
     },
   },

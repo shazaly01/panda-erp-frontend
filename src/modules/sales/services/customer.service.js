@@ -10,6 +10,13 @@ export default {
     })
   },
 
+  // البحث السريع عن عميل برقم الهاتف من شاشة الكاشير والمبيعات
+  findByPhone(phone) {
+    return apiClient.get(`${resource}/find-by-phone`, {
+      params: { phone, role: 'customer' },
+    })
+  },
+
   // جلب قائمة العملاء مع الفلترة والترقيم لشاشات العرض والبحث
   get(params = {}) {
     return apiClient.get(resource, {

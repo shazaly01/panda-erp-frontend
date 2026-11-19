@@ -1,3 +1,4 @@
+<!-- src/modules/auth/views/ForgotPasswordView.vue -->
 <template>
   <AuthCardWrapper
     title="استعادة كلمة المرور"
@@ -6,17 +7,17 @@
     max-width="md"
   >
     <form @submit.prevent="handleForgotPassword" class="space-y-6">
-      <div class="space-y-1 relative">
+      <div class="space-y-1.5 relative">
         <div class="flex items-center justify-between text-xs px-1">
-          <span class="text-slate-400">رقم الهاتف</span>
+          <span class="text-text-secondary font-medium">رقم الهاتف</span>
           <div class="flex items-center space-x-1 space-x-reverse">
-            <span :class="form.phone.length === 10 ? 'text-green-400 font-bold' : 'text-slate-500'">
+            <span :class="form.phone.length === 10 ? 'text-success font-bold' : 'text-text-muted'">
               {{ form.phone.length }}/10
             </span>
             <svg
               v-if="isValidPhone"
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-green-500 animate-fade-in"
+              class="h-4 w-4 text-success animate-fade-in"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -38,7 +39,7 @@
             maxlength="10"
             class="form-input transition-all duration-300"
             :class="{
-              'border-green-500 focus:border-green-500 focus:ring-green-500/20': isValidPhone,
+              '!border-success focus:!ring-success/20': isValidPhone,
             }"
           />
           <svg
@@ -64,10 +65,10 @@
       </button>
 
       <div class="flex items-center justify-between text-sm mt-6 px-1">
-        <router-link to="/login" class="back-link">العودة لتسجيل الدخول</router-link>
-        <router-link to="/reset-password" class="back-link text-blue-400"
-          >لديك كود بالفعل؟</router-link
-        >
+        <router-link to="/login" class="back-link font-medium"> العودة لتسجيل الدخول </router-link>
+        <router-link to="/reset-password" class="primary-link font-bold">
+          لديك كود بالفعل؟
+        </router-link>
       </div>
     </form>
   </AuthCardWrapper>
@@ -117,23 +118,22 @@ const handleForgotPassword = async () => {
 
 <style scoped>
 .back-link {
-  color: #9ca3af;
+  color: rgb(var(--color-text-muted));
   text-decoration: none;
   transition: color 0.2s ease;
 }
 .back-link:hover {
-  color: #f9fafb;
+  color: rgb(var(--color-text-primary));
   text-decoration: underline;
 }
 
-/* حل مشكلة الخلفية البيضاء عند الإدخال التلقائي من المتصفح للمظهر الداكن */
-:deep(input:-webkit-autofill),
-:deep(input:-webkit-autofill:hover),
-:deep(input:-webkit-autofill:focus),
-:deep(input:-webkit-autofill:active) {
-  -webkit-text-fill-color: #f8fafc !important;
-  box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  -webkit-box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  transition: background-color 5000s ease-in-out 0s;
+.primary-link {
+  color: rgb(var(--color-primary));
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.primary-link:hover {
+  color: rgb(var(--color-primary-dark));
+  text-decoration: underline;
 }
 </style>

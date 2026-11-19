@@ -1,59 +1,61 @@
+<!-- src/modules/hr/views/pay-groups/components/PayGroupsTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="groups" :is-loading="loading">
+      <!-- 1. اسم المجموعة -->
       <template #cell-name="{ item }">
-        <div class="flex flex-col gap-1 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex items-center gap-2.5 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.name }}
           </span>
-          <span class="text-[10px] text-text-muted font-mono"> ID: #{{ item.id }} </span>
+          <AppBadge variant="primary" size="xs" class="font-mono"> #{{ item.id }} </AppBadge>
         </div>
       </template>
 
+      <!-- 2. دورة الصرف -->
       <template #cell-frequency="{ item }">
-        <div class="flex items-center gap-2">
-          <span class="p-1.5 bg-primary/5 text-primary rounded-lg">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </span>
-          <span class="text-sm font-medium text-text-primary">
-            {{ getFrequencyLabel(item.frequency) }}
-          </span>
+        <div class="flex items-center justify-center" dir="rtl">
+          <AppBadge variant="info" size="xs" pill>
+            <span class="inline-flex items-center gap-1.5">
+              <svg
+                class="w-3.5 h-3.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>{{ getFrequencyLabel(item.frequency) }}</span>
+            </span>
+          </AppBadge>
         </div>
       </template>
 
+      <!-- 3. الحالة -->
       <template #cell-status="{ item }">
-        <span
-          class="px-2.5 py-0.5 text-[11px] font-bold rounded-full flex items-center gap-1.5 w-fit"
-          :class="
-            item.is_active
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-              : 'bg-rose-50 text-rose-700 border border-rose-100'
-          "
-        >
-          <span
-            class="w-1.5 h-1.5 rounded-full"
-            :class="item.is_active ? 'bg-emerald-500' : 'bg-rose-500'"
-          ></span>
-          {{ item.is_active ? 'نشطة' : 'متوقفة' }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="item.is_active ? 'success' : 'danger'" size="xs" pill>
+            {{ item.is_active ? 'نشطة' : 'متوقفة' }}
+          </AppBadge>
+        </div>
       </template>
 
+      <!-- 4. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('hr.pay_groups.manage')"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل المجموعة"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -65,11 +67,12 @@
 
           <button
             v-if="authStore.can('hr.pay_groups.manage')"
-            @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('delete', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف المجموعة"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -89,8 +92,9 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
-const props = defineProps({
+defineProps({
   groups: { type: Array, required: true },
   loading: { type: Boolean, default: false },
 })
@@ -101,9 +105,9 @@ const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'name', label: 'اسم المجموعة', class: 'min-w-[200px]' },
-  { key: 'frequency', label: 'دورة الصرف', class: 'min-w-[150px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'frequency', label: 'دورة الصرف', class: 'min-w-[150px] text-center' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[120px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 
 const getFrequencyLabel = (freq) => {

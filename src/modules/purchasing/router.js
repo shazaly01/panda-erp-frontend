@@ -1,3 +1,4 @@
+//src\modules\purchasing\router.js
 // --- استيراد شاشات طلبات الشراء الداخلية (Lazy Loading) ---
 const PurchaseRequisitionsList = () => import('./views/requisitions/PurchaseRequisitionsList.vue')
 const PurchaseRequisitionFormPage = () =>

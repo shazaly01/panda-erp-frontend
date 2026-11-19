@@ -1,94 +1,113 @@
 <!-- src/modules/inventory/views/adjustments/components/AdjustmentFooter.vue -->
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-right font-sans" dir="rtl">
-    <!-- 1. بطاقة الأثر المالي والإجماليات النهائية (5 أعمدة - ملمومة ومركزة) -->
+  <div
+    class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 text-right font-sans transition-colors duration-200 items-stretch"
+    dir="rtl"
+  >
+    <!-- 1. بطاقة أسباب ومبررات التسوية (7 أعمدة - الجانب الأيمن) -->
     <div
-      class="md:col-span-5 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-3"
+      class="lg:col-span-7 p-4 bg-surface-section rounded-xl border border-surface-border shadow-xs flex flex-col justify-between space-y-2.5"
     >
-      <div class="space-y-2.5 text-xs font-semibold text-gray-400">
-        <h3
-          class="text-xs font-black text-gray-200 border-b border-[#3b3f4f]/60 pb-2 flex justify-between items-center"
+      <div class="flex flex-col flex-1">
+        <div
+          class="flex items-center justify-between border-b border-surface-border/80 pb-2 mb-2.5"
         >
-          <span class="flex items-center gap-1.5">
-            <svg
-              class="w-4 h-4 text-[#e05e2b]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              />
-            </svg>
+          <label class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+            <span>{{ notesFieldLabel }}</span>
+          </label>
+          <span class="text-[10px] text-text-muted font-bold">اختياري</span>
+        </div>
+
+        <textarea
+          v-model="notesModel"
+          rows="4"
+          :placeholder="notesPlaceholder"
+          class="w-full flex-1 p-3 border border-surface-border hover:border-primary/50 focus:border-primary rounded-lg bg-surface-ground focus:bg-surface-section text-text-primary placeholder:text-text-muted text-xs font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none leading-relaxed"
+        ></textarea>
+      </div>
+
+      <p v-if="getFieldError('notes')" class="text-danger text-[10px] font-bold pr-1">
+        {{ getFieldError('notes') }}
+      </p>
+    </div>
+
+    <!-- 2. بطاقة الأثر المالي والإجماليات النهائية (5 أعمدة - نهاية مسار العين وفوق أزرار الحفظ) -->
+    <div
+      class="lg:col-span-5 p-4 bg-surface-section rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs flex flex-col justify-between space-y-3 transition-colors duration-200"
+    >
+      <div class="space-y-2 text-xs font-semibold text-text-secondary">
+        <div class="flex items-center justify-between border-b border-surface-border/80 pb-2">
+          <h3 class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
             <span>{{ summaryHeaderTitle }}</span>
-          </span>
+          </h3>
           <span
-            class="text-[10px] text-gray-400 font-mono bg-[#16171b] px-2 py-0.5 rounded-md border border-[#3e414c]"
+            class="text-[10px] text-primary font-mono font-bold bg-primary/10 px-2 py-0.5 rounded-md border border-primary/25"
           >
             {{ totalItemsCount }} بند مسجل
           </span>
-        </h3>
+        </div>
 
         <!-- في حالة الجرد الدوري والتسوية العامة: عرض الفائض والعجز بشكل مقارن مع خط نقطي رابط -->
         <template v-if="isComparisonType">
-          <div class="flex items-baseline justify-between text-emerald-400">
+          <div class="flex items-baseline justify-between text-success pt-0.5">
             <span class="shrink-0">إجمالي قيمة الزيادة والوفر (+):</span>
-            <span class="flex-1 mx-2 border-b border-dotted border-emerald-500/20"></span>
+            <span class="flex-1 mx-2 border-b border-dotted border-success/30"></span>
             <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalSurplusCost) }}</span>
           </div>
 
-          <div class="flex items-baseline justify-between text-rose-400">
+          <div class="flex items-baseline justify-between text-danger">
             <span class="shrink-0">إجمالي قيمة العجز والتالف (-):</span>
-            <span class="flex-1 mx-2 border-b border-dotted border-rose-500/20"></span>
+            <span class="flex-1 mx-2 border-b border-dotted border-danger/30"></span>
             <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalDeficitCost) }}</span>
           </div>
         </template>
 
         <!-- في حالة البضاعة التالفة أو الفاقد -->
         <template v-else-if="type === 'damage' || type === 'loss'">
-          <div class="flex items-baseline justify-between text-rose-400">
+          <div class="flex items-baseline justify-between text-danger pt-0.5">
             <span class="shrink-0">إجمالي القيمة التقديرية للخسارة:</span>
-            <span class="flex-1 mx-2 border-b border-dotted border-rose-500/20"></span>
+            <span class="flex-1 mx-2 border-b border-dotted border-danger/30"></span>
             <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalDeficitCost) }}</span>
           </div>
         </template>
 
         <!-- في حالة الرصيد الافتتاحي -->
         <template v-else-if="type === 'opening_balance'">
-          <div class="flex items-baseline justify-between text-emerald-400">
+          <div class="flex items-baseline justify-between text-success pt-0.5">
             <span class="shrink-0">إجمالي تقييم بضاعة أول المدة:</span>
-            <span class="flex-1 mx-2 border-b border-dotted border-emerald-500/20"></span>
+            <span class="flex-1 mx-2 border-b border-dotted border-success/30"></span>
             <span class="font-mono font-bold shrink-0">{{ formatCurrency(totalSurplusCost) }}</span>
           </div>
         </template>
 
-        <div class="flex items-baseline justify-between text-gray-400 pt-1">
+        <div class="flex items-baseline justify-between text-text-secondary pt-0.5">
           <span class="shrink-0">إجمالي عدد البنود المسجلة:</span>
-          <span class="flex-1 mx-2 border-b border-dotted border-[#3e414c]"></span>
-          <span class="font-mono font-bold text-white shrink-0">{{ totalItemsCount }} بند</span>
+          <span class="flex-1 mx-2 border-b border-dotted border-surface-border"></span>
+          <span class="font-mono font-bold text-text-primary shrink-0">
+            {{ totalItemsCount }} بند
+          </span>
         </div>
       </div>
 
-      <div class="pt-2">
+      <div class="pt-0.5">
         <div
-          class="flex justify-between items-center bg-[#16171b] border p-2.5 rounded-xl shadow-inner"
+          class="flex justify-between items-center gap-3 border px-3.5 py-2.5 rounded-xl shadow-2xs transition-colors"
           :class="[
             isComparisonType
               ? totalDifferenceCost > 0
-                ? 'text-emerald-400 border-emerald-500/30'
+                ? 'bg-success/10 text-success border-success/35'
                 : totalDifferenceCost < 0
-                  ? 'text-rose-400 border-rose-500/30'
-                  : 'text-[#e05e2b] border-[#3e414c]'
+                  ? 'bg-danger/10 text-danger border-danger/35'
+                  : 'bg-primary/10 text-primary border-primary/35'
               : type === 'opening_balance'
-                ? 'text-emerald-400 border-emerald-500/30'
-                : 'text-rose-400 border-rose-500/30',
+                ? 'bg-success/10 text-success border-success/35'
+                : 'bg-danger/10 text-danger border-danger/35',
           ]"
         >
-          <span class="font-black text-xs">{{ mainCostMetricLabel }}:</span>
-          <span class="text-base font-mono font-black tracking-wide">
+          <span class="font-black text-xs whitespace-nowrap">{{ mainCostMetricLabel }}:</span>
+          <span class="text-xl sm:text-2xl font-mono font-black tracking-tight whitespace-nowrap">
             {{ isComparisonType && totalDifferenceCost > 0 ? '+' : ''
             }}{{ formatCurrency(displayedMainCost) }}
           </span>
@@ -96,49 +115,11 @@
 
         <p
           v-if="getFieldError('total_cost')"
-          class="text-rose-400 text-[10px] text-center font-bold mt-1 pr-1"
+          class="text-danger text-[10px] text-center font-bold mt-1"
         >
           {{ getFieldError('total_cost') }}
         </p>
       </div>
-    </div>
-
-    <!-- 2. بطاقة أسباب ومبررات التسوية (7 أعمدة - متناسبة وعملية) -->
-    <div
-      class="md:col-span-7 p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl flex flex-col justify-between space-y-2"
-    >
-      <div class="flex flex-col flex-1">
-        <div class="flex items-center justify-between border-b border-[#3b3f4f]/60 pb-2 mb-2">
-          <label class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
-            <svg
-              class="w-4 h-4 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span>{{ notesFieldLabel }}</span>
-          </label>
-          <span class="text-[10px] text-gray-500 font-normal">اختياري</span>
-        </div>
-
-        <textarea
-          v-model="notesModel"
-          rows="4"
-          :placeholder="notesPlaceholder"
-          class="w-full flex-1 p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
-        ></textarea>
-      </div>
-
-      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
-        {{ getFieldError('notes') }}
-      </p>
     </div>
   </div>
 </template>

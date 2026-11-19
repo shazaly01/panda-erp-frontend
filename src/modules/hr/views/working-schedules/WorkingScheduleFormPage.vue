@@ -1,49 +1,64 @@
-<!--src\modules\hr\views\working-schedules\WorkingScheduleFormPage.vue--->
+<!-- src/modules/hr/views/working-schedules/WorkingScheduleFormPage.vue -->
 <template>
-  <div class="space-y-6 max-w-5xl mx-auto pb-12">
-    <!-- الترويسة (Header) -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
+  <div class="space-y-3 max-w-5xl mx-auto pb-24 text-right font-sans" dir="rtl">
+    <!-- مؤشر التحميل لكامل الشاشة -->
+    <FullScreenLoader :show="isLoadingData" message="جاري تحميل بيانات قالب الجدولة..." />
+
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
         <button
+          type="button"
           @click="goBack"
-          class="p-2 rounded-lg bg-surface-section border border-surface-border hover:bg-surface-border transition-colors"
-          title="العودة للقائمة"
+          class="p-1.5 rounded-lg bg-surface-card border border-surface-border text-text-secondary hover:text-primary hover:border-primary/60 transition-colors shadow-2xs cursor-pointer"
+          title="العودة لقائمة قوالب الجدولة"
         >
-          <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              stroke-width="2.2"
+              d="M9 5l7 7-7 7"
             />
           </svg>
         </button>
-        <div>
-          <h1 class="text-2xl font-bold text-text-primary">
-            {{ isEditMode ? 'تعديل قالب الجدولة' : 'إنشاء قالب جدولة جديد' }}
-          </h1>
-          <p class="text-sm text-text-muted mt-1">
-            {{
-              isEditMode
-                ? `تحديث إعدادات القالب: ${form.name}`
-                : 'بناء دورة عمل وتوزيع الورديات على أيامها.'
-            }}
-          </p>
-        </div>
+
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>{{ isEditMode ? 'تعديل قالب الجدولة' : 'إنشاء قالب جدولة جديد' }}</span>
+        </h1>
+
+        <span
+          v-if="isEditMode && scheduleId"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          #{{ scheduleId }}
+        </span>
       </div>
+
+      <span v-if="isEditMode && form.name" class="text-xs font-bold text-text-secondary">
+        القالب النشط: <strong class="text-text-primary">{{ form.name }}</strong>
+      </span>
     </div>
 
-    <!-- حالة التحميل -->
-    <div v-if="isLoadingData" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-    </div>
+    <!-- محتوى النموذج -->
+    <div v-if="!isLoadingData" class="space-y-3">
+      <!-- القسم الأول: البيانات الأساسية لقالب الجدولة -->
+      <div
+        class="p-4 bg-surface-header/70 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm space-y-3 transition-colors duration-200"
+      >
+        <div class="flex items-center justify-between pb-1.5 border-b border-primary/15">
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span>إعدادات قالب الجدولة وطول الدورة</span>
+          </span>
+          <span class="text-[10px] font-bold text-text-muted">الحقول المميزة بـ * إلزامية</span>
+        </div>
 
-    <!-- النموذج -->
-    <div v-else class="space-y-6">
-      <!-- القسم الأول: البيانات الأساسية -->
-      <AppCard class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div class="lg:col-span-1">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
             <AppInput
               id="schedule_name"
               label="اسم القالب *"
@@ -72,28 +87,39 @@
               label="طول الدورة (بالأيام) *"
               v-model="form.cycle_days"
               placeholder="مثال: 7 أو 14 أو 28"
-              class="font-mono"
+              class="font-mono text-left"
+              dir="ltr"
               required
             />
           </div>
         </div>
-      </AppCard>
+      </div>
 
-      <!-- القسم الثاني: الجدول التفاعلي -->
-      <AppCard class="p-6">
+      <!-- القسم الثاني: الجدول التفاعلي لتوزيع الورديات -->
+      <div
+        class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-xs transition-colors duration-200"
+      >
         <WorkingScheduleLinesGrid
           v-model="form.lines"
           :cycle-days="form.cycle_days"
           :shifts="availableShifts"
         />
-      </AppCard>
+      </div>
+    </div>
 
-      <!-- أزرار الحفظ -->
-      <div
-        class="flex justify-end gap-3 pt-2 sticky bottom-4 z-10 bg-background/80 backdrop-blur-md p-3 rounded-2xl border border-surface-border shadow-lg"
-      >
-        <AppButton variant="secondary" @click="goBack" :disabled="isSaving"> إلغاء </AppButton>
-        <AppButton @click="submit" :disabled="isSaving">
+    <!-- شريط الإجراءات السفلي الثابت -->
+    <div
+      class="fixed bottom-0 right-0 left-0 bg-surface-card border-t border-surface-border p-2.5 shadow-[0_-4px_10px_rgba(0,0,0,0.06)] z-40 flex flex-wrap justify-between items-center gap-2 px-4 sm:px-6"
+    >
+      <div class="text-xs text-text-secondary font-medium">
+        <span>يُطبَّق جدول الورديات الدوري تلقائياً على العقود المرتبطة بهذا القالب.</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <AppButton type="button" variant="secondary" size="sm" @click="goBack" :disabled="isSaving">
+          إلغاء وتراجع
+        </AppButton>
+        <AppButton type="button" size="sm" @click="submit" :disabled="isSaving">
           <span v-if="isSaving">جاري الحفظ...</span>
           <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'اعتماد وإنشاء القالب' }}</span>
         </AppButton>
@@ -108,13 +134,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 
 import { useWorkingScheduleStore } from '@/modules/hr/stores/workingScheduleStore'
-// افتراض أن لديك Store للورديات لنجلب منه قائمة الورديات لملء الـ Dropdown
 import { useShiftStore } from '@/modules/hr/stores/shiftStore'
 
-import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import FullScreenLoader from '@/components/ui/FullScreenLoader.vue'
 import WorkingScheduleLinesGrid from './components/WorkingScheduleLinesGrid.vue'
 
 const router = useRouter()
@@ -136,35 +161,30 @@ const typeOptions = [
 ]
 
 const availableShifts = computed(() => {
-  // نقوم بتهيئة الاسم للعرض في الـ Dropdown
   return shiftStore.shifts.map((shift) => ({
     ...shift,
     dropdownName: `${shift.name} (${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)})`,
   }))
 })
 
-// --- بيانات النموذج ---
 const defaultForm = () => ({
   name: '',
   type: 'rotating',
-  cycle_days: 7, // افتراضياً أسبوع
-  lines: [], // سيتم تعبئتها ديناميكياً من المكون الابن
+  cycle_days: 7,
+  lines: [],
 })
 
 const form = ref(defaultForm())
 
-// --- تحميل البيانات الأولية ---
 onMounted(async () => {
   isLoadingData.value = true
 
   try {
-    // جلب قائمة الورديات المتاحة إذا لم تكن موجودة
     if (shiftStore.shifts.length === 0) {
       await shiftStore.fetchShifts({ per_page: 100 })
     }
 
     if (isEditMode.value) {
-      // هنا تفترض الدالة أن الباك إند يُرجع القالب مع علاقة lines() محملة
       const scheduleData = await scheduleStore.fetchScheduleById(scheduleId.value)
 
       form.value = {
@@ -174,7 +194,7 @@ onMounted(async () => {
         lines: scheduleData.lines || [],
       }
     }
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء تحميل البيانات.')
     goBack()
   } finally {
@@ -182,7 +202,6 @@ onMounted(async () => {
   }
 })
 
-// --- الإجراءات ---
 const goBack = () => {
   router.push({ name: 'WorkingSchedulesList' })
 }

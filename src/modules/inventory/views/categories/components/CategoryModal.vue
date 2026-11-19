@@ -1,17 +1,20 @@
+<!-- src/modules/inventory/views/categories/components/CategoryModal.vue -->
 <template>
   <AppDialog
     :model-value="modelValue"
     @update:model-value="close"
     :title="title"
-    size="3xl"
-    border-color="border-indigo-500"
+    size="md"
+    border-color="border-primary"
     :loading="isSaving"
   >
     <CategoryForm v-model="form" :flat-categories="filteredFlatCategories" />
 
     <template #footer>
-      <AppButton variant="secondary" @click="close" :disabled="isSaving"> إلغاء </AppButton>
-      <AppButton @click="submit" :disabled="isSaving">
+      <AppButton variant="secondary" size="sm" @click="close" :disabled="isSaving">
+        إلغاء وتراجع
+      </AppButton>
+      <AppButton size="sm" @click="submit" :disabled="isSaving">
         <span v-if="isSaving">جاري الحفظ...</span>
         <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة التصنيف' }}</span>
       </AppButton>
@@ -45,7 +48,7 @@ const isEditMode = computed(() => !!props.categoryToEdit)
 
 const title = computed(() => (isEditMode.value ? 'تعديل بيانات التصنيف' : 'إضافة تصنيف جديد'))
 
-// استثناء التصنيف الحالي من الخيارات عند التعديل منعاً لااختيار العنصر كـ Parent لنفسه
+// استثناء التصنيف الحالي من الخيارات عند التعديل منعاً لاختيار العنصر كـ Parent لنفسه
 const filteredFlatCategories = computed(() => {
   if (!isEditMode.value || !props.categoryToEdit) {
     return flatCategories.value

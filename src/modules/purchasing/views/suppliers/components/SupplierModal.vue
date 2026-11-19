@@ -1,18 +1,20 @@
-<!--src/modules/purchasing/views/suppliers/components/SupplierModal.vue-->
+<!-- src/modules/purchasing/views/suppliers/components/SupplierModal.vue -->
 <template>
   <AppDialog
     :model-value="modelValue"
     @update:model-value="close"
     :title="title"
-    size="3xl"
+    size="2xl"
     border-color="border-primary"
     :loading="isSaving"
   >
     <SupplierForm v-model="form" :errors="validationErrors" />
 
     <template #footer>
-      <AppButton variant="secondary" @click="close" :disabled="isSaving"> إلغاء </AppButton>
-      <AppButton @click="submit" :disabled="isSaving">
+      <AppButton variant="secondary" size="sm" @click="close" :disabled="isSaving">
+        إلغاء وتراجع
+      </AppButton>
+      <AppButton size="sm" @click="submit" :disabled="isSaving">
         <span v-if="isSaving">جاري الحفظ...</span>
         <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة المورد' }}</span>
       </AppButton>

@@ -1,75 +1,32 @@
+<!-- src/modules/hr/views/pay-groups/components/PayGroupModal.vue -->
 <template>
-  <Transition
-    enter-active-class="transition ease-out duration-200"
-    enter-from-class="opacity-0"
-    enter-to-class="opacity-100"
-    leave-active-class="transition ease-in duration-150"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
+  <AppDialog
+    :model-value="modelValue"
+    @update:model-value="close"
+    :title="title"
+    size="md"
+    border-color="border-primary"
+    :loading="isSaving"
   >
-    <div
-      v-if="modelValue"
-      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"
-      @click.self="close"
-    >
-      <Transition
-        appear
-        enter-active-class="transition ease-out duration-300"
-        enter-from-class="opacity-0 scale-95"
-        enter-to-class="opacity-100 scale-100"
-        leave-active-class="transition ease-in duration-200"
-        leave-from-class="opacity-100 scale-100"
-        leave-to-class="opacity-0 scale-95"
-      >
-        <div
-          class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-lg transform flex flex-col max-h-[90vh]"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            class="flex justify-between items-center border-b border-surface-border pb-3 mb-5 shrink-0"
-          >
-            <h3 class="text-lg font-semibold text-text-primary">
-              {{ title }}
-            </h3>
-            <button
-              @click="close"
-              class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-border transition-colors"
-              aria-label="Close"
-              :disabled="isSaving"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+    <PayGroupForm v-model="form" :is-edit-mode="isEditMode" />
 
-          <div class="overflow-y-auto flex-1 pb-2 px-1">
-            <PayGroupForm v-model="form" :is-edit-mode="isEditMode" />
-          </div>
-
-          <div class="pt-4 mt-2 border-t border-surface-border flex justify-end gap-3 shrink-0">
-            <AppButton variant="secondary" @click="close" :disabled="isSaving"> إلغاء </AppButton>
-            <AppButton @click="submit" :disabled="isSaving">
-              <span v-if="isSaving">جاري الحفظ...</span>
-              <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة المجموعة' }}</span>
-            </AppButton>
-          </div>
-        </div>
-      </Transition>
-    </div>
-  </Transition>
+    <template #footer>
+      <AppButton variant="secondary" size="sm" @click="close" :disabled="isSaving">
+        إلغاء وتراجع
+      </AppButton>
+      <AppButton size="sm" @click="submit" :disabled="isSaving">
+        <span v-if="isSaving">جاري الحفظ...</span>
+        <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة المجموعة' }}</span>
+      </AppButton>
+    </template>
+  </AppDialog>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
+import AppDialog from '@/components/ui/AppDialog.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import PayGroupForm from './PayGroupForm.vue'
 

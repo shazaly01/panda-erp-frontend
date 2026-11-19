@@ -41,7 +41,7 @@
             </h3>
             <button
               @click="close"
-              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-border transition-colors flex items-center justify-center"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors flex items-center justify-center cursor-pointer"
               aria-label="Close"
               :disabled="loading"
             >
@@ -86,18 +86,14 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  // إمكانية اختيار أبعاد محددة جاهزة أو تمرير كلاس Tailwind مباشر
-  // الخيارات: 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', 'full'
   size: {
     type: String,
     default: '3xl',
   },
-  // تخصيص لون الحافة العلوية المميزة للمديول (مثال: 'border-blue-500', 'border-emerald-500', 'border-indigo-500')
   borderColor: {
     type: String,
     default: 'border-primary',
   },
-  // تعطيل أزرار الإغلاق في حالة الحفظ
   loading: {
     type: Boolean,
     default: false,
@@ -106,7 +102,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'close'])
 
-// تحويل قيمة size إلى كلاسات Tailwind المناسبة
 const sizeClass = computed(() => {
   const sizes = {
     sm: 'max-w-sm',

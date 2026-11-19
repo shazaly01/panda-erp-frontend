@@ -1,13 +1,13 @@
 <!-- src/modules/purchasing/views/requisitions/components/RequisitionItemsTable.vue -->
 <template>
-  <div class="p-0 bg-transparent space-y-3 font-sans text-right" dir="rtl">
+  <div class="p-0 bg-transparent space-y-2.5 font-sans text-right" dir="rtl">
     <!-- تنبيه خطأ التحقق العام لقائمة البنود إن وجد -->
     <div
       v-if="getValidationError('items')"
-      class="p-3 bg-rose-950/40 text-rose-400 rounded-xl text-xs font-bold border border-rose-900/50 flex items-center gap-2"
+      class="p-2.5 bg-danger/10 text-danger rounded-lg text-xs font-bold border border-danger/30 shadow-sm flex items-center gap-2"
     >
       <svg
-        class="w-4 h-4 shrink-0 text-rose-400"
+        class="w-4 h-4 shrink-0 text-danger"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -22,231 +22,303 @@
       <span>{{ getValidationError('items') }}</span>
     </div>
 
-    <!-- جدول إدخال وتعديل البنود المباشر -->
-    <div class="overflow-x-auto rounded-2xl border border-[#3e414c] bg-[#1a1d24] shadow-lg">
-      <table class="w-full text-right border-collapse text-xs">
-        <thead>
-          <tr class="bg-[#121316] text-gray-300 border-b border-[#3e414c] font-bold select-none">
-            <th class="p-3 text-center w-12">#</th>
-            <th class="p-3 min-w-[280px]">بيان الصنف أو مسح الباركود</th>
-            <th class="p-3 min-w-[140px]">وحدة القياس</th>
-            <th class="p-3 text-center min-w-[150px]">الكمية</th>
-            <th class="p-3 min-w-[240px]">المواصفات الفنية أو ملاحظات البند</th>
-            <th class="p-3 text-center w-12">إجراء</th>
-          </tr>
-        </thead>
-
-        <tbody class="divide-y divide-[#2a2e39]">
-          <tr
-            v-for="(row, index) in items"
-            :key="row.id || index"
-            class="hover:bg-[#20232c] transition-colors"
-          >
-            <!-- تسلسل السطر وشارة تمييزه -->
-            <td class="p-3 text-center font-mono text-gray-400 align-middle">
-              <div class="flex flex-col items-center justify-center gap-1">
-                <span class="font-bold">{{ index + 1 }}</span>
-                <span
-                  class="text-[9px] px-1.5 py-0.5 rounded font-sans font-bold"
-                  :class="
-                    row.product_id
-                      ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-amber-950/60 text-amber-400 border border-amber-500/30'
-                  "
-                >
-                  {{ row.product_id ? 'مخزني' : 'حر' }}
-                </span>
-              </div>
-            </td>
-
-            <!-- 1. بيان الصنف ومسح الباركود -->
-            <td class="p-3 align-top">
-              <div class="flex flex-col gap-1">
-                <div class="relative w-full">
-                  <input
-                    :ref="(el) => setCellRef(el, index, 'name')"
-                    type="text"
-                    v-model="row.item_name"
-                    @input="onItemNameChange(row, index, $event)"
-                    @focus="openSearchDropdown(index, $event)"
-                    @blur="closeSearchDropdownDelayed"
-                    @keydown="handleItemNameKeydown($event, row, index)"
-                    placeholder="امسح الباركود أو اكتب اسم الصنف / الكود..."
-                    class="w-full h-9 px-3 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-lg text-white text-xs font-semibold outline-none focus:ring-1 focus:ring-[#e05e2b]/40 transition-all"
-                  />
-
+    <!-- منصة جدول إدخال وتعديل البنود المباشر المجسّمة (3D Elevated Stage) -->
+    <div
+      class="invoice-stage-3d rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200"
+    >
+      <div class="overflow-x-auto min-h-[195px] flex flex-col justify-between">
+        <table class="w-full text-right border-collapse text-xs">
+          <thead class="invoice-thead-3d select-none h-11 tracking-tight">
+            <tr>
+              <th class="px-3 py-2.5 w-24 text-center text-slate-400 dark:text-slate-600 font-mono">
+                #
+              </th>
+              <th
+                class="px-3 py-2.5 min-w-[280px] text-right font-black text-white dark:text-slate-900 text-[13px]"
+              >
+                <span class="inline-flex items-center gap-2">
                   <span
-                    v-if="row.product_id"
-                    class="absolute left-2.5 top-2 text-[10px] font-mono text-emerald-400/80 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20 pointer-events-none"
+                    class="w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/25 inline-block"
+                  ></span>
+                  بيان الصنف أو مسح الباركود
+                </span>
+              </th>
+              <th
+                class="px-2.5 py-2.5 min-w-[140px] w-40 text-center font-bold text-slate-200 dark:text-slate-800"
+              >
+                وحدة القياس
+              </th>
+              <th
+                class="px-2.5 py-2.5 text-center min-w-[145px] w-36 font-bold text-slate-200 dark:text-slate-800"
+              >
+                الكمية
+              </th>
+              <th
+                class="px-3 py-2.5 min-w-[240px] text-right font-bold text-slate-200 dark:text-slate-800"
+              >
+                المواصفات الفنية أو ملاحظات البند
+              </th>
+              <th
+                class="px-2.5 py-2.5 text-center w-14 font-bold text-slate-400 dark:text-slate-600"
+              >
+                إجراء
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-surface-border/70">
+            <tr
+              v-for="(row, index) in items"
+              :key="row.id || index"
+              class="invoice-row-3d animate-row-enter h-13"
+              :class="[row.product_id ? 'invoice-row-filled' : 'invoice-row-empty']"
+            >
+              <!-- تسلسل السطر وشارة تمييزه -->
+              <td class="px-2.5 py-2 text-center font-mono align-middle">
+                <div class="flex items-center justify-center gap-1.5">
+                  <span
+                    class="w-5 h-5 rounded-md flex items-center justify-center font-black text-[11px]"
+                    :class="
+                      row.product_id
+                        ? 'bg-primary text-white shadow-2xs'
+                        : 'bg-surface-ground text-text-muted border border-surface-border'
+                    "
                   >
-                    PRD-{{ row.product_id }}
+                    {{ index + 1 }}
+                  </span>
+                  <span
+                    class="text-[9px] px-1.5 py-0.5 rounded font-sans font-bold whitespace-nowrap border"
+                    :class="
+                      row.product_id
+                        ? 'bg-success/12 text-success border-success/30'
+                        : 'bg-warning/15 text-warning border-warning/30'
+                    "
+                  >
+                    {{ row.product_id ? 'مخزني' : 'حر' }}
                   </span>
                 </div>
+              </td>
 
-                <p
-                  v-if="getValidationError(`items.${index}.item_name`)"
-                  class="text-rose-400 text-[10px] font-bold pr-1"
-                >
-                  {{ getValidationError(`items.${index}.item_name`) }}
-                </p>
-              </div>
-            </td>
+              <!-- 1. بيان الصنف ومسح الباركود -->
+              <td class="px-3 py-2 align-middle">
+                <div class="flex flex-col justify-center gap-1">
+                  <div class="relative w-full h-10 flex items-center">
+                    <input
+                      :ref="(el) => setCellRef(el, index, 'name')"
+                      type="text"
+                      v-model="row.item_name"
+                      @input="onItemNameChange(row, index, $event)"
+                      @focus="openSearchDropdown(index, $event)"
+                      @blur="closeSearchDropdownDelayed"
+                      @keydown="handleItemNameKeydown($event, row, index)"
+                      placeholder="امسح الباركود أو اكتب اسم الصنف / الكود..."
+                      :class="[
+                        'w-full h-10 rounded-xl text-text-primary outline-none transition-all placeholder:text-text-muted placeholder:font-normal',
+                        row.product_id
+                          ? 'invoice-input-seamless pr-3.5 pl-20 border text-sm font-black'
+                          : 'invoice-cell-input-3d pr-9 pl-3 bg-surface-card border border-primary/45 hover:border-primary focus:border-primary text-[13px] font-bold',
+                      ]"
+                    />
 
-            <!-- 2. وحدة القياس -->
-            <td class="p-3 align-top">
-              <div class="flex flex-col gap-1">
-                <div v-if="row.product_id && row.available_units && row.available_units.length > 0">
-                  <select
-                    :ref="(el) => setCellRef(el, index, 'unit')"
-                    v-model="row.product_unit_id"
-                    @change="syncUnitDetails(row)"
-                    @keydown="handleUnitKeydown($event, row, index)"
-                    style="color-scheme: dark"
-                    class="w-full h-9 px-2 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-lg text-white text-xs font-bold outline-none text-right cursor-pointer"
-                  >
-                    <option
-                      v-for="u in row.available_units"
-                      :key="u.id"
-                      :value="u.id"
-                      class="bg-[#16171b] text-white"
+                    <span
+                      v-if="!row.product_id"
+                      class="absolute right-3 inset-y-0 flex items-center text-primary/80 pointer-events-none"
                     >
-                      {{ u.unit_name || u.name || 'وحدة مسجلة' }}
-                    </option>
-                  </select>
-                </div>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                        />
+                      </svg>
+                    </span>
 
-                <div v-else>
-                  <input
-                    :ref="(el) => setCellRef(el, index, 'unit')"
-                    type="text"
-                    v-model="row.unit_name"
-                    @keydown="handleUnitKeydown($event, row, index)"
-                    placeholder="مثال: حبة، كرتونة، كيس..."
-                    class="w-full h-9 px-3 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-lg text-white text-xs font-semibold outline-none text-right"
-                  />
-                </div>
+                    <span
+                      v-if="row.product_id"
+                      class="absolute left-2.5 text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/25 pointer-events-none"
+                    >
+                      PRD-{{ row.product_id }}
+                    </span>
+                  </div>
 
-                <p
-                  v-if="getValidationError(`items.${index}.unit_name`)"
-                  class="text-rose-400 text-[10px] font-bold pr-1"
-                >
-                  {{ getValidationError(`items.${index}.unit_name`) }}
-                </p>
-              </div>
-            </td>
-
-            <!-- 3. الكمية المطلوبة -->
-            <td class="p-3 align-top">
-              <div class="flex flex-col items-center gap-1">
-                <div
-                  class="flex items-center w-full max-w-[130px] bg-[#16171b] border border-[#3e414c] rounded-lg overflow-hidden focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/40"
-                >
-                  <button
-                    type="button"
-                    tabindex="-1"
-                    @click="decrementQuantity(row)"
-                    class="w-8 h-9 bg-[#21242e] hover:bg-[#2c303d] text-gray-300 flex items-center justify-center font-bold text-sm select-none transition-colors"
+                  <p
+                    v-if="getValidationError(`items.${index}.item_name`)"
+                    class="text-danger text-[10px] font-bold pr-1"
                   >
-                    -
-                  </button>
-
-                  <input
-                    :ref="(el) => setCellRef(el, index, 'qty')"
-                    type="text"
-                    inputmode="decimal"
-                    :value="formatNumber(row.quantity_requested)"
-                    @input="row.quantity_requested = unformatNumber($event.target.value)"
-                    @keydown="handleQuantityKeydown($event, row, index)"
-                    class="w-full h-9 bg-transparent text-white text-xs font-mono font-black text-center outline-none"
-                    placeholder="1"
-                  />
-
-                  <button
-                    type="button"
-                    tabindex="-1"
-                    @click="incrementQuantity(row)"
-                    class="w-8 h-9 bg-[#21242e] hover:bg-[#2c303d] text-gray-300 flex items-center justify-center font-bold text-sm select-none transition-colors"
-                  >
-                    +
-                  </button>
+                    {{ getValidationError(`items.${index}.item_name`) }}
+                  </p>
                 </div>
+              </td>
 
-                <p
-                  v-if="getValidationError(`items.${index}.quantity_requested`)"
-                  class="text-rose-400 text-[10px] font-bold text-center"
-                >
-                  {{ getValidationError(`items.${index}.quantity_requested`) }}
-                </p>
-              </div>
-            </td>
+              <!-- 2. وحدة القياس -->
+              <td class="px-2.5 py-2 text-center align-middle">
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <div
+                    v-if="row.product_id && row.available_units && row.available_units.length > 0"
+                    class="relative inline-flex items-center justify-center h-9 w-full max-w-[144px]"
+                  >
+                    <select
+                      :ref="(el) => setCellRef(el, index, 'unit')"
+                      v-model="row.product_unit_id"
+                      @change="syncUnitDetails(row)"
+                      @keydown="handleUnitKeydown($event, row, index)"
+                      class="invoice-pill-editable w-full h-9 pr-3 pl-6 border rounded-xl text-text-secondary text-xs font-bold outline-none appearance-none cursor-pointer transition-all"
+                    >
+                      <option
+                        v-for="u in row.available_units"
+                        :key="u.id"
+                        :value="u.id"
+                        class="bg-surface-section text-text-primary font-bold"
+                      >
+                        {{ u.unit_name || u.name || 'وحدة مسجلة' }}
+                      </option>
+                    </select>
+                    <span
+                      class="absolute left-2.5 inset-y-0 flex items-center text-text-muted pointer-events-none text-[8px]"
+                    >
+                      ▼
+                    </span>
+                  </div>
 
-            <!-- 4. المواصفات الفنية -->
-            <td class="p-3 align-top">
-              <div class="flex flex-col gap-1">
+                  <div v-else class="w-full max-w-[144px]">
+                    <input
+                      :ref="(el) => setCellRef(el, index, 'unit')"
+                      type="text"
+                      v-model="row.unit_name"
+                      @keydown="handleUnitKeydown($event, row, index)"
+                      placeholder="حبة، كرتونة..."
+                      class="invoice-pill-editable w-full h-9 px-2.5 border rounded-xl text-text-primary placeholder:text-text-muted text-xs font-bold outline-none text-center transition-all"
+                    />
+                  </div>
+
+                  <p
+                    v-if="getValidationError(`items.${index}.unit_name`)"
+                    class="text-danger text-[10px] font-bold"
+                  >
+                    {{ getValidationError(`items.${index}.unit_name`) }}
+                  </p>
+                </div>
+              </td>
+
+              <!-- 3. الكمية المطلوبة -->
+              <td class="px-2.5 py-2 align-middle">
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <div
+                    class="invoice-pill-editable flex items-center w-full max-w-[136px] h-9 border rounded-xl overflow-hidden transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25"
+                  >
+                    <button
+                      type="button"
+                      tabindex="-1"
+                      @click="decrementQuantity(row)"
+                      class="w-8 h-full hover:bg-primary/10 text-text-secondary hover:text-primary flex items-center justify-center font-black text-sm select-none transition-colors cursor-pointer border-l border-surface-border/50"
+                    >
+                      -
+                    </button>
+
+                    <input
+                      :ref="(el) => setCellRef(el, index, 'qty')"
+                      type="text"
+                      inputmode="decimal"
+                      :value="formatNumber(row.quantity_requested)"
+                      @input="row.quantity_requested = unformatNumber($event.target.value)"
+                      @keydown="handleQuantityKeydown($event, row, index)"
+                      class="w-full h-full bg-transparent text-text-primary text-sm font-mono font-black text-center outline-none"
+                      placeholder="1"
+                    />
+
+                    <button
+                      type="button"
+                      tabindex="-1"
+                      @click="incrementQuantity(row)"
+                      class="w-8 h-full hover:bg-primary/10 text-text-secondary hover:text-primary flex items-center justify-center font-black text-sm select-none transition-colors cursor-pointer border-r border-surface-border/50"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <p
+                    v-if="getValidationError(`items.${index}.quantity_requested`)"
+                    class="text-danger text-[10px] font-bold text-center"
+                  >
+                    {{ getValidationError(`items.${index}.quantity_requested`) }}
+                  </p>
+                </div>
+              </td>
+
+              <!-- 4. المواصفات الفنية -->
+              <td class="px-3 py-2 align-middle">
                 <input
                   :ref="(el) => setCellRef(el, index, 'spec')"
                   type="text"
                   v-model="row.specifications"
                   @keydown="handleSpecificationsKeydown($event, row, index)"
                   placeholder="المواصفات (ماركة محددة، مقاس، سعة، لون...)"
-                  class="w-full h-9 px-3 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-lg text-gray-200 text-xs outline-none focus:ring-1 focus:ring-[#e05e2b]/40 transition-all"
+                  class="invoice-pill-editable w-full h-9 px-3 border rounded-xl text-text-primary placeholder:text-text-muted text-xs font-medium outline-none transition-all"
                 />
-              </div>
-            </td>
+              </td>
 
-            <!-- 5. حذف السطر -->
-            <td class="p-3 text-center align-middle">
-              <button
-                type="button"
-                tabindex="-1"
-                @click="handleRemoveRowWithFocus(index)"
-                class="p-2 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                title="حذف هذا البند (Alt + Delete)"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </td>
-          </tr>
+              <!-- 5. حذف السطر -->
+              <td class="px-2.5 py-2 text-center align-middle">
+                <div class="h-9 flex items-center justify-center">
+                  <button
+                    type="button"
+                    tabindex="-1"
+                    @click="handleRemoveRowWithFocus(index)"
+                    class="p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-xl transition-colors inline-flex items-center justify-center cursor-pointer"
+                    title="حذف هذا البند (Alt + Delete)"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
 
-          <!-- حالة القائمة الفارغة -->
-          <tr v-if="items.length === 0">
-            <td colspan="6" class="p-8 text-center text-gray-400 text-xs font-medium">
-              لم تسجل أي بند حتى الآن. انقر على الزر أدناه لإضافة البند الأول.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            <!-- حالة القائمة الفارغة -->
+            <tr v-if="items.length === 0">
+              <td colspan="6" class="py-10 text-center text-text-muted text-xs font-medium">
+                لم تسجل أي بند حتى الآن. انقر على الزر أدناه لإضافة البند الأول.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <!-- شريط الإضافة ومؤشر عدد البنود -->
-    <div class="flex items-center justify-between pt-1">
-      <button
-        type="button"
-        tabindex="-1"
-        @click="handleAddNewLineWithFocus"
-        class="h-10 px-4 bg-[#23252e] hover:bg-[#2c303c] text-[#e05e2b] border border-[#e05e2b]/40 hover:border-[#e05e2b] text-xs font-bold rounded-xl transition-all flex items-center gap-2 active:scale-95 shadow-sm"
+      <!-- شريط الإضافة السريع ومؤشر عدد البنود المدمج أسفل المنصة -->
+      <div
+        class="px-4 py-2 bg-surface-ground/60 border-t border-surface-border/80 flex flex-wrap items-center justify-between gap-2"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span>+ إضافة بند احتياج آخر (Ctrl + Enter)</span>
-      </button>
+        <button
+          type="button"
+          tabindex="-1"
+          @click="handleAddNewLineWithFocus"
+          class="h-8 px-3.5 bg-surface-card hover:bg-primary hover:text-white text-primary border border-primary/45 hover:border-primary text-xs font-black rounded-xl transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          <span>إضافة بند احتياج آخر (Ctrl + Enter)</span>
+        </button>
 
-      <span class="text-xs text-gray-400 font-mono">
-        إجمالي البنود المضافة: <strong class="text-white">{{ items.length }}</strong>
-      </span>
+        <span
+          class="px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border text-xs text-text-secondary font-mono shadow-2xs"
+        >
+          إجمالي البنود المضافة:
+          <strong class="text-primary font-black text-sm mr-1">{{ items.length }}</strong>
+        </span>
+      </div>
     </div>
 
     <!-- قائمة الاقتراحات الطافية السريعة والذكية التموضع -->
@@ -258,15 +330,15 @@
           (isSearching || searchResults.length > 0)
         "
         :style="dropdownStyle"
-        class="fixed bg-[#1e222b] border border-[#484e60] rounded-xl shadow-2xl z-[9999] max-h-60 overflow-y-auto divide-y divide-[#2d3240] text-right font-sans"
+        class="fixed bg-surface-section border border-surface-border rounded-xl shadow-2xl z-[9999] max-h-64 overflow-y-auto divide-y divide-surface-border/60 text-right font-sans transition-all"
         dir="rtl"
       >
         <div
           v-if="isSearching"
-          class="p-3 text-center text-gray-400 text-xs flex items-center justify-center gap-2"
+          class="p-3 text-center text-text-muted text-xs flex items-center justify-center gap-2 font-semibold"
         >
           <span
-            class="w-3.5 h-3.5 border-2 border-[#e05e2b] border-t-transparent rounded-full animate-spin"
+            class="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"
           ></span>
           <span>جاري البحث الفوري...</span>
         </div>
@@ -283,46 +355,49 @@
             class="p-2.5 cursor-pointer flex items-center justify-between transition-colors"
             :class="
               highlightedProductIndex === pIndex
-                ? 'bg-[#2b303e] border-r-2 border-[#e05e2b]'
-                : 'hover:bg-[#242834]'
+                ? 'bg-primary/10 border-r-4 border-primary'
+                : 'hover:bg-surface-ground'
             "
           >
-            <div class="flex flex-col gap-0.5">
+            <div class="flex flex-col gap-1 pr-1">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-white">{{ product.name }}</span>
+                <span class="text-xs font-bold text-text-primary">{{ product.name }}</span>
                 <span
                   v-if="product.matched_barcode"
-                  class="text-[9px] bg-sky-950/60 text-sky-400 px-1 rounded font-mono border border-sky-500/20"
+                  class="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono font-bold border border-primary/25"
                 >
                   باركود: {{ product.matched_barcode }}
                 </span>
               </div>
 
-              <div class="flex items-center gap-3 text-[10px] text-gray-400 font-mono">
+              <div class="flex items-center gap-3 text-[10px] text-text-muted font-mono">
                 <span>كود: PRD-{{ product.id }}</span>
                 <span v-if="product.sku">SKU: {{ product.sku }}</span>
-                <span v-if="product.unit?.name" class="text-gray-300 font-sans">
+                <span v-if="product.unit?.name" class="text-text-secondary font-sans">
                   الوحدة: {{ product.unit.name }}
                 </span>
                 <span
                   class="font-sans font-bold"
-                  :class="product.available_quantity > 0 ? 'text-emerald-400' : 'text-rose-400'"
+                  :class="product.available_quantity > 0 ? 'text-info' : 'text-danger'"
                 >
                   المتاح: {{ formatNumber(product.available_quantity) }}
                 </span>
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <span v-if="product.price > 0" class="text-xs font-mono font-bold text-emerald-400">
+            <div class="flex items-center gap-3 pl-1">
+              <span
+                v-if="product.price > 0"
+                class="text-xs font-mono font-bold text-success whitespace-nowrap"
+              >
                 {{ formatNumber(product.price) }}
               </span>
               <span
-                class="text-[10px] font-bold px-2 py-0.5 rounded transition-all"
+                class="text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all whitespace-nowrap shadow-sm"
                 :class="
                   highlightedProductIndex === pIndex
-                    ? 'bg-[#e05e2b] text-white shadow-sm'
-                    : 'text-[#e05e2b] bg-[#e05e2b]/10'
+                    ? 'bg-primary text-white'
+                    : 'text-primary bg-primary/10 border border-primary/20'
                 "
               >
                 اختيار ↵
@@ -513,7 +588,6 @@ const scrollHighlightedDropdownItemIntoView = () => {
   })
 }
 
-// تنفيذ البحث السريع مع دعم التنفيذ الفوري للمسح الضوئي (immediate = true)
 const executeFastSearch = async (queryText, rowIndex, immediate = false) => {
   clearTimeout(debounceTimer)
 
@@ -534,7 +608,6 @@ const executeFastSearch = async (queryText, rowIndex, immediate = false) => {
 
       const results = response.data?.data || response.data || []
 
-      // إذا كان الإدخال ناتجاً عن مسح باركود مباشر وتطابق صنف واحد بالضبط
       if (immediate && results.length === 1) {
         handleSelectProduct(props.items[rowIndex], results[0], rowIndex)
         return
@@ -563,13 +636,11 @@ const executeFastSearch = async (queryText, rowIndex, immediate = false) => {
   }
 }
 
-// عند الـ Focus: نقوم فقط بضبط موضع القائمة وتجهيزها دون تنفيذ أي استعلام على السيرفر
 const openSearchDropdown = (index, event) => {
   activeDropdownIndex.value = index
   updateDropdownPosition(event.target)
 }
 
-// تنفيذ البحث يحدث حصراً عند الكتابة وتغيير القيمة المدخلة
 const onItemNameChange = (row, index, event) => {
   props.handleItemNameInput(row)
   activeDropdownIndex.value = index
@@ -587,7 +658,6 @@ const closeSearchDropdownDelayed = () => {
 }
 
 const handleSelectProduct = (row, product, index) => {
-  // تمرير رقم السطر الحالي للتأكد من منع التكرار مع سطر آخر
   const isSuccess = props.selectProductForRow(row, product, index)
   activeDropdownIndex.value = null
   activeTargetInput.value = null
@@ -597,7 +667,6 @@ const handleSelectProduct = (row, product, index) => {
   if (isSuccess) {
     focusCell(index, 'qty', false)
   } else {
-    // في حال تكرار الصنف يبقى المؤشر في نفس الخلية لتعديل الإدخال
     focusCell(index, 'name', false)
   }
 }
@@ -605,15 +674,12 @@ const handleSelectProduct = (row, product, index) => {
 // =========================================================
 // 3. معالجة أحداث لوحة المفاتيح والتنقل الشبكي
 // =========================================================
-
-// 1. حقل الصنف ومسح الباركود
 const handleItemNameKeydown = async (event, row, index) => {
   if (checkCommonRowShortcuts(event, index)) return
 
   const isDropdownOpen =
     activeDropdownIndex.value === index && searchResults.value.length > 0 && !isSearching.value
 
-  // التنقل داخل القائمة المنسدلة
   if (isDropdownOpen) {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
@@ -649,7 +715,6 @@ const handleItemNameKeydown = async (event, row, index) => {
     }
   }
 
-  // ضغط Enter في حقل الاسم (مسح الباركود أو التقدم السريع)
   if (event.key === 'Enter') {
     event.preventDefault()
 
@@ -667,7 +732,6 @@ const handleItemNameKeydown = async (event, row, index) => {
     return
   }
 
-  // سهم لأسفل: انتقال للسطر التالي أو إنشاء سطر جديد مع توسيطه
   if (event.key === 'ArrowDown') {
     event.preventDefault()
     activeDropdownIndex.value = null
@@ -679,7 +743,6 @@ const handleItemNameKeydown = async (event, row, index) => {
     return
   }
 
-  // سهم لأعلى
   if (event.key === 'ArrowUp') {
     if (index > 0) {
       event.preventDefault()
@@ -689,7 +752,6 @@ const handleItemNameKeydown = async (event, row, index) => {
     return
   }
 
-  // سهم يسار -> الوحدة
   if (event.key === 'ArrowLeft') {
     const el = event.target
     if (isTextFullySelected(el) || isCursorAtEnd(el) || !row.item_name) {
@@ -700,7 +762,6 @@ const handleItemNameKeydown = async (event, row, index) => {
     return
   }
 
-  // سهم يمين -> الخلية السابقة
   if (event.key === 'ArrowRight') {
     const el = event.target
     if (isTextFullySelected(el) || isCursorAtStart(el)) {
@@ -713,7 +774,6 @@ const handleItemNameKeydown = async (event, row, index) => {
   }
 }
 
-// 2. حقل الوحدة
 const handleUnitKeydown = (event, row, index) => {
   if (checkCommonRowShortcuts(event, index)) return
 
@@ -763,7 +823,6 @@ const handleUnitKeydown = (event, row, index) => {
   }
 }
 
-// 3. حقل الكمية
 const handleQuantityKeydown = (event, row, index) => {
   if (checkCommonRowShortcuts(event, index)) return
 
@@ -821,7 +880,6 @@ const handleQuantityKeydown = (event, row, index) => {
   }
 }
 
-// 4. حقل المواصفات
 const handleSpecificationsKeydown = (event, row, index) => {
   if (checkCommonRowShortcuts(event, index)) return
 
@@ -884,14 +942,3 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleScrollOrResize)
 })
 </script>
-
-<style scoped>
-select option {
-  background-color: #16171b !important;
-  color: #f8fafc !important;
-}
-
-kbd {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-</style>

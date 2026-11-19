@@ -1,95 +1,96 @@
-<!--src/modules/purchasing/views/suppliers/components/SuppliersTable.vue-->
+<!-- src/modules/purchasing/views/suppliers/components/SuppliersTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="suppliers" :is-loading="loading">
-      <!-- عمود بيانات المورد والكود -->
+      <!-- 1. بيانات المورد والكود -->
       <template #cell-supplier_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-sm text-text-primary">
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-bold text-xs sm:text-sm text-text-primary">
               {{ item.name }}
             </span>
-            <span
+            <AppBadge
               v-if="item.partner_code"
-              class="text-xs font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded tracking-wider"
+              variant="primary"
+              size="sm"
+              class="font-mono tracking-wider"
             >
               {{ item.partner_code }}
-            </span>
+            </AppBadge>
           </div>
-          <span v-if="item.commercial_name" class="text-xs text-text-muted">
+          <span v-if="item.commercial_name" class="text-[11px] text-text-muted">
             {{ item.commercial_name }}
           </span>
         </div>
       </template>
 
-      <!-- نوع الكيان -->
+      <!-- 2. نوع الكيان -->
       <template #cell-type="{ item }">
-        <span
-          class="px-2 py-0.5 text-xs font-medium rounded-md"
-          :class="
-            item.type === 'company'
-              ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200'
-              : 'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border border-purple-200'
-          "
-        >
-          {{ item.type === 'company' ? 'شركة' : 'فرد' }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="item.type === 'company' ? 'info' : 'secondary'" size="xs" pill>
+            {{ item.type === 'company' ? 'شركة / منشأة' : 'فرد' }}
+          </AppBadge>
+        </div>
       </template>
 
-      <!-- بيانات الاتصال والعنوان -->
+      <!-- 3. بيانات الاتصال والعنوان -->
       <template #cell-contact="{ item }">
-        <div class="flex flex-col text-xs text-text-muted gap-0.5 max-w-xs">
-          <span v-if="item.phone" class="font-mono text-text-secondary" dir="ltr">
+        <div class="flex flex-col text-xs text-text-muted gap-0.5 max-w-xs text-right" dir="rtl">
+          <span
+            v-if="item.phone"
+            class="font-mono font-semibold text-text-secondary w-fit"
+            dir="ltr"
+          >
             {{ item.phone }}
           </span>
           <span v-if="item.email" class="font-mono text-text-muted truncate" :title="item.email">
             {{ item.email }}
           </span>
-          <span v-if="item.address" class="truncate" :title="item.address">
+          <span v-if="item.address" class="truncate text-[11px]" :title="item.address">
             {{ item.address }}
           </span>
-          <span v-if="!item.phone && !item.email && !item.address">---</span>
+          <span v-if="!item.phone && !item.email && !item.address" class="font-mono">---</span>
         </div>
       </template>
 
-      <!-- البيانات المالية والائتمانية -->
+      <!-- 4. البيانات المالية والائتمانية -->
       <template #cell-financial="{ item }">
-        <div class="flex flex-col text-xs gap-0.5">
-          <div class="flex items-center gap-1">
-            <span class="text-text-muted">الحد:</span>
-            <span class="font-mono font-semibold text-text-primary">
+        <div class="flex flex-col text-xs gap-0.5 text-right" dir="rtl">
+          <div class="flex items-center gap-1.5">
+            <span class="text-text-muted text-[11px]">الحد:</span>
+            <span class="font-mono font-bold text-text-primary">
               {{ Number(item.credit_limit || 0).toLocaleString() }}
             </span>
-            <span class="text-[10px] text-text-muted">{{ item.currency?.symbol || '' }}</span>
+            <span v-if="item.currency?.symbol" class="text-[10px] font-bold text-primary">
+              {{ item.currency.symbol }}
+            </span>
           </div>
-          <div v-if="item.credit_period_days" class="text-[11px] text-text-muted">
-            فترة السداد: {{ item.credit_period_days }} يوم
+          <div v-if="item.credit_period_days" class="text-[10px] font-medium text-text-muted">
+            فترة السداد: <span class="font-mono font-bold">{{ item.credit_period_days }}</span> يوم
           </div>
         </div>
       </template>
 
-      <!-- الحالة -->
+      <!-- 5. الحالة -->
       <template #cell-status="{ item }">
-        <span
-          class="px-2.5 py-0.5 text-[11px] font-bold rounded-full border flex items-center w-fit gap-1.5"
-          :class="getStatusBadgeClasses(item.status)"
-        >
-          <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClasses(item.status)"></span>
-          {{ getStatusLabel(item.status) }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="getStatusBadgeVariant(item.status)" size="xs" pill>
+            {{ getStatusLabel(item.status) }}
+          </AppBadge>
+        </div>
       </template>
 
-      <!-- الإجراءات -->
+      <!-- 6. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('core.partners.update')"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل بيانات المورد"
             type="button"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -101,12 +102,12 @@
 
           <button
             v-if="authStore.can('core.partners.delete')"
-            @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
+            @click="$emit('delete', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف المورد"
             type="button"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -129,6 +130,7 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 defineProps({
   suppliers: { type: Array, required: true },
@@ -142,10 +144,10 @@ const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'supplier_info', label: 'المورد والاسم التجاري', class: 'min-w-[200px]' },
-  { key: 'type', label: 'النوع', class: 'min-w-[100px]' },
+  { key: 'type', label: 'النوع', class: 'min-w-[115px] text-center' },
   { key: 'contact', label: 'الاتصال والعنوان', class: 'min-w-[200px]' },
   { key: 'financial', label: 'الائتمان والسداد', class: 'min-w-[150px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[110px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[110px] text-center' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 
@@ -162,29 +164,16 @@ const getStatusLabel = (status) => {
   }
 }
 
-const getStatusBadgeClasses = (status) => {
+const getStatusBadgeVariant = (status) => {
   switch (status) {
     case 'active':
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400'
+      return 'success'
     case 'inactive':
-      return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400'
+      return 'warning'
     case 'blocked':
-      return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400'
+      return 'danger'
     default:
-      return 'bg-gray-50 text-gray-700 border-gray-200'
-  }
-}
-
-const getStatusDotClasses = (status) => {
-  switch (status) {
-    case 'active':
-      return 'bg-emerald-500'
-    case 'inactive':
-      return 'bg-amber-500'
-    case 'blocked':
-      return 'bg-rose-500'
-    default:
-      return 'bg-gray-400'
+      return 'secondary'
   }
 }
 </script>

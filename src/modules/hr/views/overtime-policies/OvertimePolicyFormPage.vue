@@ -1,47 +1,62 @@
+<!-- src/modules/hr/views/overtime-policies/OvertimePolicyFormPage.vue -->
 <template>
-  <div class="space-y-6 max-w-4xl mx-auto pb-12">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
+  <div class="space-y-3 max-w-5xl mx-auto pb-24 text-right font-sans" dir="rtl">
+    <!-- مؤشر التحميل لكامل الشاشة -->
+    <FullScreenLoader :show="isLoadingData" message="جاري تحميل بيانات سياسة العمل الإضافي..." />
+
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
         <button
+          type="button"
           @click="goBack"
-          class="p-2 rounded-lg bg-surface-section border border-surface-border hover:bg-surface-border transition-colors"
-          title="العودة للقائمة"
+          class="p-1.5 rounded-lg bg-surface-card border border-surface-border text-text-secondary hover:text-primary hover:border-primary/60 transition-colors shadow-2xs cursor-pointer"
+          title="العودة لقائمة سياسات العمل الإضافي"
         >
-          <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              stroke-width="2.2"
+              d="M9 5l7 7-7 7"
             />
           </svg>
         </button>
-        <div>
-          <h1 class="text-2xl font-bold text-text-primary">
-            {{ isEditMode ? 'تعديل سياسة العمل الإضافي' : 'إضافة سياسة جديدة' }}
-          </h1>
-          <p class="text-sm text-text-muted mt-1">
-            {{
-              isEditMode
-                ? 'تحديث معدلات ومعايير السياسة الحالية.'
-                : 'إنشاء سياسة جديدة لربطها لاحقاً بعقود الموظفين.'
-            }}
-          </p>
-        </div>
+
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>{{
+            isEditMode ? 'تعديل سياسة العمل الإضافي' : 'إضافة سياسة عمل إضافي جديدة'
+          }}</span>
+        </h1>
+
+        <span
+          v-if="isEditMode && policyId"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          #{{ policyId }}
+        </span>
       </div>
     </div>
 
-    <div v-if="isLoadingData" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-    </div>
+    <!-- محتوى النموذج -->
+    <div v-if="!isLoadingData" class="space-y-3">
+      <!-- 1. بطاقة الترويسة: المعايير العامة ومعدلات الاحتساب -->
+      <div
+        class="p-4 bg-surface-header/70 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm space-y-3 transition-colors duration-200"
+      >
+        <div class="flex items-center justify-between pb-1.5 border-b border-primary/15">
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span>المعايير العامة ومعدلات الاحتساب</span>
+          </span>
+          <span class="text-[10px] font-bold text-text-muted">الحقول المميزة بـ * إلزامية</span>
+        </div>
 
-    <div v-else class="space-y-6">
-      <!-- 1. المعايير العامة ومعدلات الاحتساب -->
-      <AppCard class="p-6">
-        <h2 class="text-base font-bold text-text-primary mb-4 pb-2 border-b border-surface-border">
-          المعايير العامة ومعدلات الاحتساب
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- اسم السياسة -->
           <div class="md:col-span-2">
             <AppInput
               id="name"
@@ -64,7 +79,7 @@
               option-value="value"
               required
             />
-            <p class="text-xs text-text-muted mt-1.5">
+            <p class="text-[11px] text-text-secondary mt-1 pr-1">
               {{
                 form.overtime_source === 'supervisor'
                   ? 'يتم احتساب الساعات الإضافية حصراً بناءً على ما يعتمده ويدخله المشرف في سجل الحضور.'
@@ -73,6 +88,7 @@
             </p>
           </div>
 
+          <!-- أيام العمل في الشهر -->
           <div>
             <AppInput
               id="working_days_per_month"
@@ -81,10 +97,13 @@
               v-model="form.working_days_per_month"
               min="1"
               max="31"
+              class="font-mono text-left"
+              dir="ltr"
               required
             />
           </div>
 
+          <!-- ساعات العمل في اليوم -->
           <div>
             <AppInput
               id="working_hours_per_day"
@@ -93,10 +112,13 @@
               v-model="form.working_hours_per_day"
               min="1"
               max="24"
+              class="font-mono text-left"
+              dir="ltr"
               required
             />
           </div>
 
+          <!-- معدل الإضافي العادي -->
           <div>
             <AppInput
               id="regular_rate"
@@ -111,6 +133,7 @@
             />
           </div>
 
+          <!-- معدل عطلة نهاية الأسبوع -->
           <div>
             <AppInput
               id="weekend_rate"
@@ -125,6 +148,7 @@
             />
           </div>
 
+          <!-- معدل العطلات الرسمية -->
           <div>
             <AppInput
               id="holiday_rate"
@@ -139,6 +163,7 @@
             />
           </div>
 
+          <!-- طريقة حساب الإضافي -->
           <div>
             <AppDropdown
               id="is_daily_basis"
@@ -151,9 +176,10 @@
             />
           </div>
 
+          <!-- حد الساعات لاحتساب يوم كامل -->
           <div
             v-if="form.is_daily_basis"
-            class="md:col-span-2 p-4 bg-sky-50 dark:bg-sky-900/20 rounded-lg border border-sky-100 dark:border-sky-800/30"
+            class="md:col-span-2 p-3.5 bg-surface-card rounded-xl border border-info/40 shadow-2xs space-y-2"
           >
             <AppInput
               id="hours_to_day_threshold"
@@ -163,23 +189,39 @@
               min="1"
               max="24"
               placeholder="مثال: 5"
+              class="font-mono text-left"
+              dir="ltr"
               required
             />
-            <p class="text-xs text-sky-600 mt-2">
-              إذا تجاوز الموظف هذا العدد من الساعات، سيتم تحويل الإضافي تلقائياً إلى "يوم عمل كامل".
+            <p class="text-[11px] text-info font-bold flex items-center gap-1.5">
+              <span>•</span>
+              <span>
+                إذا تجاوز الموظف هذا العدد من الساعات، سيتم تحويل الإضافي تلقائياً إلى "يوم عمل
+                كامل".
+              </span>
             </p>
           </div>
         </div>
-      </AppCard>
+      </div>
 
-      <!-- 2. طريقة احتساب أجر الساعة والضريبة (بمسميات مبسطة ومباشرة) -->
-      <AppCard class="p-6">
-        <h2 class="text-base font-bold text-text-primary mb-1">طريقة احتساب أجر الساعة والضريبة</h2>
-        <p class="text-xs text-text-muted mb-4 pb-2 border-b border-surface-border">
-          لتخصيص طريقة تسعير الساعة أو استقطاع الضريبة لحالات الطوارئ، أو تركها بالقيم العادية.
-        </p>
+      <!-- 2. بطاقة طريقة احتساب أجر الساعة والضريبة -->
+      <div
+        class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-xs space-y-3 transition-colors duration-200"
+      >
+        <div
+          class="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-surface-border/80"
+        >
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+            <span>طريقة احتساب أجر الساعة والضريبة</span>
+          </span>
+          <span class="text-[10px] text-text-muted">
+            تخصيص تسعير الساعة أو استقطاع الضريبة (أو ترك القيم الافتراضية)
+          </span>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- نسبة الراتب المعتمدة للساعة -->
           <div>
             <AppInput
               id="wage_factor"
@@ -193,12 +235,13 @@
               dir="ltr"
               class="font-mono text-left"
             />
-            <p class="text-xs text-text-muted mt-1.5">
-              الافتراضي <span class="font-bold text-primary">1.00</span> (كامل الراتب 100%)، أو اكتب
-              <span class="font-bold text-amber-600">0.76</span> (لـ 76% من الراتب).
+            <p class="text-[11px] text-text-muted mt-1 pr-1 leading-relaxed">
+              الافتراضي <strong class="font-mono text-primary">1.00</strong> (100% من الراتب)، أو
+              اكتب <strong class="font-mono text-warning">0.76</strong> (لـ 76%).
             </p>
           </div>
 
+          <!-- ساعات الشهر الثابتة -->
           <div>
             <AppInput
               id="fixed_monthly_hours"
@@ -211,12 +254,13 @@
               dir="ltr"
               class="font-mono text-left"
             />
-            <p class="text-xs text-text-muted mt-1.5">
+            <p class="text-[11px] text-text-muted mt-1 pr-1 leading-relaxed">
               اتركه فارغاً للحساب التلقائي، أو حدد ساعات ثابتة مثل
-              <span class="font-bold text-primary">176</span> ساعة.
+              <strong class="font-mono text-primary">176</strong> ساعة.
             </p>
           </div>
 
+          <!-- نسبة ضريبة الإضافي -->
           <div>
             <AppInput
               id="tax_rate"
@@ -230,62 +274,88 @@
               dir="ltr"
               class="font-mono text-left"
             />
-            <p class="text-xs text-text-muted mt-1.5">
-              الافتراضي <span class="font-bold text-primary">0%</span> (بدون ضريبة)، أو حدد
-              <span class="font-bold text-rose-600">15%</span> لاستقطاع مباشر من الإضافي.
+            <p class="text-[11px] text-text-muted mt-1 pr-1 leading-relaxed">
+              الافتراضي <strong class="font-mono text-primary">0%</strong> (بدون ضريبة)، أو حدد
+              <strong class="font-mono text-danger">15%</strong> للاستقطاع المباشر.
             </p>
           </div>
 
           <!-- الفئات المعفاة من الضريبة -->
           <div
             v-if="Number(form.tax_rate) > 0"
-            class="md:col-span-2 p-4 bg-amber-50/70 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-900/40 space-y-3"
+            class="md:col-span-3 p-3.5 bg-warning/10 rounded-xl border border-warning/35 space-y-2.5"
           >
-            <span class="text-xs font-bold text-amber-900 dark:text-amber-300 block">
+            <span class="text-xs font-black text-warning block">
               الفئات المعفاة من خصم الضريبة:
             </span>
-            <div class="flex flex-wrap gap-4 text-xs">
-              <label class="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  value="daily"
-                  v-model="form.tax_exempt_employment_types"
-                  class="rounded text-primary focus:ring-primary h-4 w-4"
-                />
-                <span class="text-text-primary">عمال اليومية (Daily Workers)</span>
-              </label>
 
-              <label class="inline-flex items-center gap-2 cursor-pointer">
+            <div class="flex flex-wrap gap-2">
+              <label
+                v-for="exemptOpt in exemptTypeOptions"
+                :key="exemptOpt.value"
+                class="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold"
+                :class="
+                  form.tax_exempt_employment_types.includes(exemptOpt.value)
+                    ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30 shadow-2xs'
+                    : 'bg-surface-card border-surface-border text-text-secondary hover:border-primary/50 hover:text-primary'
+                "
+              >
                 <input
                   type="checkbox"
-                  value="temporary"
+                  :value="exemptOpt.value"
                   v-model="form.tax_exempt_employment_types"
-                  class="rounded text-primary focus:ring-primary h-4 w-4"
+                  class="hidden"
                 />
-                <span class="text-text-primary">العمالة المؤقتة (Temporary Workers)</span>
-              </label>
-
-              <label class="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  value="contract"
-                  v-model="form.tax_exempt_employment_types"
-                  class="rounded text-primary focus:ring-primary h-4 w-4"
-                />
-                <span class="text-text-primary">المتعاقدون بعقود محددة (Contractors)</span>
+                <div
+                  class="w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0"
+                  :class="
+                    form.tax_exempt_employment_types.includes(exemptOpt.value)
+                      ? 'bg-primary border-primary'
+                      : 'bg-surface-ground border-surface-border'
+                  "
+                >
+                  <svg
+                    v-if="form.tax_exempt_employment_types.includes(exemptOpt.value)"
+                    class="w-3 h-3 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="3"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <span>{{ exemptOpt.label }}</span>
               </label>
             </div>
-            <p class="text-[11px] text-amber-800 dark:text-amber-400">
-              سيتم إعفاء الموظفين التابعين لهذه الفئات من خصم الـ {{ form.tax_rate }}% وصرف أجر
-              الإضافي كاملاً.
+
+            <p class="text-[11px] text-text-secondary font-medium">
+              سيتم إعفاء الموظفين التابعين لهذه الفئات من خصم الـ
+              <strong class="font-mono text-warning">{{ form.tax_rate }}%</strong> وصرف أجر الإضافي
+              كاملاً.
             </p>
           </div>
         </div>
-      </AppCard>
+      </div>
+    </div>
 
-      <div class="flex justify-end gap-3">
-        <AppButton variant="secondary" @click="goBack" :disabled="isSaving"> إلغاء </AppButton>
-        <AppButton @click="submit" :disabled="isSaving">
+    <!-- شريط الإجراءات السفلي الثابت -->
+    <div
+      class="fixed bottom-0 right-0 left-0 bg-surface-card border-t border-surface-border p-2.5 shadow-[0_-4px_10px_rgba(0,0,0,0.06)] z-40 flex flex-wrap justify-between items-center gap-2 px-4 sm:px-6"
+    >
+      <div class="text-xs text-text-secondary font-medium">
+        <span>تُطبق هذه السياسة تلقائياً على العقود المرتبطة بها عند احتساب مسير الرواتب.</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <AppButton type="button" variant="secondary" size="sm" @click="goBack" :disabled="isSaving">
+          إلغاء وتراجع
+        </AppButton>
+        <AppButton type="button" size="sm" @click="submit" :disabled="isSaving">
           <span v-if="isSaving">جاري الحفظ...</span>
           <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة السياسة' }}</span>
         </AppButton>
@@ -299,10 +369,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 
-import AppCard from '@/components/ui/AppCard.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import FullScreenLoader from '@/components/ui/FullScreenLoader.vue'
 
 import { useOvertimePolicyStore } from '@/modules/hr/stores/overtimePolicyStore'
 
@@ -326,6 +396,12 @@ const sourceOptions = [
 const basisOptions = [
   { label: 'حساب بنظام الساعات (تجميع الساعات الإضافية)', value: false },
   { label: 'حساب بنظام الأيام (تحويل الساعات ليوم كامل)', value: true },
+]
+
+const exemptTypeOptions = [
+  { value: 'daily', label: 'عمال اليومية (Daily Workers)' },
+  { value: 'temporary', label: 'العمالة المؤقتة (Temporary Workers)' },
+  { value: 'contract', label: 'المتعاقدون بعقود محددة (Contractors)' },
 ]
 
 const defaultForm = () => ({
@@ -376,7 +452,7 @@ onMounted(async () => {
           ? policyData.tax_exempt_employment_types
           : ['daily', 'temporary'],
       }
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء تحميل تفاصيل السياسة.')
       goBack()
     } finally {

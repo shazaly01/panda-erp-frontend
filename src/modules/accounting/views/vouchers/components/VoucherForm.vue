@@ -1,29 +1,59 @@
 <!--src/modules/accounting/views/vouchers/components/VoucherForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit(false)" class="space-y-4">
-    <!-- 1. ترويسة السند المدمجة والمتوازنة -->
-    <div class="bg-surface-card/40 border border-surface-border p-4 rounded-xl space-y-4">
+  <form @submit.prevent="handleSubmit(false)" class="space-y-4 font-sans text-right" dir="rtl">
+    <!-- 1. ترويسة السند المدمجة والمميزة عن التفاصيل -->
+    <div
+      class="voucher-header-grid bg-surface-header/60 border border-surface-border border-t-4 border-t-primary p-4 rounded-xl shadow-xs space-y-3.5 transition-all duration-200"
+    >
+      <!-- شريط عنوان مصغر يوضح نوع السند وحالته -->
+      <div class="flex items-center justify-between pb-2 border-b border-primary/15">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-primary"></span>
+          <span class="text-xs font-black text-text-primary">
+            بيانات رأس السند وجهة التحصيل / الصرف
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span
+            v-if="isPostedEdit"
+            class="px-2.5 py-0.5 rounded-full text-[11px] font-black border bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35"
+          >
+            تعديل مباشر لسند مُرحّل (سيتم تحديث القيد بنفس الرقم)
+          </span>
+
+          <span
+            class="px-2.5 py-0.5 rounded-full text-[11px] font-black border"
+            :class="
+              isReceipt
+                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
+            "
+          >
+            {{ isReceipt ? 'سند قبض (إيراد / استلام)' : 'سند صرف (مصروف / دفع)' }}
+          </span>
+        </div>
+      </div>
+
       <!-- السطر الأول: طريقة الدفع + الخزينة/البنك + رقم الشيك/العملية + تاريخ السند -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
         <!-- طريقة الدفع -->
         <div
           :class="paymentMethodType === 'bank' ? 'md:col-span-3' : 'md:col-span-4'"
           class="flex flex-col"
         >
-          <label class="block text-sm font-medium text-gray-700 dark:text-text-secondary mb-1">
-            طريقة الدفع *
-          </label>
+          <label class="block text-xs font-bold text-text-secondary mb-1.5"> طريقة الدفع * </label>
           <div
-            class="grid grid-cols-2 gap-1.5 p-1 bg-gray-50 dark:bg-surface-ground border-2 border-gray-300 dark:border-blue-500/40 rounded-xl shadow-sm h-[46px] items-center box-border"
+            class="grid grid-cols-2 gap-1 p-1 bg-surface-card border border-surface-border rounded-lg shadow-2xs h-[40px] items-center box-border"
           >
             <button
               type="button"
               @click="handlePaymentMethodChange('box')"
               :class="[
-                'flex items-center justify-center gap-1.5 h-full rounded-lg text-xs font-bold transition-all duration-200 select-none cursor-pointer',
+                'flex items-center justify-center gap-1.5 h-full rounded-md text-xs font-black transition-all duration-200 select-none cursor-pointer',
                 paymentMethodType === 'box'
                   ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
-                  : 'text-gray-600 dark:text-text-muted hover:text-gray-900 dark:hover:text-text-primary hover:bg-white dark:hover:bg-surface-card/60',
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-ground/70',
               ]"
             >
               <span class="text-sm">💵</span>
@@ -33,10 +63,10 @@
               type="button"
               @click="handlePaymentMethodChange('bank')"
               :class="[
-                'flex items-center justify-center gap-1.5 h-full rounded-lg text-xs font-bold transition-all duration-200 select-none cursor-pointer',
+                'flex items-center justify-center gap-1.5 h-full rounded-md text-xs font-black transition-all duration-200 select-none cursor-pointer',
                 paymentMethodType === 'bank'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                  : 'text-gray-600 dark:text-text-muted hover:text-gray-900 dark:hover:text-text-primary hover:bg-white dark:hover:bg-surface-card/60',
+                  ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-ground/70',
               ]"
             >
               <span class="text-sm">🏦</span>
@@ -45,325 +75,526 @@
           </div>
         </div>
 
-        <!-- الخزينة المحددة (تظهر عند اختيار نقدي) -->
+        <!-- الخزينة المحددة + الرصيد الحالي (تظهر عند اختيار نقدي) -->
         <div v-if="paymentMethodType === 'box'" class="md:col-span-4">
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <label for="voucher-box" class="block text-xs font-bold text-text-secondary">
+              الخزينة المحددة *
+            </label>
+            <span
+              v-if="selectedTreasury"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-black border transition-colors"
+              :class="
+                isBalanceInsufficient
+                  ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40'
+                  : 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+              "
+            >
+              <span class="font-sans font-bold opacity-85">الرصيد:</span>
+              <span>{{ formatNumber(currentTreasuryBalance) }}</span>
+              <span class="text-[10px] opacity-80">{{ selectedTreasuryCurrencyCode }}</span>
+            </span>
+          </div>
           <AppDropdown
             id="voucher-box"
-            label="الخزينة المحددة *"
             v-model="form.box_id"
             :options="boxes"
             option-label="name"
             option-value="id"
             placeholder="اختر الخزينة..."
+            class="bg-surface-card"
             required
           />
         </div>
 
-        <!-- الحساب البنكي المحدد (يظهر عند اختيار بنك) -->
+        <!-- الحساب البنكي المحدد + الرصيد الحالي (يظهر عند اختيار بنك) -->
         <div v-if="paymentMethodType === 'bank'" class="md:col-span-3">
+          <div class="flex items-center justify-between gap-1.5 mb-1.5">
+            <label for="voucher-bank" class="block text-xs font-bold text-text-secondary">
+              الحساب البنكي *
+            </label>
+            <span
+              v-if="selectedTreasury"
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black border transition-colors truncate"
+              :class="
+                isBalanceInsufficient
+                  ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40'
+                  : 'bg-sky-500/12 text-sky-700 dark:text-sky-300 border-sky-500/30'
+              "
+            >
+              <span class="font-sans font-bold opacity-85">الرصيد:</span>
+              <span>{{ formatNumber(currentTreasuryBalance) }}</span>
+            </span>
+          </div>
           <AppDropdown
             id="voucher-bank"
-            label="الحساب البنكي *"
             v-model="form.bank_account_id"
             :options="formattedBankAccounts"
             option-label="displayName"
             option-value="id"
             placeholder="اختر الحساب البنكي..."
+            class="bg-surface-card"
             required
           />
         </div>
 
         <!-- رقم الشيك / العملية (يظهر فقط عند الدفع البنكي واختياري) -->
         <div v-if="paymentMethodType === 'bank'" class="md:col-span-3">
+          <label for="bank-ref-number" class="block text-xs font-bold text-text-secondary mb-1.5">
+            رقم الشيك / العملية
+          </label>
           <AppInput
             id="bank-ref-number"
             type="text"
-            label="رقم الشيك / العملية"
             v-model="form.bank_ref_number"
             placeholder="رقم الشيك أو الحوالة..."
+            class="bg-surface-card"
           />
         </div>
 
         <!-- تاريخ السند -->
         <div :class="paymentMethodType === 'bank' ? 'md:col-span-3' : 'md:col-span-4'">
+          <label for="voucher-date" class="block text-xs font-bold text-text-secondary mb-1.5">
+            تاريخ السند *
+          </label>
           <AppInput
             id="voucher-date"
             type="date"
-            label="تاريخ السند *"
             v-model="form.date"
+            class="bg-surface-card font-mono font-bold"
             dir="ltr"
             required
           />
-          <p v-if="fiscalYearError" class="mt-1 text-xs text-rose-500 font-medium">
+          <p v-if="fiscalYearError" class="mt-1 text-xs text-danger font-bold">
             {{ fiscalYearError }}
           </p>
         </div>
       </div>
 
-      <!-- السطر الثاني: الفرع والمستفيد والبيان العام -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+      <!-- السطر الثاني: متطابق هندسياً مع السطر الأول (4+4+4 للنقدي، 3+3+6 للبنكي) -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
         <!-- الفرع -->
-        <div class="md:col-span-3">
+        <div :class="paymentMethodType === 'bank' ? 'md:col-span-3' : 'md:col-span-4'">
+          <label for="voucher-branch" class="block text-xs font-bold text-text-secondary mb-1.5">
+            الفرع *
+          </label>
           <AppDropdown
             id="voucher-branch"
-            label="الفرع *"
             v-model="form.branch_id"
             :options="branches"
             option-label="name"
             option-value="id"
             placeholder="اختر الفرع..."
+            class="bg-surface-card"
             required
           />
         </div>
 
-        <!-- اسم الدافع / المستفيد -->
-        <div class="md:col-span-4">
+        <!-- اسم الدافع / المستفيد (يُملأ يدوياً ولا يُعبأ تلقائياً) -->
+        <div :class="paymentMethodType === 'bank' ? 'md:col-span-3' : 'md:col-span-4'">
+          <label for="payee-name" class="block text-xs font-bold text-text-secondary mb-1.5">
+            {{ isReceipt ? 'استلمنا من السيد / الجهة *' : 'يُصرف للسيد / الجهة *' }}
+          </label>
           <AppInput
             id="payee-name"
             type="text"
-            :label="isReceipt ? 'استلمنا من السيد / الجهة *' : 'يُصرف للسيد / الجهة *'"
             v-model="form.payee_name"
             @blur="handlePayeeBlur"
             :placeholder="isReceipt ? 'اسم الدافع...' : 'اسم المستفيد...'"
+            class="bg-surface-card"
             required
           />
         </div>
 
         <!-- البيان العام للسند -->
-        <div class="md:col-span-5">
+        <div :class="paymentMethodType === 'bank' ? 'md:col-span-6' : 'md:col-span-4'">
+          <label
+            for="voucher-description"
+            class="block text-xs font-bold text-text-secondary mb-1.5"
+          >
+            البيان العام للسند *
+          </label>
           <AppInput
             id="voucher-description"
             type="text"
-            label="البيان العام للسند *"
             v-model="form.description"
             placeholder="شرح موجز لسبب الصرف أو القبض..."
+            class="bg-surface-card"
             required
           />
         </div>
       </div>
     </div>
 
-    <!-- 2. منطقة الحسابات والمبالغ -->
-    <div class="bg-surface-card/30 border border-surface-border rounded-xl p-4 space-y-3">
-      <div class="flex justify-between items-center px-1">
-        <label class="text-xs font-bold text-text-primary flex items-center gap-1.5">
-          <span
-            class="w-2 h-2 rounded-full"
-            :class="isReceipt ? 'bg-emerald-500' : 'bg-rose-500'"
-          ></span>
-          {{
-            isReceipt
-              ? 'الحسابات المقبوض منها (الطرف الدائن)'
-              : 'الحسابات المصروف لها (الطرف المدين)'
-          }}
-        </label>
+    <!-- 2. منصة الحسابات والمبالغ المجسّمة (3D Elevated Stage) -->
+    <div
+      class="invoice-stage-3d rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200"
+    >
+      <div class="overflow-x-auto min-h-[175px] flex flex-col justify-between">
+        <table class="w-full border-collapse text-right text-xs">
+          <thead class="invoice-thead-3d select-none h-11 tracking-tight">
+            <tr>
+              <th class="px-3 py-2.5 w-16 text-center text-slate-400 dark:text-slate-600 font-mono">
+                #
+              </th>
+              <th
+                class="px-3 py-2.5 min-w-[260px] text-right font-black text-white dark:text-slate-900 text-[13px]"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <span
+                    class="w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/25 inline-block"
+                  ></span>
+                  {{
+                    isReceipt
+                      ? 'الحسابات المقبوض منها (الطرف الدائن)'
+                      : 'الحسابات المصروف لها (الطرف المدين)'
+                  }}
+                </span>
+              </th>
+              <th
+                class="px-3 py-2.5 min-w-[160px] w-44 text-center font-bold text-slate-200 dark:text-slate-800"
+              >
+                مركز التكلفة
+              </th>
+              <th
+                class="px-3 py-2.5 min-w-[130px] w-36 text-center font-black text-primary-light dark:text-primary-dark text-[13px]"
+              >
+                المبلغ
+              </th>
+              <th
+                class="px-3 py-2.5 min-w-[170px] w-48 text-right font-bold text-slate-200 dark:text-slate-800"
+              >
+                ملاحظة السطر
+              </th>
+              <th class="px-3 py-2.5 w-14 text-center font-bold text-slate-400 dark:text-slate-600">
+                إجراء
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-surface-border/70">
+            <tr
+              v-for="(line, index) in form.details"
+              :key="line._key"
+              class="invoice-row-3d animate-row-enter"
+              :class="line.account_id ? 'invoice-row-filled' : 'invoice-row-empty'"
+            >
+              <!-- 1. تسلسل السطر -->
+              <td class="px-3 py-2.5 text-center font-mono align-middle">
+                <div class="flex items-center justify-center gap-1.5">
+                  <span
+                    class="w-5 h-5 rounded-md flex items-center justify-center font-black text-[11px]"
+                    :class="
+                      line.account_id
+                        ? 'bg-primary text-white shadow-2xs'
+                        : 'bg-surface-ground text-text-muted border border-surface-border'
+                    "
+                  >
+                    {{ index + 1 }}
+                  </span>
+                  <span
+                    v-if="!line.account_id"
+                    class="text-[9px] px-1.5 py-0.5 rounded font-sans font-bold bg-warning/15 text-warning border border-warning/30 whitespace-nowrap"
+                  >
+                    بحث
+                  </span>
+                </div>
+              </td>
+
+              <!-- 2. الحساب المالي (حقل بحث نظيف أو بيانات الحساب المختار) -->
+              <td class="px-3 py-2.5 align-middle">
+                <!-- وضع البحث -->
+                <div v-if="!line.account_id" class="voucher-account-search w-full">
+                  <AccountPartySearchGrid
+                    :placeholder="
+                      isReceipt
+                        ? 'ابحث عن حساب، عميل، أو مصدر الإيراد...'
+                        : 'ابحث عن حساب مصروف، مورد، موظف، أو جهة صرف...'
+                    "
+                    @select="handleSelectAccount(index, $event)"
+                  />
+                </div>
+
+                <!-- وضع الحساب المختار -->
+                <div v-else class="flex items-center justify-between gap-2">
+                  <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-primary/10 text-primary border border-primary/25"
+                      >
+                        {{ line.account_code }}
+                      </span>
+                      <span
+                        v-if="line.reference_label"
+                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-warning/15 text-warning border border-warning/30 truncate"
+                      >
+                        {{ line.reference_label }}
+                      </span>
+                    </div>
+                    <span
+                      class="text-xs sm:text-[13px] font-black text-text-primary truncate mt-0.5"
+                      :title="line.account_name"
+                    >
+                      {{ line.account_name }}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    @click="resetLineAccount(index)"
+                    class="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-surface-border bg-surface-card hover:border-primary hover:text-primary text-text-secondary transition-colors shrink-0 cursor-pointer"
+                    title="تغيير الحساب"
+                  >
+                    تغيير
+                  </button>
+                </div>
+              </td>
+
+              <!-- 3. مركز التكلفة -->
+              <td class="px-3 py-2.5 align-middle">
+                <template v-if="line.account_id">
+                  <div class="relative w-full h-9 flex items-center">
+                    <select
+                      :id="`costCenter-${index}`"
+                      v-model="line.cost_center_id"
+                      @keydown.enter.prevent="focusInput(`amount-${index}`)"
+                      class="invoice-pill-editable w-full h-9 pr-3 pl-6 border rounded-xl text-text-secondary text-xs font-bold outline-none appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="" class="bg-surface-section text-text-muted">
+                        -- بدون مركز --
+                      </option>
+                      <option
+                        v-for="cc in costCenters"
+                        :key="cc.id"
+                        :value="cc.id"
+                        class="bg-surface-section text-text-primary font-bold"
+                      >
+                        {{ cc.name }}
+                      </option>
+                    </select>
+                    <span
+                      class="absolute left-2.5 inset-y-0 flex items-center text-text-muted pointer-events-none text-[8px]"
+                    >
+                      ▼
+                    </span>
+                  </div>
+                </template>
+                <div
+                  v-else
+                  class="h-9 flex items-center justify-center text-text-muted/35 font-mono select-none"
+                >
+                  —
+                </div>
+              </td>
+
+              <!-- 4. المبلغ -->
+              <td class="px-3 py-2.5 align-middle">
+                <template v-if="line.account_id">
+                  <div class="h-9 flex items-center justify-center">
+                    <input
+                      :id="`amount-${index}`"
+                      type="number"
+                      v-model.number="line.amount"
+                      @keydown.enter.prevent="focusInput(`desc-${index}`)"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      class="invoice-pill-editable w-full h-9 px-2 text-center font-mono font-black text-sm border rounded-xl outline-none transition-all"
+                      :class="isReceipt ? 'text-success' : 'text-primary'"
+                      required
+                    />
+                  </div>
+                </template>
+                <div
+                  v-else
+                  class="h-9 flex items-center justify-center text-text-muted/35 font-mono select-none"
+                >
+                  —
+                </div>
+              </td>
+
+              <!-- 5. البيان الفرعي -->
+              <td class="px-3 py-2.5 align-middle">
+                <template v-if="line.account_id">
+                  <div class="h-9 flex items-center">
+                    <input
+                      :id="`desc-${index}`"
+                      type="text"
+                      v-model="line.description"
+                      placeholder="ملاحظة السطر..."
+                      class="invoice-pill-editable w-full h-9 px-3 border rounded-xl text-text-primary text-xs font-semibold outline-none transition-all placeholder:text-text-muted placeholder:font-normal"
+                    />
+                  </div>
+                </template>
+                <div
+                  v-else
+                  class="h-9 flex items-center justify-center text-text-muted/35 font-mono select-none"
+                >
+                  —
+                </div>
+              </td>
+
+              <!-- 6. زر حذف السطر -->
+              <td class="px-3 py-2.5 text-center align-middle">
+                <div class="h-9 flex items-center justify-center">
+                  <button
+                    v-if="line.account_id || form.details.length > 1"
+                    type="button"
+                    @click="removeLine(index)"
+                    class="p-2 rounded-xl text-text-muted hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                    title="حذف هذا السطر"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                  <span v-else class="text-text-muted/35 font-mono select-none">—</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- شريط الإضافة السريع ومؤشر عدد البنود المدمج أسفل المنصة -->
+      <div
+        class="px-4 py-2 bg-surface-ground/60 border-t border-surface-border/80 flex flex-wrap items-center justify-between gap-2"
+      >
         <button
           type="button"
           @click="addNewEmptyLine"
-          class="text-xs font-bold text-primary hover:text-primary/80 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-primary/10 transition-colors"
+          class="h-8 px-3.5 bg-surface-card hover:bg-primary hover:text-white text-primary border border-primary/45 hover:border-primary text-xs font-black rounded-xl transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
+              stroke-width="2.2"
               d="M12 4v16m8-8H4"
             />
           </svg>
-          إضافة حساب آخر (تقسيم المبلغ)
+          <span>إضافة حساب آخر (تقسيم المبلغ)</span>
         </button>
-      </div>
 
-      <div class="space-y-2.5">
-        <div
-          v-for="(line, index) in form.details"
-          :key="line._key"
-          class="p-3 bg-surface-bg border border-surface-border rounded-xl transition-all hover:border-primary/40"
+        <span
+          class="px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border font-mono text-xs text-text-secondary shadow-2xs"
         >
-          <!-- حالة البحث الفوري عن الحساب -->
-          <div v-if="!line.account_id" class="flex flex-col gap-2">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                ابحث واختر الحساب للسطر ({{ index + 1 }}):
-              </span>
-              <button
-                v-if="form.details.length > 1"
-                type="button"
-                @click="removeLine(index)"
-                class="text-rose-500 hover:text-rose-600 text-xs font-medium flex items-center gap-1 transition-colors"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-                إلغاء السطر
-              </button>
-            </div>
-            <AccountPartySearchGrid
-              :placeholder="
-                isReceipt
-                  ? 'ابحث عن حساب، عميل، أو مصدر الإيراد...'
-                  : 'ابحث عن حساب مصروف، مورد، موظف، أو جهة صرف...'
-              "
-              @select="handleSelectAccount(index, $event)"
-            />
-          </div>
-
-          <!-- حالة الحساب المختار وتحديد المبلغ -->
-          <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
-            <!-- تفاصيل الحساب والوسم المرجعي -->
-            <div
-              class="lg:col-span-4 flex items-center justify-between p-2.5 bg-surface-card rounded-lg border border-surface-border gap-2"
-            >
-              <div class="flex flex-col min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[11px] font-mono font-bold text-primary">{{
-                    line.account_code
-                  }}</span>
-                  <span
-                    v-if="line.reference_label"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 truncate"
-                  >
-                    {{ line.reference_label }}
-                  </span>
-                </div>
-                <span
-                  class="text-xs font-bold text-text-primary truncate"
-                  :title="line.account_name"
-                >
-                  {{ line.account_name }}
-                </span>
-              </div>
-              <button
-                type="button"
-                @click="resetLineAccount(index)"
-                class="text-[11px] text-text-muted hover:text-primary hover:bg-surface-border px-2 py-1 rounded transition-colors shrink-0"
-                title="تغيير الحساب"
-              >
-                تغيير
-              </button>
-            </div>
-
-            <!-- مركز التكلفة -->
-            <div class="lg:col-span-3">
-              <select
-                :id="`costCenter-${index}`"
-                v-model="line.cost_center_id"
-                @keydown.enter.prevent="focusInput(`amount-${index}`)"
-                class="w-full px-2.5 py-2.5 text-xs bg-surface-ground border border-surface-border text-text-primary rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-colors"
-              >
-                <option value="">-- بدون مركز تكلفة --</option>
-                <option v-for="cc in costCenters" :key="cc.id" :value="cc.id">
-                  {{ cc.name }}
-                </option>
-              </select>
-            </div>
-
-            <!-- المبلغ -->
-            <div class="lg:col-span-2">
-              <AppInput
-                :id="`amount-${index}`"
-                type="number"
-                v-model.number="line.amount"
-                @keydown.enter.prevent="focusInput(`desc-${index}`)"
-                min="0.01"
-                step="0.01"
-                placeholder="المبلغ *"
-                class="font-mono text-center font-bold text-sm"
-                :class="isReceipt ? 'text-emerald-500' : 'text-rose-500'"
-                required
-              />
-            </div>
-
-            <!-- البيان الفرعي -->
-            <div class="lg:col-span-2">
-              <AppInput
-                :id="`desc-${index}`"
-                type="text"
-                v-model="line.description"
-                placeholder="ملاحظة السطر..."
-              />
-            </div>
-
-            <!-- زر حذف السطر -->
-            <div class="lg:col-span-1 flex items-center justify-center">
-              <button
-                type="button"
-                @click="removeLine(index)"
-                class="p-2 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
-                title="حذف هذا السطر"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+          الحسابات المدرجة:
+          <strong class="text-primary font-black text-sm mr-1">
+            {{ form.details.filter((l) => l.account_id).length }}
+          </strong>
+        </span>
       </div>
     </div>
 
-    <!-- 3. الشريط السفلي المدمج -->
+    <!-- تنبيه فوري عند تجاوز مبلغ الصرف للرصيد المتاح -->
     <div
-      class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-surface-border"
+      v-if="isBalanceInsufficient"
+      class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-rose-500/12 border border-rose-500/40 text-rose-700 dark:text-rose-300 text-xs font-bold"
     >
-      <!-- الإجمالي التلقائي مع شارة مميزة -->
-      <div class="flex items-center gap-3">
+      <svg
+        class="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      </svg>
+      <span>
+        لا يمكن إتمام الصرف: إجمالي المبلغ ({{ formatNumber(computedTotalAmount) }}
+        {{ selectedCurrencyCode }}) يتجاوز الرصيد المتاح ({{
+          formatNumber(effectiveAvailableBalance)
+        }}
+        {{ selectedTreasuryCurrencyCode }}).
+      </span>
+    </div>
+
+    <!-- 3. الشريط السفلي المتوازن (الأزرار في اليمين والإجمالي النهائي في أقصى اليسار) -->
+    <div
+      class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-surface-border"
+    >
+      <!-- أزرار الإجراءات (بداية المسار في اليمين) -->
+      <div class="flex flex-wrap items-center gap-2.5 justify-start">
+        <template v-if="isPostedEdit">
+          <AppButton
+            type="button"
+            @click="handleSubmit(false)"
+            :disabled="isSaving || computedTotalAmount <= 0 || isBalanceInsufficient"
+            class="bg-primary text-white font-black px-5 py-2 rounded-xl"
+          >
+            <span v-if="isSaving">جاري حفظ التعديلات...</span>
+            <span v-else>حفظ التعديلات وتحديث القيد</span>
+          </AppButton>
+        </template>
+
+        <template v-else>
+          <AppButton
+            type="button"
+            @click="handleSubmit(true)"
+            :disabled="isSaving || computedTotalAmount <= 0 || isBalanceInsufficient"
+            class="bg-primary text-white font-black px-5 py-2 rounded-xl"
+          >
+            <span v-if="isSaving">جاري الحفظ...</span>
+            <span v-else>{{ isEditMode ? 'تحديث وترحيل مباشر' : 'حفظ وترحيل مباشر' }}</span>
+          </AppButton>
+
+          <AppButton
+            type="button"
+            variant="secondary"
+            @click="handleSubmit(false)"
+            :disabled="isSaving || computedTotalAmount <= 0 || isBalanceInsufficient"
+            class="font-bold rounded-xl"
+          >
+            <span v-if="isSaving">جاري الحفظ...</span>
+            <span v-else>{{ isEditMode ? 'تحديث السند' : 'حفظ كمسودة' }}</span>
+          </AppButton>
+        </template>
+
+        <AppButton
+          type="button"
+          variant="secondary"
+          @click="$emit('cancel')"
+          :disabled="isSaving"
+          class="font-bold rounded-xl"
+        >
+          إلغاء
+        </AppButton>
+      </div>
+
+      <!-- الإجمالي التلقائي في أقصى اليسار (نهاية مسار العين) -->
+      <div
+        class="flex items-center justify-between sm:justify-end gap-3 px-4 py-2 rounded-xl bg-surface-section border border-surface-border border-r-4 border-r-primary shadow-xs"
+      >
+        <span class="text-xs font-black text-text-secondary">
+          إجمالي {{ isReceipt ? 'القبض' : 'الصرف' }}:
+        </span>
         <div
-          class="flex items-center gap-2 px-3.5 py-2 rounded-xl border"
+          class="flex items-baseline gap-1.5 px-3 py-1 rounded-lg border"
           :class="
             isReceipt
-              ? 'bg-emerald-500/10 border-emerald-500/20'
-              : 'bg-rose-500/10 border-rose-500/20'
+              ? 'bg-emerald-500/12 border-emerald-500/35 text-success'
+              : isBalanceInsufficient
+                ? 'bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400'
+                : 'bg-primary/12 border-primary/35 text-primary'
           "
         >
-          <span class="text-xs font-bold text-text-muted">
-            إجمالي {{ isReceipt ? 'القبض' : 'الصرف' }}:
-          </span>
-          <span
-            class="font-mono text-xl font-black"
-            :class="isReceipt ? 'text-emerald-500' : 'text-rose-500'"
-          >
+          <span class="font-mono text-xl font-black tracking-tight">
             {{ formatNumber(computedTotalAmount) }}
           </span>
-          <span class="text-xs font-bold text-text-muted uppercase">
+          <span class="text-[11px] font-bold uppercase opacity-85">
             {{ selectedCurrencyCode }}
           </span>
         </div>
-      </div>
-
-      <!-- أزرار الإجراءات -->
-      <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-        <AppButton type="button" variant="secondary" @click="$emit('cancel')" :disabled="isSaving">
-          إلغاء
-        </AppButton>
-        <AppButton
-          type="button"
-          @click="handleSubmit(true)"
-          :disabled="isSaving || computedTotalAmount <= 0"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-        >
-          <span v-if="isSaving">جاري الحفظ...</span>
-          <span v-else>{{ isEditMode ? 'تحديث وترحيل مباشر' : 'حفظ وترحيل مباشر' }}</span>
-        </AppButton>
-        <AppButton
-          type="button"
-          @click="handleSubmit(false)"
-          :disabled="isSaving || computedTotalAmount <= 0"
-        >
-          <span v-if="isSaving">جاري الحفظ...</span>
-          <span v-else>{{ isEditMode ? 'تحديث السند' : 'حفظ كمسودة' }}</span>
-        </AppButton>
       </div>
     </div>
   </form>
@@ -395,11 +626,14 @@ const toast = useToast()
 
 const isReceipt = computed(() => props.type === 'receipt')
 const isEditMode = computed(() => !!props.initialData?.id)
+const isPostedEdit = computed(() => isEditMode.value && props.initialData?.status === 'posted')
 
 const paymentMethodType = ref('box')
+const lastAutoDescription = ref('')
 
 const createEmptyLine = () => ({
   _key: Date.now() + Math.random(),
+  _autoDescription: '',
   account_id: null,
   account_code: '',
   account_name: '',
@@ -439,8 +673,68 @@ const selectedCurrencyCode = computed(() => {
   return currency ? currency.code : props.currencies[0]?.code || ''
 })
 
+// استخراج كائن الخزينة أو البنك المختار ورصيده الحالي
+const selectedTreasury = computed(() => {
+  if (paymentMethodType.value === 'bank') {
+    if (!form.value.bank_account_id) return null
+    return props.bankAccounts.find((b) => b.id === form.value.bank_account_id) || null
+  }
+  if (!form.value.box_id) return null
+  return props.boxes.find((b) => b.id === form.value.box_id) || null
+})
+
+const currentTreasuryBalance = computed(() => {
+  if (!selectedTreasury.value) return 0
+  return Number(selectedTreasury.value.balance ?? selectedTreasury.value.account?.balance ?? 0)
+})
+
+// احتساب الرصيد الفعلي المتاح عند تعديل سند صرف مُرحّل على نفس الخزينة أو البنك
+const effectiveAvailableBalance = computed(() => {
+  let available = currentTreasuryBalance.value
+  if (!isReceipt.value && isPostedEdit.value && props.initialData) {
+    const oldBoxId =
+      props.initialData.payment_method?.type === 'box'
+        ? props.initialData.payment_method.id
+        : props.initialData.box_id || null
+    const oldBankId =
+      props.initialData.payment_method?.type === 'bank'
+        ? props.initialData.payment_method.id
+        : props.initialData.bank_account_id || null
+    const oldAmount = Number(props.initialData.amount || 0)
+
+    if (paymentMethodType.value === 'box' && form.value.box_id && form.value.box_id === oldBoxId) {
+      available += oldAmount
+    } else if (
+      paymentMethodType.value === 'bank' &&
+      form.value.bank_account_id &&
+      form.value.bank_account_id === oldBankId
+    ) {
+      available += oldAmount
+    }
+  }
+  return available
+})
+
+const selectedTreasuryCurrencyCode = computed(() => {
+  return selectedTreasury.value?.currency?.code || selectedCurrencyCode.value
+})
+
+const selectedTreasuryName = computed(() => {
+  if (!selectedTreasury.value) return ''
+  if (paymentMethodType.value === 'bank') {
+    return `${selectedTreasury.value.bank_name} - ${selectedTreasury.value.account_number}`
+  }
+  return selectedTreasury.value.name || ''
+})
+
 const computedTotalAmount = computed(() => {
   return form.value.details.reduce((sum, line) => sum + (Number(line.amount) || 0), 0)
+})
+
+// التحقق من تجاوز مبلغ الصرف للرصيد المتاح
+const isBalanceInsufficient = computed(() => {
+  if (isReceipt.value || !selectedTreasury.value) return false
+  return computedTotalAmount.value > effectiveAvailableBalance.value + 0.0001
 })
 
 const formatNumber = (num) =>
@@ -449,6 +743,7 @@ const formatNumber = (num) =>
 watch(
   () => props.initialData,
   (newVal) => {
+    lastAutoDescription.value = ''
     if (newVal) {
       const isBank =
         newVal.payment_method?.type === 'bank' ||
@@ -484,6 +779,7 @@ watch(
           Array.isArray(newVal.details) && newVal.details.length > 0
             ? newVal.details.map((d, i) => ({
                 _key: Date.now() + i,
+                _autoDescription: '',
                 account_id: d.account?.id || d.account_id,
                 account_code: d.account?.code || d.account_code || '',
                 account_name: d.account?.name || d.account_name || '',
@@ -529,9 +825,14 @@ const handlePaymentMethodChange = (newValue) => {
 }
 
 const handlePayeeBlur = () => {
-  if (form.value.payee_name && !form.value.description) {
+  if (
+    form.value.payee_name &&
+    (!form.value.description || form.value.description === lastAutoDescription.value)
+  ) {
     const actionWord = isReceipt.value ? 'استلام من' : 'صرف لـ'
-    form.value.description = `${actionWord} ${form.value.payee_name}`
+    const generated = `${actionWord} ${form.value.payee_name}`
+    form.value.description = generated
+    lastAutoDescription.value = generated
   }
 }
 
@@ -549,17 +850,24 @@ const handleSelectAccount = (index, item) => {
     line.cost_center_id = form.value.branch_id || ''
   }
 
-  if (!form.value.payee_name) {
-    form.value.payee_name = item.name
+  const actionWord = isReceipt.value ? 'استلام من' : 'صرف لـ'
+  const generatedDesc = `${actionWord} ${item.name}`
+  const prevGeneralAuto = lastAutoDescription.value
+
+  // تحديث البيان العام للسند تلقائياً ما لم يقم المستخدم بتعديله يدوياً
+  if (!form.value.description || form.value.description === prevGeneralAuto) {
+    form.value.description = generatedDesc
+    lastAutoDescription.value = generatedDesc
   }
 
-  if (!form.value.description) {
-    const actionWord = isReceipt.value ? 'استلام من' : 'صرف لـ'
-    form.value.description = `${actionWord} ${item.name}`
-  }
-
-  if (!line.description) {
-    line.description = form.value.description || item.name
+  // تحديث ملاحظة السطر تلقائياً ما لم يقم المستخدم بتعديلها يدوياً
+  if (
+    !line.description ||
+    line.description === line._autoDescription ||
+    line.description === prevGeneralAuto
+  ) {
+    line.description = generatedDesc
+    line._autoDescription = generatedDesc
   }
 
   nextTick(() => {
@@ -570,6 +878,16 @@ const handleSelectAccount = (index, item) => {
 const resetLineAccount = (index) => {
   const line = form.value.details[index]
   if (line) {
+    if (line.description === line._autoDescription) {
+      line.description = ''
+    }
+    line._autoDescription = ''
+
+    if (form.value.details.length === 1 && form.value.description === lastAutoDescription.value) {
+      form.value.description = ''
+      lastAutoDescription.value = ''
+    }
+
     line.account_id = null
     line.account_code = ''
     line.account_name = ''
@@ -590,6 +908,7 @@ const removeLine = (index) => {
     form.value.details.splice(index, 1)
   } else {
     form.value.details = [createEmptyLine()]
+    lastAutoDescription.value = ''
   }
 }
 
@@ -621,7 +940,13 @@ const handleSubmit = (postAfterSave = false) => {
     return toast.error('الرجاء اختيار الحساب البنكي.')
   }
 
-  if (!form.value.payee_name) {
+  if (isBalanceInsufficient.value) {
+    return toast.error(
+      `رصيد ${selectedTreasuryName.value} غير كافٍ للصرف. الرصيد المتاح: ${formatNumber(effectiveAvailableBalance.value)}`,
+    )
+  }
+
+  if (!form.value.payee_name || !form.value.payee_name.trim()) {
     return toast.error(`الرجاء كتابة اسم ${isReceipt.value ? 'الدافع' : 'المستفيد'}.`)
   }
   if (!form.value.description) {
@@ -656,7 +981,7 @@ const handleSubmit = (postAfterSave = false) => {
     type: props.type,
     branch_id: form.value.branch_id,
     date: form.value.date,
-    payee_name: form.value.payee_name,
+    payee_name: form.value.payee_name.trim(),
     description: form.value.description,
     box_id: isBank ? null : form.value.box_id || null,
     bank_account_id: isBank ? form.value.bank_account_id || null : null,
@@ -673,19 +998,54 @@ const handleSubmit = (postAfterSave = false) => {
 </script>
 
 <style scoped>
-:deep(#voucher-date) {
-  height: 46px !important;
+/* توحيد ارتفاع وحواف جميع حقول الإدخال والقوائم المنسدلة داخل رأس السند (40px) */
+.voucher-header-grid :deep(input),
+.voucher-header-grid :deep(.p-dropdown),
+.voucher-header-grid :deep([data-pc-name='dropdown']),
+.voucher-header-grid :deep([data-pc-section='root']) {
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 0.5rem !important;
   box-sizing: border-box !important;
+}
+
+.voucher-header-grid :deep(input) {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+.voucher-header-grid :deep(input[type='date']) {
+  color-scheme: inherit;
+}
+
+.voucher-header-grid :deep(.p-dropdown),
+.voucher-header-grid :deep([data-pc-name='dropdown']) {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.voucher-header-grid :deep(.p-dropdown-label),
+.voucher-header-grid :deep([data-pc-section='input']) {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
   display: flex !important;
   align-items: center !important;
 }
 
-:deep(.p-dropdown) {
-  height: 46px !important;
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  align-items: center !important;
+/* توحيد خلفية وإطار حقل البحث الداخلي مع ألوان الثيم بدلاً من الأسود القاتم */
+.voucher-account-search :deep(input) {
+  background-color: rgb(var(--color-surface-card)) !important;
+  border-color: rgba(var(--primary-rgb), 0.45) !important;
+  color: rgb(var(--color-text-primary)) !important;
+  height: 40px !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+.voucher-account-search :deep(input:focus) {
+  border-color: rgb(var(--color-primary)) !important;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.25) !important;
 }
 </style>

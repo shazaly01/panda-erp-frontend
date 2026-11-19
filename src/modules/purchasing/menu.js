@@ -1,3 +1,4 @@
+//src\modules\purchasing\menu.js
 import {
   ShoppingCartIcon,
   ClipboardDocumentCheckIcon,

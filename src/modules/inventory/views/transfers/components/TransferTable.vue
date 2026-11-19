@@ -1,4 +1,4 @@
-<!--src/modules/inventory/views/transfers/components/TransferTable.vue-->
+<!-- src/modules/inventory/views/transfers/components/TransferTable.vue -->
 <template>
   <AppCard>
     <AppTable
@@ -10,10 +10,10 @@
     >
       <!-- 1. رقم أمر التحويل ومُنشئ السند -->
       <template #cell-transfer_number="{ item }">
-        <div class="flex flex-col gap-1 text-right font-mono" dir="rtl">
-          <span class="font-bold text-[#e05e2b] bg-[#e05e2b]/10 px-2 py-0.5 rounded w-fit text-xs">
+        <div class="flex flex-col items-start gap-1 text-right" dir="rtl">
+          <AppBadge variant="primary" size="sm">
             {{ item.transfer_number || `#${item.id}` }}
-          </span>
+          </AppBadge>
           <span class="text-[10px] text-text-muted">
             مُنشئ السند: {{ item.creator?.name || 'النظام' }}
           </span>
@@ -23,8 +23,8 @@
       <!-- 2. تاريخ التحويل والملاحظات -->
       <template #cell-transfer_date="{ item }">
         <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
-          <span class="text-xs text-text-muted font-mono font-bold">
-            {{ item.transfer_date ? item.transfer_date.substr(0, 10) : '-' }}
+          <span class="text-xs text-text-secondary font-mono font-semibold">
+            {{ item.transfer_date ? String(item.transfer_date).substring(0, 10) : '-' }}
           </span>
           <span
             v-if="item.notes"
@@ -38,25 +38,24 @@
 
       <!-- 3. مسار التحويل (المستودع المصدر -> المستودع الوجهة) -->
       <template #cell-warehouses_route="{ item }">
-        <div class="flex items-center gap-2 text-right text-xs" dir="rtl">
+        <div class="flex items-center gap-2.5 text-right text-xs" dir="rtl">
           <!-- المستودع المصدر -->
           <div class="flex flex-col">
-            <span class="font-bold text-amber-300">
-              {{ item.from_warehouse?.name || 'مستودع المصدر' }}
+            <span class="font-bold text-text-primary flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-warning shrink-0"></span>
+              <span>{{ item.from_warehouse?.name || 'مستودع المصدر' }}</span>
             </span>
-            <span v-if="item.from_warehouse?.code" class="text-[10px] font-mono text-gray-500">
+            <span
+              v-if="item.from_warehouse?.code"
+              class="text-[10px] font-mono text-text-muted pr-3 mt-0.5"
+            >
               {{ item.from_warehouse.code }}
             </span>
           </div>
 
           <!-- أيقونة اتجاه التحويل -->
-          <div class="text-gray-500 px-1">
-            <svg
-              class="w-4 h-4 text-[#e05e2b]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+          <div class="text-primary px-1 shrink-0">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -68,10 +67,14 @@
 
           <!-- المستودع الوجهة -->
           <div class="flex flex-col">
-            <span class="font-bold text-emerald-300">
-              {{ item.to_warehouse?.name || 'مستودع الوجهة' }}
+            <span class="font-bold text-text-primary flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-success shrink-0"></span>
+              <span>{{ item.to_warehouse?.name || 'مستودع الوجهة' }}</span>
             </span>
-            <span v-if="item.to_warehouse?.code" class="text-[10px] font-mono text-gray-500">
+            <span
+              v-if="item.to_warehouse?.code"
+              class="text-[10px] font-mono text-text-muted pr-3 mt-0.5"
+            >
               {{ item.to_warehouse.code }}
             </span>
           </div>
@@ -81,42 +84,27 @@
       <!-- 4. حالة الاعتماد والتأثير المخزني -->
       <template #cell-status="{ item }">
         <div class="flex justify-center items-center" dir="rtl">
-          <span
-            :class="[
-              'px-2.5 py-0.5 text-[10px] font-black rounded-full border',
-              item.status === 'approved' || item.status === 'completed'
-                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30'
-                : item.status === 'cancelled'
-                  ? 'bg-rose-950/40 text-rose-400 border-rose-500/30'
-                  : 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-            ]"
-          >
-            {{
-              item.status === 'approved' || item.status === 'completed'
-                ? 'معتمد ومرحل'
-                : item.status === 'cancelled'
-                  ? 'ملغي'
-                  : 'مسودة قيد المراجعة'
-            }}
-          </span>
+          <AppBadge :variant="getStatusBadgeVariant(item.status)" size="xs" pill>
+            {{ getStatusLabel(item.status) }}
+          </AppBadge>
         </div>
       </template>
 
       <!-- 5. عدد البنود والاعتماد -->
       <template #cell-summary="{ item }">
-        <div class="flex flex-col justify-center min-w-[110px] text-right" dir="rtl">
-          <div class="flex justify-between text-[11px] text-text-muted">
+        <div class="flex flex-col justify-center min-w-[120px] text-right" dir="rtl">
+          <div class="flex justify-between text-[11px] text-text-secondary font-medium">
             <span>عدد البنود:</span>
-            <span class="font-mono font-bold text-white">
+            <span class="font-mono font-bold text-text-primary">
               {{ item.items ? item.items.length : '-' }} صنف
             </span>
           </div>
           <div
             v-if="item.approver"
-            class="flex justify-between text-[10px] text-text-muted mt-0.5 border-t border-surface-border/50 pt-0.5"
+            class="flex justify-between text-[10px] text-text-muted mt-0.5 border-t border-surface-border pt-0.5"
           >
             <span>المعتمد:</span>
-            <span class="text-text-secondary font-bold truncate max-w-[80px]">
+            <span class="text-text-secondary font-bold truncate max-w-[85px]">
               {{ item.approver.name }}
             </span>
           </div>
@@ -130,7 +118,7 @@
           <button
             v-if="item.status === 'draft'"
             @click="$emit('complete-transfer', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors cursor-pointer"
             title="اعتماد وترحيل التحويل وتحديث الأرصدة فورياً"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,7 +126,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M5 13l4 4L19 7"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </button>
@@ -146,7 +134,7 @@
           <!-- زر طباعة السند -->
           <button
             @click="$emit('print-transfer', item)"
-            class="p-1.5 text-indigo-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-info hover:bg-info/10 rounded-lg transition-colors cursor-pointer"
             title="طباعة إذن التحويل المخزني A4"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -163,7 +151,7 @@
           <button
             v-if="item.status === 'draft'"
             @click="$emit('edit-transfer', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل بيانات أمر التحويل"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -180,7 +168,7 @@
           <button
             v-if="item.status === 'draft'"
             @click="$emit('delete-transfer', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف أمر التحويل"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -205,6 +193,7 @@ import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 defineProps({
   transfers: { type: Array, required: true },
@@ -227,6 +216,20 @@ const tableHeaders = computed(() => [
   { key: 'warehouses_route', label: 'مسار التحويل (من ← إلى)' },
   { key: 'status', label: 'حالة الاعتماد', class: 'text-center' },
   { key: 'summary', label: 'ملخص البنود' },
-  { key: 'actions', label: 'الإجراءات', class: 'text-left min-w-[110px]' },
+  { key: 'actions', label: 'الإجراءات', class: 'text-left min-w-[140px]' },
 ])
+
+const getStatusLabel = (status) => {
+  if (status === 'approved' || status === 'completed') return 'معتمد ومُرحّل'
+  if (status === 'cancelled') return 'ملغي'
+  if (status === 'in_transit') return 'قيد النقل'
+  return 'مسودة قيد المراجعة'
+}
+
+const getStatusBadgeVariant = (status) => {
+  if (status === 'approved' || status === 'completed') return 'success'
+  if (status === 'cancelled') return 'danger'
+  if (status === 'in_transit') return 'info'
+  return 'warning'
+}
 </script>

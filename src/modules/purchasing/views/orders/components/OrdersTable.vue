@@ -1,4 +1,4 @@
-<!--src/modules/purchasing/views/orders/components/OrdersTable.vue-->
+<!-- src/modules/purchasing/views/orders/components/OrdersTable.vue -->
 <template>
   <AppCard>
     <AppTable
@@ -8,13 +8,13 @@
       :row-clickable="true"
       @row-click="$emit('row-clicked', $event)"
     >
-      <!-- المعرف ورقم أمر الشراء -->
+      <!-- 1. المعرف ورقم أمر الشراء -->
       <template #cell-order_number="{ item }">
-        <div class="flex flex-col gap-1 text-right font-mono" dir="rtl">
-          <span class="font-bold text-[#e05e2b] bg-[#e05e2b]/10 px-2 py-0.5 rounded w-fit text-xs">
+        <div class="flex flex-col items-start gap-1 text-right" dir="rtl">
+          <AppBadge variant="primary" size="sm">
             {{ item.order_number || `#${item.id}` }}
-          </span>
-          <span v-if="item.requisition" class="text-[10px] text-sky-400">
+          </AppBadge>
+          <span v-if="item.requisition" class="text-[10px] font-mono text-info font-bold">
             طلب احتياج: #{{ item.requisition.requisition_number || item.requisition_id }}
           </span>
           <span class="text-[10px] text-text-muted">
@@ -23,76 +23,83 @@
         </div>
       </template>
 
-      <!-- بيانات المورد والشريك التجاري -->
+      <!-- 2. بيانات المورد والشريك التجاري -->
       <template #cell-supplier="{ item }">
         <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-bold text-xs text-text-primary">
             {{ item.supplier?.name || `مورد رقم #${item.supplier_id}` }}
           </span>
-          <span v-if="item.supplier?.phone" class="text-[10px] font-mono text-text-muted">
+          <span v-if="item.supplier?.phone" class="text-[10px] font-mono text-text-muted mt-0.5">
             {{ item.supplier.phone }}
           </span>
         </div>
       </template>
 
-      <!-- التواريخ وجدول التوريد -->
+      <!-- 3. التواريخ وجدول التوريد -->
       <template #cell-dates="{ item }">
-        <div class="flex flex-col gap-1 py-1 text-right font-mono" dir="rtl">
-          <div class="flex items-center gap-1.5 text-xs text-text-muted">
-            <span class="text-gray-400 font-sans text-[11px]">تاريخ الأمر:</span>
-            <span>{{ item.order_date || '-' }}</span>
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
+          <div
+            class="flex items-center gap-1.5 text-xs text-text-secondary font-mono font-semibold"
+          >
+            <span class="text-text-muted font-sans font-normal text-[11px]">تاريخ الأمر:</span>
+            <span>{{ item.order_date ? String(item.order_date).substring(0, 10) : '-' }}</span>
           </div>
           <div
             v-if="item.expected_delivery_date"
-            class="flex items-center gap-1.5 text-[11px] text-amber-400/90"
+            class="flex items-center gap-1.5 text-[11px] font-mono text-warning font-bold"
           >
             <span class="font-sans text-[10px]">التوريد المتوقع:</span>
-            <span>{{ item.expected_delivery_date }}</span>
+            <span>{{ String(item.expected_delivery_date).substring(0, 10) }}</span>
           </div>
         </div>
       </template>
 
-      <!-- حالة أمر الشراء -->
+      <!-- 4. حالة أمر الشراء -->
       <template #cell-status="{ item }">
         <div class="flex justify-center items-center" dir="rtl">
-          <span
-            class="px-2.5 py-0.5 text-[10px] font-black rounded-full border"
-            :class="getStatusBadgeClass(item.status?.value || item.status)"
+          <AppBadge
+            :variant="getStatusBadgeVariant(item.status?.value || item.status)"
+            size="xs"
+            pill
           >
             {{ item.status?.label || getStatusLabel(item.status?.value || item.status) }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
-      <!-- المبالغ والبيانات المالية -->
+      <!-- 5. المبالغ والبيانات المالية -->
       <template #cell-financials="{ item }">
-        <div class="flex flex-col justify-center min-w-[140px] text-right font-mono" dir="rtl">
-          <div class="flex justify-between text-xs font-bold text-text-primary">
+        <div class="flex flex-col justify-center min-w-[140px] text-right" dir="rtl">
+          <div class="flex justify-between text-[11px] text-text-secondary font-medium">
             <span>الإجمالي:</span>
-            <span class="text-emerald-400">{{ formatCurrency(item.total_amount) }}</span>
+            <span class="font-mono font-bold text-success">
+              {{ formatCurrency(item.total_amount || 0) }}
+            </span>
           </div>
           <div class="flex justify-between text-[10px] text-text-muted mt-0.5">
             <span>الضريبة:</span>
-            <span class="text-sky-300">{{ formatCurrency(item.tax_amount || 0) }}</span>
+            <span class="font-mono font-semibold text-info">
+              {{ formatCurrency(item.tax_amount || 0) }}
+            </span>
           </div>
           <div
             v-if="parseFloat(item.discount_amount) > 0"
-            class="flex justify-between text-[10px] text-amber-400"
+            class="flex justify-between text-[10px] border-t border-surface-border pt-0.5 mt-0.5 text-danger font-bold"
           >
             <span>الخصم:</span>
-            <span>-{{ formatCurrency(item.discount_amount) }}</span>
+            <span class="font-mono">-{{ formatCurrency(item.discount_amount) }}</span>
           </div>
         </div>
       </template>
 
-      <!-- أزرار الإجراءات والعمليات المتاحة -->
+      <!-- 6. أزرار الإجراءات والعمليات المتاحة -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <!-- زر اعتماد وتأكيد أمر الشراء: متاح للمسودات فقط -->
           <button
             v-if="isDraft(item)"
             @click="$emit('confirm-order', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors cursor-pointer"
             title="اعتماد وتأكيد أمر الشراء"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,7 +107,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M5 13l4 4L19 7"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </button>
@@ -108,7 +115,7 @@
           <!-- زر طباعة أمر الشراء -->
           <button
             @click="$emit('print-order', item)"
-            class="p-1.5 text-indigo-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-info hover:bg-info/10 rounded-lg transition-colors cursor-pointer"
             title="طباعة أمر الشراء الرسمي"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +132,7 @@
           <button
             v-if="canEdit(item)"
             @click="$emit('edit-order', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل بيانات أمر الشراء"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,7 +149,7 @@
           <button
             v-if="canCancel(item)"
             @click="$emit('cancel-order', item)"
-            class="p-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-warning hover:bg-warning/10 rounded-lg transition-colors cursor-pointer"
             title="إلغاء أمر الشراء"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -159,7 +166,7 @@
           <button
             v-if="isDraft(item)"
             @click="$emit('delete-order', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف مسودة أمر الشراء"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -184,6 +191,7 @@ import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 defineProps({
@@ -208,7 +216,7 @@ const tableHeaders = computed(() => [
   { key: 'dates', label: 'التواريخ وموعد التوريد' },
   { key: 'status', label: 'حالة الأمر', class: 'text-center' },
   { key: 'financials', label: 'المبالغ الإجمالية' },
-  { key: 'actions', label: 'إجراءات تخصصية', class: 'text-left min-w-[140px]' },
+  { key: 'actions', label: 'إجراءات تخصصية', class: 'text-left min-w-[150px]' },
 ])
 
 const isDraft = (item) => {
@@ -240,17 +248,17 @@ const getStatusLabel = (status) => {
   return map[status] || status || 'غير محدد'
 }
 
-const getStatusBadgeClass = (status) => {
+const getStatusBadgeVariant = (status) => {
   const map = {
-    draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-    confirmed: 'bg-blue-950/40 text-blue-400 border-blue-500/30',
-    partially_received: 'bg-indigo-950/40 text-indigo-400 border-indigo-500/30',
-    received: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
-    partially_billed: 'bg-purple-950/40 text-purple-400 border-purple-500/30',
-    billed: 'bg-teal-950/40 text-teal-400 border-teal-500/30',
-    closed: 'bg-gray-800 text-gray-300 border-gray-600',
-    cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
+    draft: 'warning',
+    confirmed: 'info',
+    partially_received: 'info',
+    received: 'success',
+    partially_billed: 'warning',
+    billed: 'success',
+    closed: 'secondary',
+    cancelled: 'danger',
   }
-  return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'
+  return map[status] || 'secondary'
 }
 </script>

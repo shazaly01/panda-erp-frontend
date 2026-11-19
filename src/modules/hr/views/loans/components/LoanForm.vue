@@ -1,6 +1,11 @@
+<!-- src/modules/hr/views/loans/components/LoanForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- 1. اختيار الموظف -->
       <div class="md:col-span-2">
         <AppDropdown
           id="loan-employee"
@@ -16,7 +21,8 @@
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 2. مبلغ السلفة الإجمالي -->
+      <div>
         <AppInput
           id="loan-amount"
           type="number"
@@ -32,7 +38,8 @@
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 3. عدد الأقساط -->
+      <div>
         <AppInput
           id="loan-installments"
           type="number"
@@ -42,11 +49,14 @@
           min="1"
           max="60"
           placeholder="مثلاً: 12"
+          class="font-mono text-left"
+          dir="ltr"
           required
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 4. تاريخ بدء الخصم -->
+      <div>
         <AppInput
           id="loan-start-date"
           type="date"
@@ -58,16 +68,25 @@
         />
       </div>
 
-      <div class="md:col-span-1 flex items-end pb-1">
+      <!-- 5. بطاقة القسط الشهري التقديري -->
+      <div class="flex items-end pb-1">
         <div
-          class="w-full bg-primary/10 border border-primary/20 rounded-lg p-3 flex justify-between items-center"
+          class="w-full bg-surface-card border border-primary/40 rounded-xl px-3.5 py-2.5 flex justify-between items-center shadow-2xs"
         >
-          <span class="text-sm font-bold text-text-primary">القسط الشهري التقديري:</span>
-          <span class="text-lg font-bold font-mono text-primary">{{ estimatedInstallment }}</span>
+          <span class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span>القسط الشهري التقديري:</span>
+          </span>
+          <span
+            class="px-2.5 py-0.5 rounded-lg bg-primary/10 border border-primary/25 text-primary font-mono font-black text-sm"
+          >
+            {{ estimatedInstallment }}
+          </span>
         </div>
       </div>
     </div>
 
+    <!-- 6. سبب السلفة -->
     <div>
       <AppTextarea
         id="loan-reason"
@@ -75,7 +94,7 @@
         :model-value="modelValue.reason"
         @update:model-value="updateField('reason', $event)"
         placeholder="اكتب مبرر طلب السلفة..."
-        rows="2"
+        rows="3"
         required
       />
     </div>
@@ -98,14 +117,12 @@ const emit = defineEmits(['update:modelValue'])
 
 const employeeStore = useEmployeeStore()
 
-// جلب الموظفين إذا لم يتم جلبهم مسبقاً
 onMounted(() => {
   if (employeeStore.employees.length === 0) {
     employeeStore.fetchEmployees({ per_page: 500, is_active: 1 })
   }
 })
 
-// دالة لتحديث البيانات دون كسر قاعدة One-Way Data Flow
 const updateField = (field, value) => {
   emit('update:modelValue', {
     ...props.modelValue,
@@ -113,7 +130,6 @@ const updateField = (field, value) => {
   })
 }
 
-// حساب القسط التقديري لحظياً بناءً على المبلغ وعدد الأقساط
 const estimatedInstallment = computed(() => {
   const amount = parseFloat(props.modelValue.amount)
   const count = parseInt(props.modelValue.installments_count, 10)
@@ -125,3 +141,14 @@ const estimatedInstallment = computed(() => {
   return (amount / count).toFixed(2)
 })
 </script>
+
+<style scoped>
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+}
+</style>

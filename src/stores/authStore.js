@@ -1,3 +1,4 @@
+//src\stores\authStore.js
 import { defineStore } from 'pinia'
 import authService from '@/services/authService'
 

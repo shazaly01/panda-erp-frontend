@@ -73,7 +73,7 @@
     <AppConfirmDialog
       v-model="isPostDialogOpen"
       title="تأكيد ترحيل السند"
-      :message="`هل أنت متأكد من رغبتك في ترحيل السند رقم ${voucherToPost?.number}؟ سيتم إنشاء قيد يومية تلقائياً ولا يمكن التعديل عليه بعد الترحيل.`"
+      :message="`هل أنت متأكد من رغبتك في ترحيل السند رقم ${voucherToPost?.number}؟ سيتم إنشاء قيد يومية تلقائياً وتحديث أرصدة الحسابات.`"
       confirm-text="ترحيل واعتماد"
       confirm-variant="primary"
       @confirmed="postSelectedVoucher"
@@ -82,16 +82,24 @@
     <AppConfirmDialog
       v-model="isUnpostDialogOpen"
       title="تأكيد إلغاء الترحيل وإعادة الفتح للتعديل"
-      :message="`هل أنت متأكد من رغبتك في إلغاء ترحيل السند رقم ${voucherToUnpost?.number}؟ سيتم حذف القيد المحاسبي المرتبط نهائياً وإعادة السند إلى مسودة لتتمكن من تعديله.`"
-      confirm-text="إلغاء الترحيل والفتح للتعديل"
+      :message="`هل أنت متأكد من رغبتك في إلغاء ترحيل السند رقم ${voucherToUnpost?.number}؟ سيتم حذف القيد المحاسبي المرتبط نهائياً وإعادة السند إلى مسودة.`"
+      confirm-text="إلغاء الترحيل"
       confirm-variant="warning"
       @confirmed="unpostSelectedVoucher"
     />
 
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
-      title="تأكيد حذف مسودة السند"
-      :message="`هل أنت متأكد من رغبتك في حذف مسودة السند بشكل نهائي؟`"
+      :title="
+        voucherToDelete?.status === 'posted' ? 'تأكيد حذف السند المُرحّل' : 'تأكيد حذف مسودة السند'
+      "
+      :message="
+        voucherToDelete?.status === 'posted'
+          ? `هل أنت متأكد من رغبتك في حذف السند المُرحّل رقم ${voucherToDelete?.number} نهائياً؟ سيتم حذف القيد المحاسبي المرتبط به وعكس أي تسويات مالية مرتبطة.`
+          : `هل أنت متأكد من رغبتك في حذف مسودة السند رقم ${voucherToDelete?.number} بشكل نهائي؟`
+      "
+      confirm-text="حذف نهائي"
+      confirm-variant="danger"
       @confirmed="deleteSelectedVoucher"
     />
   </div>
@@ -138,6 +146,7 @@ const pageDescription = computed(() =>
 )
 const createPermission = computed(() => (isReceipt.value ? 'receipt.create' : 'payment.create'))
 const updatePermission = computed(() => (isReceipt.value ? 'receipt.update' : 'payment.update'))
+const deletePermission = computed(() => (isReceipt.value ? 'receipt.delete' : 'payment.delete'))
 
 // الفلاتر والبحث والتواريخ
 const searchQuery = ref('')
@@ -223,12 +232,8 @@ const openCreateModal = () => {
 }
 
 const openEditModal = (voucher) => {
-  if (voucher.status === 'posted') {
-    if (!authStore.can(updatePermission.value)) {
-      toast.warning('لا تملك صلاحية تعديل هذا السند.')
-      return
-    }
-    openUnpostDialog(voucher)
+  if (voucher.status === 'void' || !authStore.can(updatePermission.value)) {
+    openViewModal(voucher)
     return
   }
   voucherToEditId.value = voucher.id
@@ -296,13 +301,13 @@ const postSelectedVoucher = async () => {
   }
 }
 
-// إلغاء ترحيل السند وإعادة الفتح للتعديل
+// إلغاء ترحيل السند وإعادته لمسودة
 const isUnpostDialogOpen = ref(false)
 const voucherToUnpost = ref(null)
 
 const openUnpostDialog = (voucher) => {
   if (!authStore.can(updatePermission.value)) {
-    toast.warning('لا تملك صلاحية تعديل هذا السند.')
+    toast.warning('لا تملك صلاحية إلغاء ترحيل هذا السند.')
     return
   }
   voucherToUnpost.value = voucher
@@ -311,14 +316,10 @@ const openUnpostDialog = (voucher) => {
 
 const unpostSelectedVoucher = async () => {
   if (voucherToUnpost.value) {
-    const targetId = voucherToUnpost.value.id
     try {
-      await voucherStore.unpostVoucherAction(targetId)
-      toast.success('تم إلغاء ترحيل السند وحذف القيد المحاسبي بنجاح.')
+      await voucherStore.unpostVoucherAction(voucherToUnpost.value.id)
+      toast.success('تم إلغاء ترحيل السند وحذف القيد المحاسبي المرتبط بنجاح.')
       await handlePageChange(pagination.value?.current_page || 1)
-
-      voucherToEditId.value = targetId
-      isFormModalOpen.value = true
     } catch (error) {
       toast.error(voucherStore.error || 'حدث خطأ أثناء إلغاء ترحيل السند.')
     } finally {
@@ -328,13 +329,13 @@ const unpostSelectedVoucher = async () => {
   }
 }
 
-// حذف السند
+// حذف السند (مسودة أو مُرحّل حسب الصلاحية)
 const isDeleteDialogOpen = ref(false)
 const voucherToDelete = ref(null)
 
 const openDeleteDialog = (voucher) => {
-  if (voucher.status === 'posted') {
-    toast.warning('لا يمكن حذف السندات المُرحلة.')
+  if (!authStore.can(deletePermission.value)) {
+    toast.warning('لا تملك صلاحية حذف هذا السند.')
     return
   }
   voucherToDelete.value = voucher
@@ -344,8 +345,13 @@ const openDeleteDialog = (voucher) => {
 const deleteSelectedVoucher = async () => {
   if (voucherToDelete.value) {
     try {
+      const wasPosted = voucherToDelete.value.status === 'posted'
       await voucherStore.deleteVoucher(voucherToDelete.value.id)
-      toast.success('تم حذف مسودة السند بنجاح.')
+      toast.success(
+        wasPosted
+          ? 'تم حذف السند المُرحّل والقيد المحاسبي المرتبط به بنجاح.'
+          : 'تم حذف مسودة السند بنجاح.',
+      )
 
       const targetPage =
         vouchers.value.length === 1 && pagination.value?.current_page > 1

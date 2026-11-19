@@ -1,3 +1,4 @@
+<!-- src/modules/auth/views/ResetPasswordView.vue -->
 <template>
   <AuthCardWrapper
     title="تعيين كلمة المرور"
@@ -7,17 +8,18 @@
     max-width="md"
   >
     <form v-if="!successMessage" @submit.prevent="handleResetPassword" class="space-y-4">
-      <div class="space-y-1 relative">
+      <!-- رقم الهاتف -->
+      <div class="space-y-1.5 relative">
         <div class="flex items-center justify-between text-xs px-1">
-          <span class="text-slate-400">رقم الهاتف</span>
+          <span class="text-text-secondary font-medium">رقم الهاتف</span>
           <div class="flex items-center space-x-1 space-x-reverse">
-            <span :class="form.phone.length === 10 ? 'text-green-400 font-bold' : 'text-slate-500'">
+            <span :class="form.phone.length === 10 ? 'text-success font-bold' : 'text-text-muted'">
               {{ form.phone.length }}/10
             </span>
             <svg
               v-if="isValidPhone"
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-green-500 animate-fade-in"
+              class="h-4 w-4 text-success animate-fade-in"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -39,7 +41,7 @@
             maxlength="10"
             class="form-input transition-all duration-300"
             :class="{
-              'border-green-500 focus:border-green-500 focus:ring-green-500/20': isValidPhone,
+              '!border-success focus:!ring-success/20': isValidPhone,
             }"
           />
           <svg
@@ -59,6 +61,7 @@
         </div>
       </div>
 
+      <!-- رمز التحقق -->
       <div class="relative">
         <input
           type="text"
@@ -66,10 +69,10 @@
           placeholder="رمز التحقق المكون من 6 أرقام"
           required
           maxlength="6"
-          class="form-input text-center tracking-widest font-bold border-blue-500/30"
+          class="form-input text-center tracking-widest font-bold border-dashed !border-primary/60"
         />
         <svg
-          class="input-icon"
+          class="input-icon !text-primary"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -84,6 +87,7 @@
         </svg>
       </div>
 
+      <!-- كلمة المرور الجديدة -->
       <div class="relative">
         <input
           :type="showPassword ? 'text' : 'password'"
@@ -96,7 +100,7 @@
         <button
           type="button"
           @click="showPassword = !showPassword"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none cursor-pointer"
         >
           <svg
             v-if="showPassword"
@@ -136,6 +140,7 @@
         </button>
       </div>
 
+      <!-- تأكيد كلمة المرور الجديدة -->
       <div class="relative">
         <input
           :type="showConfirmPassword ? 'text' : 'password'"
@@ -144,25 +149,11 @@
           required
           class="form-input pl-10"
         />
-        <svg
-          class="input-icon"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.5"
-            d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
-          />
-        </svg>
 
         <button
           type="button"
           @click="showConfirmPassword = !showConfirmPassword"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none cursor-pointer"
         >
           <svg
             v-if="showConfirmPassword"
@@ -208,14 +199,16 @@
       </button>
 
       <div class="text-center text-sm mt-4">
-        <router-link to="/login" class="back-link">إلغاء والعودة لصفحة الدخول</router-link>
+        <router-link to="/login" class="back-link font-medium">
+          إلغاء والعودة لصفحة الدخول
+        </router-link>
       </div>
     </form>
 
     <div v-else class="mt-4">
-      <router-link to="/login" class="submit-button block text-center pt-2"
-        >تسجيل الدخول الآن</router-link
-      >
+      <router-link to="/login" class="submit-button block text-center">
+        تسجيل الدخول الآن
+      </router-link>
     </div>
   </AuthCardWrapper>
 </template>
@@ -279,23 +272,12 @@ const handleResetPassword = async () => {
 
 <style scoped>
 .back-link {
-  color: #9ca3af;
+  color: rgb(var(--color-text-muted));
   text-decoration: none;
   transition: color 0.2s ease;
 }
 .back-link:hover {
-  color: #f9fafb;
+  color: rgb(var(--color-text-primary));
   text-decoration: underline;
-}
-
-/* حل مشكلة الخلفية البيضاء عند الإدخال التلقائي من المتصفح للمظهر الداكن */
-:deep(input:-webkit-autofill),
-:deep(input:-webkit-autofill:hover),
-:deep(input:-webkit-autofill:focus),
-:deep(input:-webkit-autofill:active) {
-  -webkit-text-fill-color: #f8fafc !important;
-  box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  -webkit-box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  transition: background-color 5000s ease-in-out 0s;
 }
 </style>

@@ -1,68 +1,64 @@
-<!--src\modules\hr\views\positions\components\PositionsTable.vue-->
+<!-- src/modules/hr/views/positions/components/PositionsTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="positions" :is-loading="loading">
+      <!-- 1. المسمى الوظيفي والكود -->
       <template #cell-position_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex items-center gap-2.5 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.name }}
           </span>
-          <span
-            v-if="item.code"
-            class="text-xs font-mono font-bold text-primary bg-primary/10 w-fit px-1.5 py-0.5 rounded tracking-wider"
-          >
+          <AppBadge v-if="item.code" variant="primary" size="xs" class="font-mono tracking-wider">
             {{ item.code }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
+      <!-- 2. الوصف -->
       <template #cell-description="{ item }">
-        <div class="text-xs text-text-muted max-w-xs truncate" :title="item.description">
-          {{ item.description || '---' }}
+        <div
+          class="text-xs text-text-secondary max-w-xs truncate text-right"
+          :title="item.description"
+          dir="rtl"
+        >
+          {{ item.description || '—' }}
         </div>
       </template>
 
+      <!-- 3. عدد الموظفين المرتبطين -->
       <template #cell-employees_count="{ item }">
-        <div class="flex items-center gap-1.5">
-          <span
-            class="px-2 py-0.5 text-xs font-bold rounded-full"
-            :class="
-              item.employees_count > 0
-                ? 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400'
-                : 'bg-surface-border text-text-muted'
-            "
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge
+            :variant="item.employees_count > 0 ? 'info' : 'secondary'"
+            size="xs"
+            pill
+            class="font-mono"
           >
             {{ item.employees_count || 0 }} موظف
-          </span>
+          </AppBadge>
         </div>
       </template>
 
+      <!-- 4. الحالة -->
       <template #cell-status="{ item }">
-        <span
-          class="px-2.5 py-0.5 text-[11px] font-bold rounded-full border flex items-center w-fit gap-1.5"
-          :class="
-            item.is_active
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-rose-50 text-rose-700 border-rose-200'
-          "
-        >
-          <span
-            class="w-1.5 h-1.5 rounded-full"
-            :class="item.is_active ? 'bg-emerald-500' : 'bg-rose-500'"
-          ></span>
-          {{ item.is_active ? 'نشط' : 'موقوف' }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="item.is_active ? 'success' : 'danger'" size="xs" pill>
+            {{ item.is_active ? 'نشط' : 'موقوف' }}
+          </AppBadge>
+        </div>
       </template>
 
+      <!-- 5. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('position.update')"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل المسمى الوظيفي"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -74,17 +70,20 @@
 
           <button
             v-if="authStore.can('position.delete')"
-            @click.stop="$emit('delete', item)"
+            type="button"
+            @click="$emit('delete', item)"
             :class="[
               'p-1.5 rounded-lg transition-colors',
               item.employees_count > 0
-                ? 'text-gray-300 cursor-not-allowed'
-                : 'text-rose-500 hover:text-rose-600 hover:bg-rose-50',
+                ? 'text-text-muted/35 cursor-not-allowed'
+                : 'text-danger hover:bg-danger/10 cursor-pointer',
             ]"
-            :title="item.employees_count > 0 ? 'لا يمكن الحذف لارتباطه بموظفين' : 'حذف'"
+            :title="
+              item.employees_count > 0 ? 'لا يمكن الحذف لارتباطه بموظفين' : 'حذف المسمى الوظيفي'
+            "
             :disabled="item.employees_count > 0"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -97,7 +96,7 @@
       </template>
     </AppTable>
 
-    <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
+    <AppPagination :meta="pagination || {}" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
 
@@ -107,10 +106,11 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
-const props = defineProps({
+defineProps({
   positions: { type: Array, required: true },
-  pagination: { type: Object, required: true },
+  pagination: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 })
 
@@ -119,10 +119,10 @@ defineEmits(['page-change', 'edit', 'delete'])
 const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
-  { key: 'position_info', label: 'المسمى الوظيفي', class: 'min-w-[200px]' },
+  { key: 'position_info', label: 'المسمى الوظيفي والكود', class: 'min-w-[200px]' },
   { key: 'description', label: 'الوصف', class: 'min-w-[200px]' },
-  { key: 'employees_count', label: 'المرتبطين', class: 'min-w-[120px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[100px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'employees_count', label: 'المرتبطين', class: 'min-w-[120px] text-center' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[110px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 </script>

@@ -6,17 +6,17 @@
       :items="vouchers"
       :is-loading="loading"
       :row-clickable="true"
-      @row-click="$emit('view', $event)"
+      @row-click="$emit('edit', $event)"
     >
       <template #cell-voucher_info="{ item }">
         <div class="flex flex-col gap-1.5 py-1">
           <div class="flex items-center gap-2">
             <span
               :class="[
-                'text-[10px] font-bold px-1.5 py-0.5 rounded border',
+                'text-[10px] font-bold px-2 py-0.5 rounded-md border',
                 (item.type || type) === 'receipt'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : 'bg-rose-50 text-rose-700 border-rose-200',
+                  ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                  : 'bg-rose-500/12 text-rose-700 dark:text-rose-300 border-rose-500/30',
               ]"
             >
               {{ item.type_label || (type === 'receipt' ? 'سند قبض' : 'سند صرف') }}
@@ -26,10 +26,10 @@
             </span>
           </div>
           <div class="flex items-center gap-2 text-xs text-text-muted">
-            <span dir="ltr">{{ item.date }}</span>
+            <span dir="ltr" class="font-mono">{{ item.date }}</span>
             <span
               v-if="item.branch?.name"
-              class="px-1.5 bg-surface-border rounded-sm truncate max-w-[120px]"
+              class="px-2 py-0.5 bg-surface-card border border-surface-border text-text-secondary font-semibold rounded-md truncate max-w-[130px]"
             >
               فرع: {{ item.branch.name }}
             </span>
@@ -51,14 +51,18 @@
             </span>
           </div>
         </div>
-        <div v-else class="text-xs text-rose-500 font-medium">غير محدد</div>
+        <div v-else class="text-xs text-danger font-bold">غير محدد</div>
       </template>
 
       <template #cell-amount="{ item }">
         <div class="flex flex-col gap-1">
           <span
             class="font-mono font-bold text-sm"
-            :class="(item.type || type) === 'receipt' ? 'text-emerald-600' : 'text-rose-600'"
+            :class="
+              (item.type || type) === 'receipt'
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-rose-600 dark:text-rose-400'
+            "
           >
             {{ (item.type || type) === 'payment' ? '-' : '+' }} {{ formatNumber(item.amount) }}
           </span>
@@ -73,10 +77,10 @@
           :class="[
             'px-2.5 py-0.5 text-[11px] font-bold rounded-full border flex items-center w-fit gap-1.5',
             item.status === 'posted'
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
               : item.status === 'approved'
-                ? 'bg-blue-50 text-blue-700 border-blue-200'
-                : 'bg-gray-100 text-gray-600 border-gray-200',
+                ? 'bg-sky-500/12 text-sky-700 dark:text-sky-300 border-sky-500/30'
+                : 'bg-surface-card text-text-secondary border-surface-border',
           ]"
         >
           <span
@@ -85,8 +89,8 @@
               item.status === 'posted'
                 ? 'bg-emerald-500'
                 : item.status === 'approved'
-                  ? 'bg-blue-500 animate-pulse'
-                  : 'bg-gray-400',
+                  ? 'bg-sky-500 animate-pulse'
+                  : 'bg-text-muted',
             ]"
           ></span>
           {{ item.status_label || item.status }}
@@ -98,7 +102,7 @@
           <!-- زر الطباعة المباشرة للسند -->
           <button
             @click.stop="$emit('print', item)"
-            class="p-1.5 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+            class="p-1.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="طباعة السند الورقي"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,7 +118,7 @@
           <!-- زر عرض السند -->
           <button
             @click.stop="$emit('view', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            class="p-1.5 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-colors cursor-pointer"
             title="عرض السند"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -137,7 +141,7 @@
           <button
             v-if="item.status === 'draft' && authStore.can(`${type}.approve`)"
             @click.stop="$emit('approve', item)"
-            class="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+            class="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors cursor-pointer"
             title="اعتماد السند"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,17 +154,17 @@
             </svg>
           </button>
 
-          <!-- زر تعديل السند (للمسودات) / إلغاء الترحيل والتعديل (للسندات المرحلة) -->
+          <!-- زر تعديل السند (مباشر للمسودات والسندات المُرحّلة حسب الصلاحية) -->
           <button
-            v-if="authStore.can(`${type}.update`)"
+            v-if="item.status !== 'void' && authStore.can(`${type}.update`)"
             @click.stop="$emit('edit', item)"
             :class="[
-              'p-1.5 rounded-lg transition-colors',
+              'p-1.5 rounded-lg transition-colors cursor-pointer',
               item.status === 'posted'
-                ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'
-                : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
+                ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10',
             ]"
-            :title="item.status === 'posted' ? 'إلغاء الترحيل والتعديل' : 'تعديل'"
+            :title="item.status === 'posted' ? 'تعديل مباشر للسند المُرحّل' : 'تعديل'"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -176,7 +180,7 @@
           <button
             v-if="item.status !== 'posted' && authStore.can(`${type}.post`)"
             @click.stop="$emit('post', item)"
-            class="p-1.5 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+            class="p-1.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors cursor-pointer"
             title="ترحيل وتحويل لقيد يومية"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -189,17 +193,12 @@
             </svg>
           </button>
 
-          <!-- زر حذف السند -->
+          <!-- زر حذف السند (مباشر للمسودات والسندات المُرحّلة حسب الصلاحية) -->
           <button
             v-if="authStore.can(`${type}.delete`)"
-            @click.stop="item.status !== 'posted' ? $emit('delete', item) : null"
-            :class="[
-              'p-1.5 rounded-lg transition-colors',
-              item.status === 'posted'
-                ? 'text-gray-300 cursor-not-allowed'
-                : 'text-rose-500 hover:text-rose-600 hover:bg-rose-50',
-            ]"
-            :title="item.status === 'posted' ? 'مُرحل (لا يمكن حذفه)' : 'حذف'"
+            @click.stop="$emit('delete', item)"
+            class="p-1.5 rounded-lg transition-colors text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+            :title="item.status === 'posted' ? 'حذف السند المُرحّل وقيده المحاسبي' : 'حذف'"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path

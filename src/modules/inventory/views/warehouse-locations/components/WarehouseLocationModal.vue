@@ -1,10 +1,11 @@
+<!-- src/modules/inventory/views/warehouse-locations/components/WarehouseLocationModal.vue -->
 <template>
   <AppDialog
     :model-value="modelValue"
     @update:model-value="close"
     :title="title"
-    size="3xl"
-    border-color="border-amber-500"
+    size="md"
+    border-color="border-primary"
     :loading="isSaving"
   >
     <WarehouseLocationForm
@@ -15,8 +16,10 @@
     />
 
     <template #footer>
-      <AppButton variant="secondary" @click="close" :disabled="isSaving"> إلغاء </AppButton>
-      <AppButton @click="submit" :disabled="isSaving">
+      <AppButton variant="secondary" size="sm" @click="close" :disabled="isSaving">
+        إلغاء وتراجع
+      </AppButton>
+      <AppButton size="sm" @click="submit" :disabled="isSaving">
         <span v-if="isSaving">جاري الحفظ...</span>
         <span v-else>{{ isEditMode ? 'حفظ التعديلات' : 'إضافة الموقع' }}</span>
       </AppButton>

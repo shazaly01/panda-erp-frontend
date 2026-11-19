@@ -2,6 +2,7 @@
 import accountingNav from '@/modules/accounting/menu'
 import inventoryNav from '@/modules/inventory/menu'
 import purchasingNav from '@/modules/purchasing/menu'
+import salesNav from '@/modules/sales/menu'
 import {
   HomeIcon,
   Cog6ToothIcon,
@@ -29,19 +30,25 @@ export const navigationMenu = [
   ...accountingNav,
 
   // ============================================
-  // 3. إدارة المشتريات والتوريد
+  // 3. إدارة المبيعات ونقاط البيع
+  // ============================================
+  { isModuleHeader: true, label: 'إدارة المبيعات' },
+  ...salesNav,
+
+  // ============================================
+  // 4. إدارة المشتريات والتوريد
   // ============================================
   { isModuleHeader: true, label: 'إدارة المشتريات' },
   ...purchasingNav,
 
   // ============================================
-  // 4. سلسلة الإمداد (المخزون)
+  // 5. سلسلة الإمداد (المخزون)
   // ============================================
   { isModuleHeader: true, label: 'سلسلة الإمداد' },
   ...inventoryNav,
 
   // ============================================
-  // 5. الموارد البشرية
+  // 6. الموارد البشرية
   // ============================================
   { isModuleHeader: true, label: 'الموارد البشرية' },
   {
@@ -55,7 +62,7 @@ export const navigationMenu = [
   },
 
   // ============================================
-  // 6. إدارة النظام
+  // 7. إدارة النظام
   // ============================================
   { isModuleHeader: true, label: 'إعدادات النظام' },
   {

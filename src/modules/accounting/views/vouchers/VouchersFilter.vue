@@ -1,19 +1,32 @@
 <!--src/modules/accounting/views/vouchers/VouchersFilter.vue-->
 <template>
-  <div class="bg-surface-section p-4 rounded-xl border border-surface-border mb-6 space-y-4">
+  <div
+    class="bg-surface-header/60 p-4 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs mb-6 space-y-4 transition-all duration-200"
+    dir="rtl"
+  >
     <!-- الصف الأول: البحث ونوع السند والحالة -->
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
       <div class="md:col-span-5">
+        <label
+          for="voucher-search-input"
+          class="block text-xs font-bold text-text-secondary mb-1.5"
+        >
+          البحث السريع
+        </label>
         <AppInput
           id="voucher-search-input"
           :model-value="searchQuery"
           placeholder="بحث برقم السند، البيان، أو اسم الحساب..."
+          class="bg-surface-card"
           @update:model-value="$emit('update:searchQuery', $event)"
           clearable
         />
       </div>
 
       <div class="md:col-span-3">
+        <label for="voucher-type-filter" class="block text-xs font-bold text-text-secondary mb-1.5">
+          نوع السند
+        </label>
         <AppDropdown
           id="voucher-type-filter"
           :model-value="typeFilter"
@@ -22,11 +35,18 @@
             { id: 'payment', name: 'سندات صرف (دفع)' },
             { id: 'receipt', name: 'سندات قبض (استلام)' },
           ]"
+          class="bg-surface-card"
           @update:model-value="$emit('update:typeFilter', $event)"
         />
       </div>
 
       <div class="md:col-span-4">
+        <label
+          for="voucher-status-filter"
+          class="block text-xs font-bold text-text-secondary mb-1.5"
+        >
+          حالة السند
+        </label>
         <AppDropdown
           id="voucher-status-filter"
           :model-value="statusFilter"
@@ -36,6 +56,7 @@
             { id: 'approved', name: 'معتمد (بانتظار الترحيل)' },
             { id: 'posted', name: 'مُرحل (قيد يومية)' },
           ]"
+          class="bg-surface-card"
           @update:model-value="$emit('update:statusFilter', $event)"
         />
       </div>
@@ -43,49 +64,49 @@
 
     <!-- الصف الثاني: فلترة التواريخ، أزرار الفترات، وزر طباعة كشف التقرير الديناميكي -->
     <div
-      class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-surface-border"
+      class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-primary/15"
     >
       <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1.5 text-xs text-text-muted">
+        <div class="flex items-center gap-1.5 text-xs text-text-secondary">
           <span class="font-bold text-text-primary">من:</span>
           <input
             type="date"
             :value="dateFrom"
             @input="$emit('update:dateFrom', $event.target.value)"
-            class="bg-slate-800/80 border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 [color-scheme:dark] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors cursor-pointer"
+            class="bg-surface-card border border-surface-border hover:border-primary/60 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-2xs"
           />
         </div>
 
-        <div class="flex items-center gap-1.5 text-xs text-text-muted">
+        <div class="flex items-center gap-1.5 text-xs text-text-secondary">
           <span class="font-bold text-text-primary">إلى:</span>
           <input
             type="date"
             :value="dateTo"
             @input="$emit('update:dateTo', $event.target.value)"
-            class="bg-slate-800/80 border border-slate-700 hover:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 [color-scheme:dark] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors cursor-pointer"
+            class="bg-surface-card border border-surface-border hover:border-primary/60 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer shadow-2xs"
           />
         </div>
 
         <!-- أزرار الاختصارات الزمنية السريعة -->
-        <div class="flex items-center gap-1 mr-1">
+        <div class="flex items-center gap-1.5 mr-1">
           <button
             type="button"
             @click="setPeriod('today')"
-            class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700 text-slate-300 transition-colors"
+            class="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-surface-border bg-surface-card hover:border-primary/60 hover:text-primary text-text-secondary transition-all cursor-pointer"
           >
             اليوم
           </button>
           <button
             type="button"
             @click="setPeriod('week')"
-            class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700 text-slate-300 transition-colors"
+            class="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-surface-border bg-surface-card hover:border-primary/60 hover:text-primary text-text-secondary transition-all cursor-pointer"
           >
             هذا الأسبوع
           </button>
           <button
             type="button"
             @click="setPeriod('month')"
-            class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700 text-slate-300 transition-colors"
+            class="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-surface-border bg-surface-card hover:border-primary/60 hover:text-primary text-text-secondary transition-all cursor-pointer"
           >
             هذا الشهر
           </button>
@@ -93,7 +114,7 @@
             v-if="dateFrom || dateTo"
             type="button"
             @click="clearDates"
-            class="px-2 py-1 text-xs font-bold text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            class="px-2.5 py-1.5 text-xs font-bold text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
           >
             مسح التاريخ
           </button>
@@ -105,10 +126,10 @@
         type="button"
         @click="$emit('print-expenses')"
         :class="[
-          'text-white font-bold py-1.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-xs shadow-sm active:scale-95',
+          'text-white font-bold py-1.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-xs shadow-sm active:scale-95 cursor-pointer',
           isReceipt
-            ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/10'
-            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/10',
+            ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/15'
+            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/15',
         ]"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

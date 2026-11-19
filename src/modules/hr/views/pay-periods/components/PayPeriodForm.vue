@@ -1,6 +1,11 @@
+<!-- src/modules/hr/views/pay-periods/components/PayPeriodForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- 1. مجموعة الدفع -->
       <div class="md:col-span-2">
         <AppDropdown
           id="payperiod-group"
@@ -16,6 +21,7 @@
         />
       </div>
 
+      <!-- 2. اسم الفترة -->
       <div class="md:col-span-2">
         <AppInput
           id="payperiod-name"
@@ -28,7 +34,8 @@
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 3. تاريخ البداية -->
+      <div>
         <AppInput
           id="payperiod-start-date"
           type="date"
@@ -39,7 +46,8 @@
         />
       </div>
 
-      <div class="md:col-span-1">
+      <!-- 4. تاريخ النهاية -->
+      <div>
         <AppInput
           id="payperiod-end-date"
           type="date"
@@ -51,7 +59,8 @@
         />
       </div>
 
-      <div class="md:col-span-2" v-if="isEditMode">
+      <!-- 5. حالة الفترة المالية (عند التعديل) -->
+      <div v-if="isEditMode" class="md:col-span-2 space-y-2">
         <AppDropdown
           id="payperiod-status"
           label="حالة الفترة المالية"
@@ -62,9 +71,21 @@
           option-value="value"
           required
         />
-        <p class="text-[10px] text-amber-600 mt-1" v-if="modelValue.status === 'closed'">
-          تنبيه: إغلاق الفترة يمنع صرف رواتب جديدة عليها.
-        </p>
+
+        <div
+          v-if="modelValue.status === 'closed'"
+          class="p-2.5 rounded-lg bg-warning/10 border border-warning/30 text-warning text-[11px] font-bold flex items-center gap-2"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <span>تنبيه: إغلاق الفترة يمنع صرف رواتب جديدة عليها.</span>
+        </div>
       </div>
     </div>
   </div>
@@ -102,3 +123,14 @@ const updateField = (field, value) => {
   })
 }
 </script>
+
+<style scoped>
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+}
+</style>

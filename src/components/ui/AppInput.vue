@@ -1,8 +1,8 @@
-<!---src\components\ui\AppInput.vue-->
+<!--src\components\ui\AppInput.vue-->
 <template>
   <div>
     <div v-if="label" class="flex justify-between items-center mb-1">
-      <label :for="id" class="block text-sm font-medium text-gray-700 dark:text-text-secondary">
+      <label :for="id" class="block text-sm font-medium text-text-secondary">
         {{ label }}
       </label>
       <slot name="label-append"></slot>
@@ -16,7 +16,13 @@
       :required="required"
       :disabled="disabled"
       :dir="dir"
-      class="block w-full rounded-xl shadow-sm py-2.5 px-4 transition-all duration-200 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-surface-ground dark:border-blue-500/40 dark:text-text-primary dark:placeholder:text-text-muted dark:focus:ring-2 dark:focus:ring-sky-400 dark:focus:border-sky-400 dark:shadow-[0_0_15px_rgba(56,189,248,0.12)] disabled:opacity-60 disabled:cursor-not-allowed"
+      :class="[
+        'block w-full rounded-md py-2 px-3 transition-all duration-200 text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed',
+        variant === 'sales'
+          ? 'bg-transparent border-0 text-text-primary placeholder:text-text-muted focus:ring-0 p-0'
+          : 'bg-surface-section border border-surface-border text-text-primary placeholder:text-text-muted shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20',
+        inputClass,
+      ]"
     />
   </div>
 </template>
@@ -54,6 +60,14 @@ defineProps({
   dir: {
     type: String,
     default: null,
+  },
+  inputClass: {
+    type: String,
+    default: '',
+  },
+  variant: {
+    type: String,
+    default: 'default',
   },
 })
 

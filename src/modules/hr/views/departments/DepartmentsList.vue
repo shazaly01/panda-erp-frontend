@@ -1,15 +1,27 @@
-<!---src\modules\hr\views\departments\DepartmentsList.vue-->
+<!-- src/modules/hr/views/departments/DepartmentsList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">الهيكل التنظيمي (الإدارات والأقسام)</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إدارة الهيكل الإداري للمنشأة، وتحديد المستويات التنظيمية وارتباطاتها المحاسبية.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>الهيكل التنظيمي (الإدارات والأقسام)</span>
+        </h1>
+        <span
+          v-if="departmentTree?.length"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+          title="عدد الإدارات الرئيسية"
+        >
+          {{ departmentTree.length }}
+        </span>
       </div>
+
       <AppButton
         v-if="authStore.can('department.create')"
+        size="sm"
         @click="openCreateModal(null)"
         icon="plus"
       >
@@ -17,6 +29,7 @@
       </AppButton>
     </div>
 
+    <!-- شجرة الإدارات والأقسام -->
     <DepartmentsTreeView
       :departments="departmentTree"
       :loading="loading"
@@ -25,6 +38,7 @@
       @delete="openDeleteDialog"
     />
 
+    <!-- نافذة إضافة / تعديل إدارة -->
     <DepartmentModal
       v-if="isModalOpen"
       v-model="isModalOpen"
@@ -33,6 +47,7 @@
       @saved="onDepartmentSaved"
     />
 
+    <!-- نافذة تأكيد الحذف -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف الإدارة"
@@ -80,7 +95,6 @@ const openCreateModal = (parentId = null) => {
 }
 
 const handleAddChild = (parentNode) => {
-  // عند الضغط على إضافة فرع من داخل الشجرة
   openCreateModal(parentNode.id)
 }
 
@@ -91,8 +105,7 @@ const openEditModal = (department) => {
 }
 
 const onDepartmentSaved = async () => {
-  // لا نحتاج لاستدعاء fetch هنا لأن הـ Store يقوم بذلك داخلياً في دوال create/update
-  // ولكن يمكن وضع أي منطق إضافي هنا إذا لزم الأمر مستقبلاً
+  // الـ Store يقوم بتحديث الشجرة داخلياً بعد الحفظ
 }
 
 // -- إدارة الحذف (Delete State) --
@@ -111,7 +124,6 @@ const confirmDelete = async () => {
     await departmentStore.deleteDepartment(departmentToDelete.value.id)
     toast.success('تم حذف الإدارة بنجاح.')
   } catch (error) {
-    // הـ Store يقوم بإرجاع الخطأ (مثال: لو الإدارة لها موظفين)
     toast.error(departmentStore.error || 'فشل عملية الحذف.')
   } finally {
     isDeleteDialogOpen.value = false

@@ -12,6 +12,7 @@ import accountingMenu from '@/modules/accounting/menu'
 import hrMenu from '@/modules/hr/menu'
 import inventoryMenu from '@/modules/inventory/menu'
 import purchasingMenu from '@/modules/purchasing/menu'
+import salesMenu from '@/modules/sales/menu'
 
 // عناصر مشتركة تظهر في جميع القوائم الجانبية
 const commonDashboard = {
@@ -55,6 +56,7 @@ const systemSettings = {
 // كائن يحتوي على القوائم لكل نظام/موديول
 export const appMenus = {
   accounting: [commonDashboard, ...accountingMenu, systemSettings],
+  sales: [commonDashboard, ...salesMenu, systemSettings],
   hr: [commonDashboard, ...hrMenu, systemSettings],
   inventory: [commonDashboard, ...inventoryMenu, systemSettings],
   purchasing: [commonDashboard, ...purchasingMenu, systemSettings],

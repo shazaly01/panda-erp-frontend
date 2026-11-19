@@ -1,4 +1,4 @@
-//src\modules\sales\stores\customerStore.js
+// src/modules/sales/stores/customerStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import customerService from '../services/customer.service'
@@ -60,6 +60,38 @@ export const useCustomerStore = defineStore('salesCustomer', () => {
   }
 
   /**
+   * البحث السريع عن عميل برقم الهاتف
+   */
+  async function findCustomerByPhone(phone) {
+    if (!phone || !String(phone).trim()) {
+      return { found: false, data: null }
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await customerService.findByPhone(String(phone).trim())
+      const result = response.data || { found: false, data: null }
+
+      if (result.found && result.data) {
+        const exists = selectorCustomers.value.some((c) => c.id === result.data.id)
+        if (!exists) {
+          selectorCustomers.value.unshift(result.data)
+        }
+      }
+
+      return result
+    } catch (err) {
+      error.value = err.response?.data?.message || 'فشل البحث برقم الهاتف.'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * جلب قائمة العملاء لشاشات الجداول والبحث مع الترقيم والفلترة
    */
   async function fetchCustomers(page = 1, filters = {}) {
@@ -112,7 +144,6 @@ export const useCustomerStore = defineStore('salesCustomer', () => {
     try {
       const response = await customerService.create(payload)
       currentCustomer.value = response.data.data || null
-      // إبطال كاش القوائم المنسدلة لضمان ظهور العميل الجديد فوراً
       isSelectorLoaded.value = false
       return response.data
     } catch (err) {
@@ -138,7 +169,6 @@ export const useCustomerStore = defineStore('salesCustomer', () => {
     try {
       const response = await customerService.update(id, payload)
       currentCustomer.value = response.data.data || null
-      // إبطال كاش القوائم المنسدلة لضمان تحديث الأسماء والبيانات المحاسبية
       isSelectorLoaded.value = false
       return response.data
     } catch (err) {
@@ -165,7 +195,6 @@ export const useCustomerStore = defineStore('salesCustomer', () => {
       if (currentCustomer.value?.id === id) {
         currentCustomer.value = null
       }
-      // إزالة العميل مباشرة من القائمة السريعة
       selectorCustomers.value = selectorCustomers.value.filter((c) => c.id !== id)
       return response.data
     } catch (err) {
@@ -208,6 +237,7 @@ export const useCustomerStore = defineStore('salesCustomer', () => {
     validationErrors,
     isSelectorLoaded,
     fetchCustomersSelector,
+    findCustomerByPhone,
     fetchCustomers,
     fetchCustomer,
     createCustomer,

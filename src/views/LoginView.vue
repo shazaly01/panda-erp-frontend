@@ -1,3 +1,4 @@
+<!-- src/modules/auth/views/LoginView.vue -->
 <template>
   <AuthCardWrapper
     :title="brandingStore.appName"
@@ -6,13 +7,13 @@
     max-width="md"
   >
     <form @submit.prevent="handleLogin" class="space-y-6">
-      <div class="space-y-1 relative">
+      <div class="space-y-1.5 relative">
         <div class="flex items-center justify-between text-xs px-1">
-          <span class="text-slate-400">رقم الهاتف</span>
+          <span class="text-text-secondary font-medium">رقم الهاتف</span>
           <div class="flex items-center space-x-1 space-x-reverse">
             <span
               :class="
-                credentials.phone.length === 10 ? 'text-green-400 font-bold' : 'text-slate-500'
+                credentials.phone.length === 10 ? 'text-success font-bold' : 'text-text-muted'
               "
             >
               {{ credentials.phone.length }}/10
@@ -20,7 +21,7 @@
             <svg
               v-if="isValidPhone"
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 text-green-500 animate-fade-in"
+              class="h-4 w-4 text-success animate-fade-in"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -42,7 +43,7 @@
             maxlength="10"
             class="form-input transition-all duration-300"
             :class="{
-              'border-green-500 focus:border-green-500 focus:ring-green-500/20': isValidPhone,
+              '!border-success focus:!ring-success/20': isValidPhone,
             }"
           />
           <svg
@@ -74,7 +75,7 @@
         <button
           type="button"
           @click="showPassword = !showPassword"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none cursor-pointer"
         >
           <svg
             v-if="showPassword"
@@ -114,12 +115,14 @@
         </button>
       </div>
 
-      <div class="flex items-center justify-between text-sm text-slate-300 px-1">
+      <div class="flex items-center justify-between text-sm text-text-secondary px-1">
         <label class="flex items-center space-x-2 space-x-reverse cursor-pointer select-none">
           <input type="checkbox" v-model="rememberMe" class="form-checkbox" />
-          <span class="mr-2">تذكرني</span>
+          <span class="mr-2 font-medium">تذكرني</span>
         </label>
-        <router-link to="/forgot-password" class="forgot-link">نسيت كلمة المرور؟</router-link>
+        <router-link to="/forgot-password" class="forgot-link font-medium">
+          نسيت كلمة المرور؟
+        </router-link>
       </div>
 
       <button type="submit" :disabled="isLoading || !isValidPhone" class="submit-button">
@@ -127,9 +130,9 @@
         <span v-else>تسجيل الدخول</span>
       </button>
 
-      <div class="mt-6 text-center text-sm text-slate-400">
+      <div class="mt-6 text-center text-sm text-text-muted">
         ليس لديك حساب؟
-        <router-link to="/register" class="register-link font-semibold">
+        <router-link to="/register" class="register-link font-bold">
           تقديم طلب تسجيل جديد
         </router-link>
       </div>
@@ -143,15 +146,16 @@ import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
 import AuthCardWrapper from './AuthCardWrapper.vue'
 import { useBrandingStore } from '@/stores/brandingStore'
-const brandingStore = useBrandingStore()
 
+const brandingStore = useBrandingStore()
 const authStore = useAuthStore()
 const router = useRouter()
+
 const credentials = reactive({ phone: '', password: '' })
 const rememberMe = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
-const showPassword = ref(false) // حالة التحكم برؤية كلمة المرور
+const showPassword = ref(false)
 
 const isValidPhone = computed(() => {
   return /^[0-9]{10}$/.test(credentials.phone)
@@ -195,18 +199,18 @@ const handleLogin = async () => {
 <style scoped>
 .form-checkbox {
   appearance: none;
-  background-color: rgba(17, 24, 39, 0.8);
-  border: 1px solid #374151;
+  background-color: rgb(var(--color-surface-card));
+  border: 1px solid rgb(var(--color-surface-border));
   padding: 9px;
-  border-radius: 4px;
+  border-radius: 5px;
   display: inline-block;
   position: relative;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .form-checkbox:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: rgb(var(--color-primary));
+  border-color: rgb(var(--color-primary));
 }
 .form-checkbox:checked::after {
   content: '✓';
@@ -214,31 +218,21 @@ const handleLogin = async () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
+  color: #ffffff;
   font-size: 11px;
   font-weight: bold;
 }
 
 .forgot-link,
 .register-link {
-  color: #2563eb;
+  color: rgb(var(--color-primary));
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .forgot-link:hover,
 .register-link:hover {
-  color: #1d4ed8;
+  color: rgb(var(--color-primary-dark));
   text-decoration: underline;
-}
-
-:deep(input:-webkit-autofill),
-:deep(input:-webkit-autofill:hover),
-:deep(input:-webkit-autofill:focus),
-:deep(input:-webkit-autofill:active) {
-  -webkit-text-fill-color: #f8fafc !important;
-  box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  -webkit-box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-  transition: background-color 5000s ease-in-out 0s;
 }
 </style>

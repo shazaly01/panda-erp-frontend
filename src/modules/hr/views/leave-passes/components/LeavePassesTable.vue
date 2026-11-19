@@ -1,108 +1,94 @@
-<!---src\modules\hr\views\leave-passes\components\LeavePassesTable.vue-->
+<!-- src/modules/hr/views/leave-passes/components/LeavePassesTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="leavePasses" :is-loading="loading">
+      <!-- 1. بيانات الموظف -->
       <template #cell-employee_info="{ item }">
-        <div class="flex flex-col gap-0.5 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex flex-col items-start gap-1 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.employee?.full_name || '---' }}
           </span>
-          <span class="text-xs text-text-muted flex items-center gap-2">
-            <span>رقم: {{ item.employee?.employee_number || '---' }}</span>
-            <span class="text-surface-border">|</span>
-            <span>{{ item.employee?.phone || '---' }}</span>
-          </span>
+          <div class="flex items-center gap-1.5 flex-wrap text-xs text-text-muted">
+            <AppBadge variant="secondary" size="xs" class="font-mono">
+              #{{ item.employee?.employee_number || '---' }}
+            </AppBadge>
+            <span v-if="item.employee?.phone" dir="ltr" class="font-mono text-[11px]">
+              {{ item.employee.phone }}
+            </span>
+          </div>
         </div>
       </template>
 
+      <!-- 2. الوقت المخطط اليوم -->
       <template #cell-time_window="{ item }">
-        <div class="flex items-center gap-1.5 text-xs font-medium text-text-primary py-1">
-          <span class="bg-surface-border/50 px-2 py-0.5 rounded text-text-secondary">
+        <div class="flex items-center justify-center gap-1.5 text-xs py-1" dir="rtl">
+          <span
+            class="px-2 py-0.5 rounded-lg bg-surface-ground border border-surface-border font-mono font-bold text-text-primary"
+          >
             {{ item.requested_leave_at }}
           </span>
-          <span class="text-text-muted text-[10px]">إلى</span>
-          <span class="bg-surface-border/50 px-2 py-0.5 rounded text-text-secondary">
+          <span class="text-text-muted text-[10px] font-bold">إلى</span>
+          <span
+            class="px-2 py-0.5 rounded-lg bg-surface-ground border border-surface-border font-mono font-bold text-text-primary"
+          >
             {{ item.requested_return_at }}
           </span>
         </div>
       </template>
 
+      <!-- 3. الحركة الفعلية (البوابة) -->
       <template #cell-actual_time="{ item }">
-        <div class="flex flex-col gap-0.5 text-[11px] py-1">
-          <div v-if="item.actual_leave_at" class="text-amber-600 dark:text-amber-400 font-mono">
+        <div class="flex flex-col items-center gap-0.5 text-[11px] py-1" dir="rtl">
+          <div v-if="item.actual_leave_at" class="text-warning font-mono font-bold">
             خروج: {{ item.actual_leave_at.substring(11, 16) }}
           </div>
-          <div v-if="item.actual_return_at" class="text-blue-600 dark:text-blue-400 font-mono">
+          <div v-if="item.actual_return_at" class="text-info font-mono font-bold">
             عودة: {{ item.actual_return_at.substring(11, 16) }}
           </div>
-          <span v-if="!item.actual_leave_at && !item.actual_return_at" class="text-text-muted">
-            ---
+          <span
+            v-if="!item.actual_leave_at && !item.actual_return_at"
+            class="text-text-muted/50 font-mono"
+          >
+            —
           </span>
         </div>
       </template>
 
+      <!-- 4. رمز الإذن (QR) -->
       <template #cell-pass_code="{ item }">
-        <span
-          class="text-xs font-mono font-bold text-primary bg-primary/10 w-fit px-2 py-0.5 rounded tracking-wider"
-        >
-          {{ item.pass_code }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge variant="primary" size="sm" class="font-mono tracking-wider select-all">
+            {{ item.pass_code }}
+          </AppBadge>
+        </div>
       </template>
 
+      <!-- 5. الحالة الحركية -->
       <template #cell-status="{ item }">
-        <span
-          class="px-2.5 py-0.5 text-[11px] font-bold rounded-full border flex items-center w-fit gap-1.5"
-          :class="{
-            'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400':
-              item.status === 'approved',
-            'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400':
-              item.status === 'out',
-            'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400':
-              item.status === 'returned',
-            'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400':
-              item.status === 'rejected',
-          }"
-        >
-          <span
-            class="w-1.5 h-1.5 rounded-full"
-            :class="{
-              'bg-emerald-500': item.status === 'approved',
-              'bg-amber-500': item.status === 'out',
-              'bg-blue-500': item.status === 'returned',
-              'bg-rose-500': item.status === 'rejected',
-            }"
-          ></span>
-          {{
-            item.status === 'approved'
-              ? 'معتمد للعبور'
-              : item.status === 'out'
-                ? 'خارج المنشأة'
-                : item.status === 'returned'
-                  ? 'عاد للمنشأة'
-                  : 'مرفوض'
-          }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="getStatusVariant(item.status)" size="xs" pill>
+            {{ getStatusLabel(item.status) }}
+          </AppBadge>
+        </div>
       </template>
 
+      <!-- 6. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('hr_leave_passes.update')"
-            @click.stop="$emit('edit', item)"
+            type="button"
+            @click="$emit('edit', item)"
             :class="[
               'p-1.5 rounded-lg transition-colors',
-              item.status === 'out' || item.status === 'returned'
-                ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
-                : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
+              isLocked(item)
+                ? 'text-text-muted/35 cursor-not-allowed'
+                : 'text-primary hover:bg-primary/10 cursor-pointer',
             ]"
-            :title="
-              item.status === 'out' || item.status === 'returned'
-                ? 'لا يمكن التعديل بعد التحرك الفعلي'
-                : 'تعديل الإذن'
-            "
-            :disabled="item.status === 'out' || item.status === 'returned'"
+            :title="isLocked(item) ? 'لا يمكن التعديل بعد التحرك الفعلي' : 'تعديل الإذن'"
+            :disabled="isLocked(item)"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24 " stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -114,21 +100,20 @@
 
           <button
             v-if="authStore.can('hr_leave_passes.delete')"
-            @click.stop="$emit('delete', item)"
+            type="button"
+            @click="$emit('delete', item)"
             :class="[
               'p-1.5 rounded-lg transition-colors',
-              item.status === 'out' || item.status === 'returned'
-                ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
-                : 'text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10',
+              isLocked(item)
+                ? 'text-text-muted/35 cursor-not-allowed'
+                : 'text-danger hover:bg-danger/10 cursor-pointer',
             ]"
             :title="
-              item.status === 'out' || item.status === 'returned'
-                ? 'لا يمكن الحذف بعد توثيق الحركة أمنياً'
-                : 'إلغاء الإذن نهائياً'
+              isLocked(item) ? 'لا يمكن الحذف بعد توثيق الحركة أمنياً' : 'إلغاء الإذن نهائياً'
             "
-            :disabled="item.status === 'out' || item.status === 'returned'"
+            :disabled="isLocked(item)"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -141,7 +126,7 @@
       </template>
     </AppTable>
 
-    <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
+    <AppPagination :meta="pagination || {}" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
 
@@ -151,10 +136,11 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 defineProps({
   leavePasses: { type: Array, required: true },
-  pagination: { type: Object, required: true },
+  pagination: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 })
 
@@ -162,13 +148,34 @@ defineEmits(['page-change', 'edit', 'delete'])
 
 const authStore = useAuthStore()
 
-// مصفوفة العناوين المطابقة لخصائص ومخرجات موديول أذونات الخروج
 const tableHeaders = computed(() => [
-  { key: 'employee_info', label: 'الموظف', class: 'min-w-[220px]' },
-  { key: 'time_window', label: 'الوقت المخطط اليوم', class: 'min-w-[150px]' },
-  { key: 'actual_time', label: 'الحركة الفعلية (البوابة)', class: 'min-w-[150px]' },
-  { key: 'pass_code', label: 'رمز الإذن (QR)', class: 'min-w-[120px]' },
-  { key: 'status', label: 'الحالة الحركية', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'employee_info', label: 'الموظف', class: 'min-w-[210px]' },
+  { key: 'time_window', label: 'الوقت المخطط اليوم', class: 'min-w-[160px] text-center' },
+  { key: 'actual_time', label: 'الحركة الفعلية (البوابة)', class: 'min-w-[150px] text-center' },
+  { key: 'pass_code', label: 'رمز الإذن (QR)', class: 'min-w-[130px] text-center' },
+  { key: 'status', label: 'الحالة الحركية', class: 'min-w-[130px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
+
+const isLocked = (item) => item.status === 'out' || item.status === 'returned'
+
+const getStatusVariant = (status) => {
+  const map = {
+    approved: 'success',
+    out: 'warning',
+    returned: 'info',
+    rejected: 'danger',
+  }
+  return map[status] || 'secondary'
+}
+
+const getStatusLabel = (status) => {
+  const map = {
+    approved: 'معتمد للعبور',
+    out: 'خارج المنشأة',
+    returned: 'عاد للمنشأة',
+    rejected: 'مرفوض',
+  }
+  return map[status] || status
+}
 </script>

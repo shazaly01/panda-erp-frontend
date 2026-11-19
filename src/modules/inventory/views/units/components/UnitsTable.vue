@@ -1,48 +1,39 @@
-<!---src\modules\inventory\views\units\components\UnitsTable.vue--->
+<!-- src/modules/inventory/views/units/components/UnitsTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="units" :is-loading="loading">
+      <!-- 1. اسم وحدة القياس والرمز -->
       <template #cell-unit_info="{ item }">
-        <div class="flex items-center gap-2 py-1">
-          <span class="font-bold text-sm text-text-primary">
+        <div class="flex items-center gap-2.5 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">
             {{ item.name }}
           </span>
-          <span
-            v-if="item.symbol"
-            class="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded tracking-wider"
-          >
+          <AppBadge v-if="item.symbol" variant="primary" size="sm" class="font-mono tracking-wider">
             {{ item.symbol }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
+      <!-- 2. حالة وحدة القياس -->
       <template #cell-status="{ item }">
-        <span
-          class="px-2.5 py-0.5 text-[11px] font-bold rounded-full border flex items-center w-fit gap-1.5"
-          :class="
-            item.is_active
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400'
-              : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400'
-          "
-        >
-          <span
-            class="w-1.5 h-1.5 rounded-full"
-            :class="item.is_active ? 'bg-emerald-500' : 'bg-rose-500'"
-          ></span>
-          {{ item.is_active ? 'نشط' : 'موقوف' }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="item.is_active ? 'success' : 'danger'" size="xs" pill>
+            {{ item.is_active ? 'نشط' : 'موقوف' }}
+          </AppBadge>
+        </div>
       </template>
 
+      <!-- 3. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('unit.update')"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل وحدة القياس"
             type="button"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -54,12 +45,12 @@
 
           <button
             v-if="authStore.can('unit.delete')"
-            @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
+            @click="$emit('delete', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف وحدة القياس"
             type="button"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -82,6 +73,7 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 defineProps({
   units: { type: Array, required: true },
@@ -95,7 +87,7 @@ const authStore = useAuthStore()
 
 const tableHeaders = computed(() => [
   { key: 'unit_info', label: 'وحدة القياس والرمز', class: 'min-w-[200px]' },
-  { key: 'status', label: 'الحالة', class: 'min-w-[120px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[120px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 </script>

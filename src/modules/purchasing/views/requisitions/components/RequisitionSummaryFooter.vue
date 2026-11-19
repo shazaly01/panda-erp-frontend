@@ -1,12 +1,12 @@
 <!-- src/modules/purchasing/views/requisitions/components/RequisitionSummaryFooter.vue -->
 <template>
-  <div class="space-y-3 text-right font-sans" dir="rtl">
+  <div class="space-y-3 text-right font-sans transition-colors duration-200" dir="rtl">
     <!-- تنبيه في حال وجود سبب رفض مسجل مسبقاً للطلب -->
     <div
       v-if="formData.rejection_reason"
-      class="p-4 bg-rose-950/30 border border-rose-900/50 rounded-2xl space-y-1 text-rose-300 text-xs shadow-sm"
+      class="p-3.5 bg-danger/10 border border-danger/30 rounded-xl space-y-1 text-danger text-xs shadow-2xs"
     >
-      <div class="flex items-center gap-2 text-rose-400 font-bold text-xs">
+      <div class="flex items-center gap-2 font-black text-xs">
         <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
@@ -17,36 +17,31 @@
         </svg>
         <span>سبب الرفض المسجل من الإدارة:</span>
       </div>
-      <p class="text-xs text-rose-200/90 leading-relaxed pr-6">
+      <p class="text-xs text-text-primary leading-relaxed pr-6 font-medium">
         {{ formData.rejection_reason }}
       </p>
     </div>
 
-    <!-- بطاقة مبررات الاحتياج والملاحظات فقط (مبسطة ونظيفة بصرياً) -->
-    <div class="p-4 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-lg space-y-2.5">
-      <div class="flex items-center justify-between">
-        <label class="text-xs font-bold text-gray-200 flex items-center gap-2">
-          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
-          </svg>
+    <!-- بطاقة مبررات الاحتياج والملاحظات -->
+    <div
+      class="p-4 bg-surface-section rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs space-y-2.5 transition-colors duration-200"
+    >
+      <div class="flex items-center justify-between border-b border-surface-border/80 pb-2">
+        <label class="text-xs font-black text-text-primary flex items-center gap-1.5">
+          <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
           <span>مبررات الاحتياج أو ملاحظات عامة</span>
         </label>
-        <span class="text-[11px] text-gray-500 font-normal">اختياري</span>
+        <span class="text-[10px] text-text-muted font-bold">اختياري</span>
       </div>
 
       <textarea
         v-model="formData.notes"
         rows="3"
         placeholder="سجل هنا أي تفاصيل توضح سبب الاحتياج، الموقع أو القسم المستفيد، أو أي تعليمات خاصة لمسؤول المشتريات..."
-        class="w-full p-3 border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded-xl bg-[#16171b] text-white placeholder:text-gray-500 text-xs font-semibold focus:ring-1 focus:ring-[#e05e2b]/40 outline-none transition-all resize-none leading-relaxed"
+        class="w-full p-3 border border-surface-border hover:border-primary/50 focus:border-primary rounded-lg bg-surface-ground focus:bg-surface-section text-text-primary placeholder:text-text-muted text-xs font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none leading-relaxed"
       ></textarea>
 
-      <p v-if="getFieldError('notes')" class="text-rose-400 text-[10px] font-bold pr-1">
+      <p v-if="getFieldError('notes')" class="text-danger text-[10px] font-bold pr-1">
         {{ getFieldError('notes') }}
       </p>
     </div>

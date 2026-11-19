@@ -1,7 +1,11 @@
-<!--src\modules\hr\views\departments\components\DepartmentForm.vue-->
+<!-- src/modules/hr/views/departments/components/DepartmentForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- 1. اسم الإدارة / القسم -->
       <div class="md:col-span-2">
         <AppInput
           id="dept-name"
@@ -14,6 +18,7 @@
         />
       </div>
 
+      <!-- 2. كود الإدارة -->
       <div>
         <AppInput
           id="dept-code"
@@ -27,6 +32,7 @@
         />
       </div>
 
+      <!-- 3. المستوى التنظيمي -->
       <div>
         <AppDropdown
           id="dept-type"
@@ -41,6 +47,7 @@
         />
       </div>
 
+      <!-- 4. الإدارة الأب -->
       <div class="md:col-span-2">
         <AppDropdown
           id="dept-parent"
@@ -53,11 +60,12 @@
           placeholder="-- إدارة رئيسية (لا يتبع لأحد) --"
           :disabled="isRootEdit"
         />
-        <p v-if="isRootEdit" class="text-xs text-amber-500 mt-1">
-          لا يمكن تغيير تبعية إدارة رئيسية تمتلك فروعاً فرعية.
+        <p v-if="isRootEdit" class="text-[11px] text-warning font-bold mt-1 pr-1">
+          • لا يمكن تغيير تبعية إدارة رئيسية تمتلك فروعاً فرعية.
         </p>
       </div>
 
+      <!-- 5. مركز التكلفة المحاسبي -->
       <div class="md:col-span-2">
         <AppDropdown
           id="dept-cost-center"
@@ -71,7 +79,7 @@
         />
       </div>
 
-      <!-- الحقل الجديد: اختيار مشرفي القسم (متعدد) -->
+      <!-- 6. مشرفو القسم -->
       <div class="md:col-span-2">
         <AppMultiSelect
           id="dept-supervisors"
@@ -83,13 +91,13 @@
           option-value="id"
           placeholder="اختر المشرفين المسؤولين عن هذا القسم..."
         />
-        <p class="text-xs text-text-secondary mt-1">
-          يمكنك اختيار مشرف واحد أو عدة مشرفين، سيتيح لهم هذا النظام رؤية واعتماد حضور جميع موظفي
-          هذا القسم.
+        <p class="text-[11px] text-text-secondary mt-1 pr-1">
+          يمكنك اختيار مشرف واحد أو عدة مشرفين لرؤية واعتماد حضور موظفي هذا القسم.
         </p>
       </div>
     </div>
 
+    <!-- 7. وصف المهام -->
     <div>
       <AppTextarea
         id="dept-desc"
@@ -97,12 +105,15 @@
         :model-value="modelValue.description"
         @update:model-value="updateField('description', $event)"
         placeholder="اكتب نبذة عن مهام ومسؤوليات هذه الإدارة..."
-        rows="3"
+        rows="2"
       />
     </div>
 
-    <div class="flex items-center gap-3 pt-2">
-      <label class="relative inline-flex items-center cursor-pointer">
+    <!-- 8. حالة التفعيل -->
+    <div
+      class="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-card border border-surface-border"
+    >
+      <label class="relative inline-flex items-center cursor-pointer select-none">
         <input
           type="checkbox"
           :checked="modelValue.is_active"
@@ -110,18 +121,28 @@
           class="sr-only peer"
         />
         <div
-          class="w-11 h-6 bg-surface-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
+          class="w-10 h-5 bg-surface-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-surface-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
         ></div>
-        <span class="ms-3 text-sm font-medium text-text-primary">
-          {{ modelValue.is_active ? 'الإدارة نشطة (مفعلة)' : 'الإدارة موقوفة' }}
+        <span class="ms-2.5 text-xs font-bold text-text-primary">
+          {{ modelValue.is_active ? 'الإدارة نشطة (متاحة للاستخدام)' : 'الإدارة موقوفة' }}
         </span>
       </label>
+
+      <span
+        class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+        :class="
+          modelValue.is_active
+            ? 'bg-success/10 text-success border-success/30'
+            : 'bg-danger/10 text-danger border-danger/30'
+        "
+      >
+        {{ modelValue.is_active ? 'مفعّلة' : 'معطّلة' }}
+      </span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
@@ -131,18 +152,17 @@ const props = defineProps({
   modelValue: { type: Object, required: true },
   flatDepartments: { type: Array, required: true },
   costCenters: { type: Array, required: true },
-  employees: { type: Array, required: true }, // قائمة الموظفين لاختيار المشرفين منها
-  isRootEdit: { type: Boolean, default: false }, // لمنع تغيير الأب إذا كانت العقدة جذرية ولها أبناء
+  employees: { type: Array, required: true },
+  isRootEdit: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-// مصفوفة الأنواع مطابقة للـ Enum في الباك-إند
 const departmentTypes = [
-  { id: 'administration', name: '🏢 إدارة عليا' },
-  { id: 'department', name: '📁 قسم' },
-  { id: 'section', name: '📑 شعبة / وحدة' },
-  { id: 'branch', name: '📍 فرع' },
+  { id: 'administration', name: 'إدارة عليا' },
+  { id: 'department', name: 'قسم' },
+  { id: 'section', name: 'شعبة / وحدة' },
+  { id: 'branch', name: 'فرع' },
 ]
 
 const updateField = (field, value) => {

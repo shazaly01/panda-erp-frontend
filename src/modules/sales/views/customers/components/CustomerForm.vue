@@ -1,4 +1,4 @@
-<!--src/modules/sales/views/customers/components/CustomerForm.vue-->
+<!-- src/modules/sales/views/customers/components/CustomerForm.vue -->
 <template>
   <div class="space-y-5">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -77,6 +77,20 @@
           placeholder="مثال: 0501234567"
           :error="getFieldError('phone')"
           dir="ltr"
+        />
+      </div>
+
+      <!-- قائمة الأسعار المخصصة للعميل -->
+      <div>
+        <AppDropdown
+          id="customer-price-list"
+          label="قائمة الأسعار (فئة التسعير)"
+          :model-value="modelValue.price_list_id"
+          @update:model-value="updateField('price_list_id', $event)"
+          :options="priceListOptions"
+          option-label="name"
+          option-value="id"
+          :error="getFieldError('price_list_id')"
         />
       </div>
 
@@ -186,6 +200,10 @@
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { usePriceListStore } from '@/modules/inventory/stores/priceListStore'
+
 const props = defineProps({
   modelValue: {
     type: Object,
@@ -198,6 +216,20 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const priceListStore = usePriceListStore()
+const { priceLists } = storeToRefs(priceListStore)
+
+const priceListOptions = computed(() => {
+  const activeLists = (priceLists.value || []).filter((pl) => pl.is_active !== false)
+  return [{ id: null, name: 'الافتراضية (السعر الأساسي)' }, ...activeLists]
+})
+
+onMounted(() => {
+  if (!priceLists.value || priceLists.value.length === 0) {
+    priceListStore.fetchPriceLists({ per_page: 100 })
+  }
+})
 
 const updateField = (field, value) => {
   emit('update:modelValue', {

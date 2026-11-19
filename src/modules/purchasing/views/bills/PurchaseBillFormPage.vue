@@ -1,22 +1,22 @@
 <!-- src/modules/purchasing/views/bills/PurchaseBillFormPage.vue -->
 <template>
-  <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
+  <div class="space-y-3 text-right font-sans pb-24 transition-all duration-200" dir="rtl">
     <!-- مؤشر التحميل لكامل الشاشة أثناء جلب البيانات -->
     <FullScreenLoader :show="!isFormLoaded" message="جاري تحميل بيانات فاتورة المشتريات..." />
 
     <!-- شريط عنوان الصفحة المتكيف مع رقم الفاتورة وحالتها -->
     <div
-      class="flex flex-wrap justify-between items-center py-1 border-b border-surface-border/60 gap-3"
+      class="flex flex-wrap justify-between items-center py-1 border-b border-surface-border/60 gap-2"
     >
-      <div class="flex items-center gap-3">
-        <h1 class="text-base font-black text-text-primary flex items-center gap-2">
-          <span class="inline-block w-1.5 h-3 bg-[#e05e2b] rounded-full"></span>
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3 bg-primary rounded-full"></span>
           {{ formPageTitle }}
         </h1>
 
         <span
           v-if="form.bill_number"
-          class="px-2.5 py-0.5 text-xs font-mono font-bold rounded-lg bg-[#e05e2b]/15 text-[#e05e2b] border border-[#e05e2b]/30"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
         >
           {{ form.bill_number }}
         </span>
@@ -24,7 +24,7 @@
 
       <div v-if="form.status" class="flex items-center gap-2 text-xs">
         <span
-          class="px-2.5 py-0.5 rounded-lg border text-[11px] font-bold"
+          class="px-2.5 py-0.5 rounded-full border text-[11px] font-bold"
           :class="getStatusBadgeClass(form.status)"
         >
           {{ getStatusLabel(form.status) }}
@@ -35,7 +35,7 @@
     <!-- رسالة الخطأ العام من المتجر إن وجدت -->
     <div
       v-if="billStore.error"
-      class="p-3 bg-rose-950/40 border border-rose-900/50 text-rose-400 rounded-xl text-xs font-bold shadow-sm"
+      class="p-2.5 bg-danger/10 border border-danger/30 text-danger rounded-lg text-xs font-bold shadow-2xs"
     >
       {{ billStore.error }}
     </div>
@@ -51,26 +51,24 @@
       :route-badge-class="routeBadgeClass"
     />
 
-    <!-- 2. منطقة جدول الأصناف والإدخال الفوري والذكي -->
-    <AppCard>
-      <BillItemsTable
-        :items="items"
-        :form="form"
-        :visible-table-schema="visibleTableSchema"
-        :get-validation-error="getValidationError"
-        :format-number="formatNumber"
-        :unformat-number="unformatNumber"
-        :sync-unit-details="syncUnitDetails"
-        :recalculate-line="recalculateLine"
-        :increment-quantity="incrementQuantity"
-        :decrement-quantity="decrementQuantity"
-        :remove-row="removeRow"
-        :trigger-add-new-empty-line="triggerAddNewEmptyLine"
-        :selectProductForRow="selectProductForRow"
-        :handle-global-item-select="handleGlobalItemSelect"
-        :is-form-loaded="isFormLoaded"
-      />
-    </AppCard>
+    <!-- 2. منصة جدول الأصناف المجسّمة (بدون تغليف مزدوج) -->
+    <BillItemsTable
+      :items="items"
+      :form="form"
+      :visible-table-schema="visibleTableSchema"
+      :get-validation-error="getValidationError"
+      :format-number="formatNumber"
+      :unformat-number="unformatNumber"
+      :sync-unit-details="syncUnitDetails"
+      :recalculate-line="recalculateLine"
+      :increment-quantity="incrementQuantity"
+      :decrement-quantity="decrementQuantity"
+      :remove-row="removeRow"
+      :trigger-add-new-empty-line="triggerAddNewEmptyLine"
+      :select-product-for-row="selectProductForRow"
+      :handle-global-item-select="handleGlobalItemSelect"
+      :is-form-loaded="isFormLoaded"
+    />
 
     <!-- 3. منطقة التذييل والإجماليات والتوجيه المحاسبي -->
     <BillSummaryFooter
@@ -88,35 +86,39 @@
     />
 
     <!-- 4. بطاقة استعراض سندات الصرف وسجل السداد المرتبط بالفاتورة -->
-    <AppCard
+    <div
       v-if="billStore.currentBill?.voucher_details?.length > 0"
-      class="border border-surface-border/80 bg-surface-card/40 p-4 rounded-xl space-y-3"
+      class="p-4 bg-surface-section rounded-xl border border-surface-border border-t-4 border-t-success shadow-xs space-y-3 transition-colors duration-200"
     >
-      <div class="flex items-center justify-between border-b border-surface-border/50 pb-2">
-        <h3 class="text-xs font-black text-text-primary flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          سندات الصرف والمدفوعات المرتبطة بالفاتورة
+      <div class="flex items-center justify-between border-b border-surface-border/80 pb-2">
+        <h3 class="text-xs font-black text-text-primary flex items-center gap-1.5">
+          <span class="w-1.5 h-3.5 rounded-full bg-success inline-block"></span>
+          <span>سندات الصرف والمدفوعات المرتبطة بالفاتورة</span>
         </h3>
-        <span class="text-[11px] font-mono font-bold text-emerald-400">
+        <span
+          class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-success/10 text-success border border-success/25"
+        >
           إجمالي المسدد: {{ formatNumber(form.paid_amount) }}
         </span>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
         <div
           v-for="item in billStore.currentBill.voucher_details"
           :key="item.id"
-          class="p-3 bg-surface-bg border border-surface-border/60 rounded-lg space-y-1.5 text-xs"
+          class="p-3 bg-surface-card border border-surface-border rounded-xl space-y-1.5 text-xs shadow-2xs transition-colors hover:border-primary/40"
         >
           <div class="flex items-center justify-between">
-            <span class="font-mono font-black text-primary"
-              >#{{ item.voucher?.number || item.voucher_id }}</span
-            >
-            <span class="font-mono font-bold text-emerald-400">
+            <span class="font-mono font-black text-primary">
+              #{{ item.voucher?.number || item.voucher_id }}
+            </span>
+            <span class="font-mono font-black text-success">
               {{ formatNumber(item.amount) }}
             </span>
           </div>
-          <div class="flex items-center justify-between text-text-muted text-[11px]">
+          <div
+            class="flex items-center justify-between text-text-secondary text-[11px] font-medium"
+          >
             <span>
               {{
                 item.voucher?.payment_method === 'bank'
@@ -124,18 +126,18 @@
                   : item.voucher?.box?.name || 'خزينة نقدية'
               }}
             </span>
-            <span class="font-mono">{{ item.voucher?.date || '-' }}</span>
+            <span class="font-mono text-text-muted">{{ item.voucher?.date || '-' }}</span>
           </div>
           <p
             v-if="item.description"
-            class="text-text-muted text-[11px] truncate"
+            class="text-text-muted text-[11px] truncate border-t border-surface-border/50 pt-1"
             :title="item.description"
           >
             {{ item.description }}
           </p>
         </div>
       </div>
-    </AppCard>
+    </div>
 
     <!-- نافذة سند الصرف المالي الموحد للتسوية -->
     <VoucherModal
@@ -149,12 +151,12 @@
 
     <!-- 5. شريط الإجراءات السفلي العائم الثابت -->
     <div
-      class="fixed bottom-0 right-0 left-0 bg-[#1e2027] border-t border-[#3b3f4f] p-3.5 shadow-[0_-4px_25px_rgba(0,0,0,0.5)] z-40 flex flex-col sm:flex-row justify-between items-center px-4 sm:px-8 gap-3"
+      class="fixed bottom-0 right-0 left-0 bg-surface-card border-t border-surface-border p-2.5 shadow-[0_-4px_10px_rgba(0,0,0,0.06)] z-40 flex flex-wrap justify-between items-center gap-2 px-4 sm:px-6"
     >
-      <div class="text-xs text-gray-400 font-medium flex items-center gap-2">
+      <div class="text-xs text-text-secondary font-medium flex items-center gap-2">
         <span
-          class="w-2 h-2 rounded-full"
-          :class="isDirectInventoryPurchase ? 'bg-emerald-400' : 'bg-sky-400'"
+          class="w-2 h-2 rounded-full shrink-0"
+          :class="isDirectInventoryPurchase ? 'bg-success' : 'bg-info'"
         ></span>
         <span>
           {{
@@ -167,7 +169,7 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+      <div class="flex items-center gap-2 sm:gap-2.5">
         <!-- زر إلغاء وتراجع -->
         <AppButton type="button" variant="secondary" size="sm" @click="handleCancel">
           إلغاء وتراجع
@@ -180,9 +182,9 @@
             calculatedRemainingAmount > 0
           "
           type="button"
+          variant="success"
           size="sm"
           @click="openVoucherModal"
-          class="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-[0_0_10px_rgba(16,185,129,0.3)]"
         >
           سداد دفعة مالية بسند صرف
         </AppButton>
@@ -194,7 +196,6 @@
           size="sm"
           :disabled="billStore.loading || !isFormLoaded"
           @click="handleSubmit(false)"
-          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
         >
           <span v-if="billStore.loading">جاري حفظ التعديلات وتحديث القيد والمخزون...</span>
           <span v-else>حفظ وتحديث الفاتورة</span>
@@ -208,7 +209,6 @@
           size="sm"
           :disabled="billStore.loading || !isFormLoaded"
           @click="handleSubmit(false)"
-          class="text-gray-300 border-gray-600 hover:bg-gray-800"
         >
           <span v-if="billStore.loading">جاري الحفظ...</span>
           <span v-else>{{ isEdit ? 'تحديث المسودة' : 'حفظ كمسودة' }}</span>
@@ -221,7 +221,6 @@
           size="sm"
           :disabled="billStore.loading || !isFormLoaded"
           @click="handleSubmit(true)"
-          class="bg-[#e05e2b] hover:bg-[#d04f1e] text-white border-none shadow-[0_0_15px_rgba(224,94,43,0.35)] font-bold px-5"
         >
           <span v-if="billStore.loading">جاري الترحيل وتوليد القيد...</span>
           <span v-else>حفظ وترحيل الفاتورة فوراً</span>
@@ -236,7 +235,6 @@ import { computed } from 'vue'
 import { usePurchaseBillFormLogic } from './composables/usePurchaseBillFormLogic'
 
 import AppButton from '@/components/ui/AppButton.vue'
-import AppCard from '@/components/ui/AppCard.vue'
 import FullScreenLoader from '@/components/ui/FullScreenLoader.vue'
 
 import BillHeaderForm from './components/BillHeaderForm.vue'
@@ -306,12 +304,12 @@ const getStatusLabel = (status) => {
 
 const getStatusBadgeClass = (status) => {
   const map = {
-    draft: 'bg-amber-950/40 text-amber-400 border-amber-500/30',
-    posted: 'bg-blue-950/40 text-blue-400 border-blue-500/30',
-    partially_paid: 'bg-indigo-950/40 text-indigo-400 border-indigo-500/30',
-    paid: 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30',
-    cancelled: 'bg-rose-950/40 text-rose-400 border-rose-500/30',
+    draft: 'bg-warning/15 text-warning border-warning/35',
+    posted: 'bg-info/15 text-info border-info/35',
+    partially_paid: 'bg-primary/15 text-primary border-primary/35',
+    paid: 'bg-success/15 text-success border-success/35',
+    cancelled: 'bg-danger/15 text-danger border-danger/35',
   }
-  return map[status] || 'bg-gray-800 text-gray-300 border-gray-600'
+  return map[status] || 'bg-surface-card text-text-secondary border-surface-border'
 }
 </script>

@@ -1,18 +1,30 @@
 <!-- src/modules/inventory/views/transfers/components/TransferHeader.vue -->
 <template>
   <div
-    class="p-4 sm:p-5 bg-[#23252e] rounded-2xl border border-[#3b3f4f] shadow-xl space-y-4 text-right font-sans"
+    class="p-3 bg-surface-header/60 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs space-y-2.5 text-right font-sans transition-all duration-200"
     dir="rtl"
   >
-    <!-- شبكة الحقول الرئيسية: 4 أعمدة متناسقة -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- شريط عنوان القسم العلوي -->
+    <div class="flex items-center justify-between pb-1 border-b border-primary/15">
+      <span class="text-[11px] font-black text-text-secondary flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+        بيانات المستودعات وأمر التحويل المخزني
+      </span>
+    </div>
+
+    <!-- شبكة الحقول الرئيسية: 4 أعمدة متساوية -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
       <!-- 1. transfer_number (رقم أمر التحويل) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300"> رقم أمر التحويل </label>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          رقم أمر التحويل
+        </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span
+            class="absolute right-2.5 inset-y-0 flex items-center text-primary pointer-events-none z-10"
+          >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -27,24 +39,27 @@
             type="text"
             v-model="formData.transfer_number"
             placeholder="رقم أمر التحويل..."
-            class="block w-full h-full pr-10 pl-4 bg-transparent text-white font-mono font-bold text-xs focus:outline-none placeholder-gray-500"
+            class="block w-full h-full pr-8 pl-3 bg-transparent text-text-primary placeholder:text-text-muted font-mono font-bold text-xs focus:outline-none"
           />
         </div>
-        <p v-if="getFieldError('transfer_number')" class="text-rose-400 text-[10px] font-bold pr-1">
+        <p
+          v-if="getFieldError('transfer_number')"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+        >
           {{ getFieldError('transfer_number') }}
         </p>
       </div>
 
       <!-- 2. from_warehouse_id (المستودع المصدر / المخرِج) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300">
-          المستودع المصدر <span class="text-rose-500">*</span>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          المستودع المصدر <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
         >
           <span
-            class="absolute right-3 text-amber-400 pointer-events-none z-10 flex items-center"
+            class="absolute right-2.5 inset-y-0 flex items-center text-warning pointer-events-none z-10"
             title="المستودع المصدر"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,41 +71,41 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <WarehouseDropdown
               id="transfer-from-warehouse-id"
               v-model="formData.from_warehouse_id"
               label=""
               placeholder="اختر المستودع المصدر..."
-              class="w-full bg-transparent header-dropdown"
+              class="w-full bg-transparent header-embedded-dropdown"
             />
           </div>
         </div>
         <p
           v-if="getFieldError('from_warehouse_id')"
-          class="text-rose-400 text-[10px] font-bold pr-1"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
         >
           {{ getFieldError('from_warehouse_id') }}
         </p>
       </div>
 
       <!-- 3. to_warehouse_id (المستودع الوجهة / المستلم) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300">
-          المستودع الوجهة <span class="text-rose-500">*</span>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          المستودع الوجهة <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border rounded-xl flex items-center transition-all duration-200"
+          class="relative w-full h-9 bg-surface-card border rounded-lg flex items-center shadow-2xs transition-all duration-200 overflow-hidden"
           :class="[
             formData.from_warehouse_id &&
             formData.to_warehouse_id &&
             formData.from_warehouse_id === formData.to_warehouse_id
-              ? 'border-rose-500 ring-1 ring-rose-500/50'
-              : 'border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30',
+              ? 'border-danger ring-2 ring-danger/20'
+              : 'border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
           ]"
         >
           <span
-            class="absolute right-3 text-emerald-400 pointer-events-none z-10 flex items-center"
+            class="absolute right-2.5 inset-y-0 flex items-center text-success pointer-events-none z-10"
             title="المستودع الوجهة"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,17 +117,20 @@
               />
             </svg>
           </span>
-          <div class="w-full h-full pr-9 pl-1 flex items-center">
+          <div class="w-full h-full pr-8 pl-1 flex items-center">
             <WarehouseDropdown
               id="transfer-to-warehouse-id"
               v-model="formData.to_warehouse_id"
               label=""
               placeholder="اختر المستودع الوجهة..."
-              class="w-full bg-transparent header-dropdown"
+              class="w-full bg-transparent header-embedded-dropdown"
             />
           </div>
         </div>
-        <p v-if="getFieldError('to_warehouse_id')" class="text-rose-400 text-[10px] font-bold pr-1">
+        <p
+          v-if="getFieldError('to_warehouse_id')"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+        >
           {{ getFieldError('to_warehouse_id') }}
         </p>
         <p
@@ -121,28 +139,31 @@
             formData.to_warehouse_id &&
             formData.from_warehouse_id === formData.to_warehouse_id
           "
-          class="text-rose-400 text-[10px] font-bold pr-1"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
         >
           لا يمكن اختيار نفس المستودع كمصدر ووجهة.
         </p>
       </div>
 
       <!-- 4. transfer_date (تاريخ التحويل) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-bold text-gray-300">
-          تاريخ التحويل <span class="text-rose-500">*</span>
+      <div class="relative w-full">
+        <label class="block text-[11px] font-bold text-text-secondary pr-1 mb-1">
+          تاريخ التحويل <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-xl flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]/30"
+          class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <input
             type="date"
             v-model="formData.transfer_date"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            class="block w-full h-full pr-3 pl-16 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right cursor-pointer"
           />
 
-          <span class="absolute left-3 text-gray-400 pointer-events-none flex items-center z-10">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <span
+            class="absolute left-2.5 inset-y-0 flex items-center text-text-muted pointer-events-none gap-1 text-xs z-10"
+          >
+            <span class="font-medium text-[10px]">تاريخ</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -152,7 +173,10 @@
             </svg>
           </span>
         </div>
-        <p v-if="getFieldError('transfer_date')" class="text-rose-400 text-[10px] font-bold pr-1">
+        <p
+          v-if="getFieldError('transfer_date')"
+          class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+        >
           {{ getFieldError('transfer_date') }}
         </p>
       </div>
@@ -176,34 +200,35 @@ const getFieldError = (path) => {
 </script>
 
 <style scoped>
-input[type='date']::-webkit-calendar-picker-indicator {
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
   filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
 }
 
 /* إلغاء الإطار والخلفية للقوائم المنسدلة المدمجة داخل الحاويات المخصصة */
-:deep(.header-dropdown .p-dropdown),
-:deep(.header-dropdown [data-pc-name='dropdown']),
-:deep(.header-dropdown [data-pc-section='root']),
-:deep(.header-dropdown div.inline-flex) {
+:deep(.header-embedded-dropdown .p-dropdown),
+:deep(.header-embedded-dropdown [data-pc-name='dropdown']),
+:deep(.header-embedded-dropdown [data-pc-section='root']),
+:deep(.header-embedded-dropdown div.inline-flex) {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  height: 36px !important;
+  min-height: 36px !important;
 }
 
-:deep(.header-dropdown .p-dropdown-label),
-:deep(.header-dropdown [data-pc-section='input']) {
+:deep(.header-embedded-dropdown .p-dropdown-label),
+:deep(.header-embedded-dropdown [data-pc-section='input']) {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
-  padding-right: 0.25rem !important;
-}
-
-:deep(.header-dropdown .p-dropdown:not(.p-disabled).p-focus) {
-  box-shadow: none !important;
-  border: none !important;
+  padding: 0 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 </style>

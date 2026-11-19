@@ -1,30 +1,28 @@
+<!-- src/modules/hr/views/working-schedules/components/WorkingSchedulesTable.vue -->
 <template>
-  <AppCard class="overflow-hidden">
+  <AppCard>
     <AppTable :headers="tableHeaders" :items="schedules" :is-loading="loading">
-      <!-- اسم القالب -->
+      <!-- 1. اسم القالب -->
       <template #cell-name="{ item }">
-        <span class="font-bold text-sm text-text-primary">{{ item.name }}</span>
+        <div class="flex items-center gap-2 py-1 text-right" dir="rtl">
+          <span class="font-bold text-xs sm:text-sm text-text-primary">{{ item.name }}</span>
+        </div>
       </template>
 
-      <!-- نوع القالب -->
+      <!-- 2. نوع القالب -->
       <template #cell-type="{ item }">
-        <span
-          class="px-2.5 py-0.5 text-[11px] font-bold rounded-full border flex items-center w-fit"
-          :class="
-            item.type === 'fixed'
-              ? 'bg-blue-50 text-blue-700 border-blue-200'
-              : 'bg-purple-50 text-purple-700 border-purple-200'
-          "
-        >
-          {{ item.type === 'fixed' ? 'ثابت' : 'مرن/متغير' }}
-        </span>
+        <div class="flex justify-center items-center" dir="rtl">
+          <AppBadge :variant="item.type === 'fixed' ? 'info' : 'warning'" size="xs" pill>
+            {{ item.type === 'fixed' ? 'ثابت' : 'مرن / متغير' }}
+          </AppBadge>
+        </div>
       </template>
 
-      <!-- طول الدورة (دورة العمل) -->
+      <!-- 3. طول الدورة (دورة العمل) -->
       <template #cell-cycle_days="{ item }">
-        <div class="flex items-center gap-1.5 font-medium text-text-primary">
+        <div class="flex items-center justify-center gap-1.5 text-xs" dir="rtl">
           <svg
-            class="w-4 h-4 text-text-muted"
+            class="w-4 h-4 text-primary shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -36,43 +34,48 @@
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <span>{{ item.cycle_days }} يوم</span>
+          <span class="font-mono font-black text-text-primary">{{ item.cycle_days }}</span>
+          <span class="text-text-secondary font-bold">يوم</span>
         </div>
       </template>
 
-      <!-- تاريخ الإنشاء -->
+      <!-- 4. تاريخ الإنشاء -->
       <template #cell-created_at="{ item }">
-        <span class="text-xs text-text-muted">
-          {{ new Date(item.created_at).toLocaleDateString('ar-EG') }}
-        </span>
+        <div class="text-center" dir="rtl">
+          <span class="text-xs font-mono font-semibold text-text-secondary">
+            {{ item.created_at ? new Date(item.created_at).toLocaleDateString('ar-EG') : '---' }}
+          </span>
+        </div>
       </template>
 
-      <!-- الإجراءات (Actions) -->
+      <!-- 5. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('hr.working_schedules.update')"
-            @click.stop="$emit('edit', item)"
-            class="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('edit', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل قالب الجدولة"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
           </button>
 
           <button
             v-if="authStore.can('hr.working_schedules.delete')"
-            @click.stop="$emit('delete', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            type="button"
+            @click="$emit('delete', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف القالب"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -85,8 +88,7 @@
       </template>
     </AppTable>
 
-    <!-- الترقيم (Pagination) -->
-    <AppPagination :meta="pagination" @page-change="$emit('page-change', $event)" />
+    <AppPagination :meta="pagination || {}" @page-change="$emit('page-change', $event)" />
   </AppCard>
 </template>
 
@@ -96,10 +98,11 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
-const props = defineProps({
+defineProps({
   schedules: { type: Array, required: true },
-  pagination: { type: Object, required: true },
+  pagination: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
 })
 
@@ -107,12 +110,11 @@ defineEmits(['page-change', 'edit', 'delete'])
 
 const authStore = useAuthStore()
 
-// تعريف رؤوس الجدول بناءً على هيكلة AppTable
 const tableHeaders = computed(() => [
   { key: 'name', label: 'اسم القالب', class: 'min-w-[200px]' },
-  { key: 'type', label: 'النوع', class: 'min-w-[120px]' },
-  { key: 'cycle_days', label: 'دورة العمل', class: 'min-w-[150px]' },
-  { key: 'created_at', label: 'تاريخ الإنشاء', class: 'min-w-[150px]' },
-  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
+  { key: 'type', label: 'النوع', class: 'min-w-[130px] text-center' },
+  { key: 'cycle_days', label: 'دورة العمل', class: 'min-w-[140px] text-center' },
+  { key: 'created_at', label: 'تاريخ الإنشاء', class: 'min-w-[140px] text-center' },
+  { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[110px]' },
 ])
 </script>

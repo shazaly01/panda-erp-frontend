@@ -1,10 +1,15 @@
+<!-- src/modules/hr/views/leave-passes/components/LeavePassForm.vue -->
 <template>
-  <div class="space-y-5">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div
+    class="-m-3 p-3.5 bg-surface-header rounded-xl border border-surface-border shadow-xs space-y-3 text-right font-sans transition-colors duration-200"
+    dir="rtl"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- 1. اختيار الموظف -->
       <div class="md:col-span-2">
         <AppDropdown
           id="lp-employee"
-          label="اختار الموظف طالب الإذن *"
+          label="الموظف طالب الإذن *"
           :model-value="modelValue.employee_id"
           @update:model-value="updateField('employee_id', $event)"
           :options="mappedEmployees"
@@ -18,6 +23,7 @@
         />
       </div>
 
+      <!-- 2. تاريخ الخروج المؤقت -->
       <div class="md:col-span-2">
         <AppInput
           id="lp-date"
@@ -29,6 +35,7 @@
         />
       </div>
 
+      <!-- 3. وقت المغادرة المتوقع -->
       <div>
         <AppInput
           id="lp-leave-at"
@@ -40,6 +47,7 @@
         />
       </div>
 
+      <!-- 4. وقت العودة المتوقع -->
       <div>
         <AppInput
           id="lp-return-at"
@@ -52,6 +60,7 @@
       </div>
     </div>
 
+    <!-- 5. سبب الإذن -->
     <div>
       <AppTextarea
         id="lp-reason"
@@ -59,7 +68,7 @@
         :model-value="modelValue.reason"
         @update:model-value="updateField('reason', $event)"
         placeholder="اكتب تبرير المشرف لإصدار الإذن الطارئ للموظف..."
-        rows="4"
+        rows="3"
         required
       />
     </div>
@@ -83,7 +92,6 @@ const emit = defineEmits(['update:modelValue'])
 const activeEmployees = ref([])
 const employeeLoading = ref(false)
 
-// مواءمة ومعالجة البيانات لدمج الاسم والرقم الوظيفي ليتعرف عليها محرك البحث داخل الـ Dropdown
 const mappedEmployees = computed(() => {
   return activeEmployees.value.map((emp) => ({
     id: emp.id,
@@ -91,7 +99,6 @@ const mappedEmployees = computed(() => {
   }))
 })
 
-// تحديث الحقول بشكل مرن وإرسال المخرجات للأب (V-Model)
 const updateField = (field, value) => {
   emit('update:modelValue', {
     ...props.modelValue,
@@ -99,11 +106,9 @@ const updateField = (field, value) => {
   })
 }
 
-// جلب قائمة الموظفين النشطين تلقائياً عند تحميل الاستمارة لملء القائمة المنسدلة للمشرف
 const fetchActiveEmployeesList = async () => {
   employeeLoading.value = true
   try {
-    // جلب الموظفين النشطين فقط والذين هم على رأس العمل
     const response = await apiClient.get('/hr/employees', {
       params: { is_active: 1, per_page: 500 },
     })
@@ -119,3 +124,16 @@ onMounted(() => {
   fetchActiveEmployeesList()
 })
 </script>
+
+<style scoped>
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator),
+:global(.dark input[type='time']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+}
+</style>

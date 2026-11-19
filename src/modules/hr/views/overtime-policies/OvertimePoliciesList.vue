@@ -1,17 +1,34 @@
+<!-- src/modules/hr/views/overtime-policies/OvertimePoliciesList.vue -->
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary">إدارة سياسات العمل الإضافي</h1>
-        <p class="text-sm text-text-muted mt-1">
-          إدارة سياسات ومعدلات احتساب الساعات والأيام الإضافية لربطها بعقود الموظفين.
-        </p>
+  <div class="space-y-3 max-w-7xl mx-auto pb-12 text-right font-sans" dir="rtl">
+    <!-- ترويسة الصفحة المدمجة -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-3 py-1.5 border-b border-surface-border/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-sm sm:text-base font-black text-text-primary flex items-center gap-2">
+          <span class="inline-block w-1.5 h-3.5 bg-primary rounded-full"></span>
+          <span>إدارة سياسات العمل الإضافي</span>
+        </h1>
+        <span
+          v-if="pagination?.total !== undefined"
+          class="px-2 py-0.5 text-[11px] font-mono font-bold rounded-md bg-primary/10 text-primary border border-primary/25"
+        >
+          {{ pagination.total }}
+        </span>
       </div>
-      <AppButton v-if="authStore.can('overtime_policy.create')" @click="goToCreate" icon="plus">
+
+      <AppButton
+        v-if="authStore.can('overtime_policy.create')"
+        size="sm"
+        @click="goToCreate"
+        icon="plus"
+      >
         إضافة سياسة جديدة
       </AppButton>
     </div>
 
+    <!-- شريط البحث والفلترة -->
     <OvertimePoliciesFilter
       v-model:searchQuery="filters.search"
       v-model:status="filters.status"
@@ -19,6 +36,7 @@
       @update:status="onFilterChange"
     />
 
+    <!-- جدول سياسات العمل الإضافي -->
     <OvertimePoliciesTable
       :policies="policies"
       :pagination="pagination"
@@ -28,6 +46,7 @@
       @delete="openDeleteDialog"
     />
 
+    <!-- نافذة تأكيد الحذف -->
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف السياسة"
@@ -64,7 +83,7 @@ const { policies, pagination, loading } = storeToRefs(policyStore)
 // -- الفلاتر --
 const filters = reactive({
   search: '',
-  status: '', // يمكن إزالته لاحقاً إذا لم يكن للسياسات حالات (Status)
+  status: '',
 })
 
 let searchTimeout = null
@@ -80,7 +99,7 @@ const onFilterChange = () => {
 const handlePageChange = async (page = 1) => {
   try {
     await policyStore.fetchPolicies({ page, ...filters })
-  } catch (error) {
+  } catch {
     toast.error('حدث خطأ أثناء جلب بيانات سياسات العمل الإضافي.')
   }
 }
@@ -89,7 +108,7 @@ onMounted(() => {
   handlePageChange(1)
 })
 
-// -- التوجيه (Navigation) للـ Page --
+// -- التوجيه (Navigation) --
 const goToCreate = () => {
   router.push({ name: 'overtime-policies.create' })
 }
@@ -120,7 +139,7 @@ const confirmDelete = async () => {
         : pagination.value.current_page
 
     await handlePageChange(targetPage)
-  } catch (error) {
+  } catch {
     toast.error(policyStore.error || 'فشل عملية الحذف.')
   } finally {
     isDeleteDialogOpen.value = false

@@ -1,520 +1,575 @@
 <!-- src/modules/purchasing/views/requisitions/components/TriageRequisitionModal.vue -->
 <template>
-  <div
-    v-if="modelValue"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
-    dir="rtl"
+  <AppDialog
+    :model-value="modelValue"
+    @update:model-value="handleClose"
+    size="5xl"
+    border-color="border-primary"
+    :loading="isSubmitting"
   >
-    <div
-      class="bg-[#1e2027] border border-[#3b3e4f] rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] font-sans text-right"
-    >
-      <!-- ترويسة النافذة المنظمة -->
-      <div
-        class="px-5 py-4 bg-[#23252e] border-b border-[#3b3e4f] flex justify-between items-center"
-      >
-        <div class="flex items-center gap-3">
-          <span class="w-2 h-6 bg-[#e05e2b] rounded-full inline-block"></span>
-          <div>
-            <h2 class="text-sm font-black text-white flex items-center gap-2">
-              <span>فرز وتوجيه بنود طلب الاحتياج</span>
-              <span
-                class="text-xs px-2.5 py-0.5 rounded-lg bg-[#e05e2b]/20 text-[#e05e2b] font-mono font-bold"
-              >
-                {{ requisition?.requisition_number || `#${requisition?.id}` }}
-              </span>
-            </h2>
-            <p class="text-[11px] text-gray-400 mt-0.5">
-              توجيه آلي للأرصدة المتوفرة، مطابقة البنود الحرة، وإدارة التجزئة عند العجز الجزئي
-            </p>
-          </div>
+    <template #title>
+      <div class="flex flex-col gap-0.5 text-right" dir="rtl">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-sm sm:text-base font-black text-text-primary">
+            فرز وتوجيه بنود طلب الاحتياج
+          </span>
+          <AppBadge variant="primary" size="sm" class="font-mono">
+            {{ requisition?.requisition_number || `#${requisition?.id}` }}
+          </AppBadge>
         </div>
-
-        <button
-          type="button"
-          @click="handleClose"
-          class="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-[#343746] transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+        <span class="text-[11px] font-medium text-text-muted">
+          توجيه آلي للأرصدة المتوفرة، مطابقة البنود الحرة، وإدارة التجزئة عند العجز الجزئي
+        </span>
       </div>
+    </template>
 
-      <!-- جسم النافذة وشريط التحكم الذكي -->
-      <div class="p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
-        <!-- شريط العمليات: تحديد المستودع + زر الفرز الذكي -->
-        <div
-          class="bg-[#181a20] border border-[#383c4b] p-3.5 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
-        >
-          <div class="flex items-center gap-3 w-full md:w-auto">
-            <div
-              class="w-9 h-9 rounded-xl bg-[#e05e2b]/15 text-[#e05e2b] flex items-center justify-center shrink-0"
-            >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
-                />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <span class="text-xs font-bold text-gray-200 block">مستودع الفحص والصرف</span>
-              <span class="text-[10px] text-gray-400">تحديث أرصدة الأصناف ومسارات التوجيه</span>
-            </div>
-
-            <div class="w-56">
-              <select
-                v-model="selectedWarehouseId"
-                @change="handleWarehouseChange"
-                :disabled="loadingWarehouses || requisitionStore.triageLoading"
-                class="w-full bg-[#121418] border border-[#3b3e4f] rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-[#e05e2b] focus:outline-none disabled:opacity-50 font-bold cursor-pointer"
-              >
-                <option value="" disabled>-- اختر المستودع --</option>
-                <option v-for="wh in warehousesList" :key="wh.id" :value="wh.id">
-                  {{ wh.name }} {{ wh.code ? `(${wh.code})` : '' }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- زر إعادة التوجيه الذكي بنقرة واحدة -->
-          <button
-            type="button"
-            @click="applySmartAutoAllocation"
-            :disabled="requisitionStore.triageLoading || triageRows.length === 0"
-            class="h-9 px-3.5 bg-[#232630] hover:bg-[#2c303d] border border-[#e05e2b]/50 hover:border-[#e05e2b] text-[#e05e2b] text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 self-end md:self-auto shrink-0 shadow-sm"
+    <!-- جسم النافذة وشريط التحكم الذكي -->
+    <div class="-m-3 space-y-3.5 font-sans text-right" dir="rtl">
+      <!-- شريط العمليات: تحديد المستودع + زر الفرز الذكي -->
+      <div
+        class="p-3 bg-surface-header/60 border border-surface-border border-t-4 border-t-primary rounded-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-2xs"
+      >
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+          <div
+            class="w-9 h-9 rounded-lg bg-primary/12 text-primary border border-primary/25 flex items-center justify-center shrink-0"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
               />
             </svg>
-            <span>توزيع تلقائي ذكي</span>
-          </button>
-        </div>
-
-        <!-- مؤشر التحميل أثناء قراءة الأرصدة -->
-        <div
-          v-if="requisitionStore.triageLoading"
-          class="py-16 flex flex-col items-center justify-center space-y-3"
-        >
-          <div
-            class="w-8 h-8 border-2 border-[#e05e2b] border-t-transparent rounded-full animate-spin"
-          ></div>
-          <span class="text-xs font-bold text-gray-400"
-            >جاري قراءة الأرصدة اللحظية للمستودع المختار...</span
-          >
-        </div>
-
-        <!-- جدول التوجيه بعد الفرز الآلي -->
-        <div
-          v-else-if="triageRows.length > 0"
-          class="border border-[#383c4b] rounded-xl overflow-hidden bg-[#181a20]"
-        >
-          <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs text-gray-300">
-              <thead class="bg-[#23252e] text-gray-400 font-bold border-b border-[#383c4b]">
-                <tr>
-                  <th class="p-3 text-center w-12">#</th>
-                  <th class="p-3 min-w-[260px]">بيان الصنف أو الخدمة</th>
-                  <th class="p-3 text-center w-28">المطلوب / المتبقي</th>
-                  <th class="p-3 text-center w-28">الرصيد بالمستودع</th>
-                  <th class="p-3 text-center min-w-[190px]">مسار التنفيذ</th>
-                  <th class="p-3 text-center w-24">الكمية الموجهة</th>
-                  <th class="p-3 text-center min-w-[130px]">إجراءات ومعالجة</th>
-                </tr>
-              </thead>
-
-              <tbody class="divide-y divide-[#2a2d3a]">
-                <tr
-                  v-for="(row, idx) in triageRows"
-                  :key="row.unique_row_id || row.requisition_item_id + '-' + idx"
-                  class="hover:bg-[#1e2028] transition-colors"
-                  :class="row.is_split_child ? 'bg-[#15171d]/60' : ''"
-                >
-                  <!-- الرقم التسلسلي والتمييز -->
-                  <td class="p-3 font-mono text-center text-gray-500 align-middle">
-                    <span v-if="!row.is_split_child">{{ idx + 1 }}</span>
-                    <span v-else class="text-[#e05e2b] text-[10px] font-bold">&rdquor;</span>
-                  </td>
-
-                  <!-- تفاصيل الصنف وشارات التمييز -->
-                  <td class="p-3 align-middle">
-                    <div class="flex flex-col gap-1">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <span
-                          class="text-[9px] px-1.5 py-0.2 rounded font-bold"
-                          :class="
-                            row.is_free_text
-                              ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30'
-                              : row.is_manually_matched
-                                ? 'bg-indigo-950/60 text-indigo-400 border border-indigo-500/30'
-                                : 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'
-                          "
-                        >
-                          {{
-                            row.is_free_text
-                              ? 'مخصص'
-                              : row.is_manually_matched
-                                ? 'تمت المطابقة'
-                                : 'مخزني'
-                          }}
-                        </span>
-
-                        <span class="font-bold text-white">{{ row.item_name }}</span>
-
-                        <span
-                          v-if="row.is_split_parent"
-                          class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-500/20"
-                        >
-                          تجزئة: صرف المخزون
-                        </span>
-
-                        <span
-                          v-if="row.is_split_child"
-                          class="text-[9px] px-1.5 py-0.2 rounded bg-sky-950/40 text-sky-300 border border-sky-500/20"
-                        >
-                          تجزئة: استكمال بالشراء
-                        </span>
-                      </div>
-
-                      <div
-                        v-if="row.specifications"
-                        class="text-[10px] text-gray-400 truncate max-w-xs"
-                      >
-                        {{ row.specifications }}
-                      </div>
-                    </div>
-                  </td>
-
-                  <!-- الكمية المطلوبة والمتبقية -->
-                  <td class="p-3 text-center font-mono align-middle">
-                    <span class="text-white font-bold">{{ row.remaining_quantity }}</span>
-                    <span class="text-[10px] text-gray-500 block">
-                      من {{ row.quantity_requested }}
-                    </span>
-                  </td>
-
-                  <!-- الرصيد المتاح بالمستودع -->
-                  <td class="p-3 text-center align-middle">
-                    <div v-if="row.is_free_text" class="text-gray-500 text-[10px]">
-                      غير مسجل بالمستودع
-                    </div>
-                    <div v-else>
-                      <span
-                        class="inline-block px-2 py-0.5 rounded-full text-xs font-mono font-bold border"
-                        :class="
-                          row.available_stock >= row.remaining_quantity
-                            ? 'bg-emerald-950/50 text-emerald-400 border-emerald-500/30'
-                            : row.available_stock > 0
-                              ? 'bg-amber-950/50 text-amber-400 border-amber-500/30'
-                              : 'bg-rose-950/50 text-rose-400 border-rose-500/30'
-                        "
-                      >
-                        {{ row.available_stock }}
-                      </span>
-                    </div>
-                  </td>
-
-                  <!-- مسار التنفيذ -->
-                  <td class="p-3 text-center align-middle">
-                    <div
-                      class="inline-flex bg-[#121418] p-1 rounded-lg border border-[#333644] gap-1"
-                    >
-                      <button
-                        type="button"
-                        @click="row.action = 'issue'"
-                        :disabled="!row.can_issue_from_warehouse || row.remaining_quantity <= 0"
-                        class="px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 disabled:opacity-20 disabled:cursor-not-allowed"
-                        :class="
-                          row.action === 'issue'
-                            ? 'bg-[#e05e2b] text-white shadow-sm'
-                            : 'text-gray-400 hover:text-white'
-                        "
-                      >
-                        <svg
-                          class="w-3.5 h-3.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span>صرف مخزني</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        @click="row.action = 'purchase'"
-                        :disabled="row.remaining_quantity <= 0"
-                        class="px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 disabled:opacity-20 disabled:cursor-not-allowed"
-                        :class="
-                          row.action === 'purchase'
-                            ? 'bg-sky-600 text-white shadow-sm'
-                            : 'text-gray-400 hover:text-white'
-                        "
-                      >
-                        <svg
-                          class="w-3.5 h-3.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                          />
-                        </svg>
-                        <span>شراء خارجي</span>
-                      </button>
-                    </div>
-                  </td>
-
-                  <!-- الكمية الموجهة -->
-                  <td class="p-3 text-center align-middle">
-                    <input
-                      type="number"
-                      v-model.number="row.quantity"
-                      :max="row.remaining_quantity"
-                      min="0.0001"
-                      step="any"
-                      class="w-20 bg-[#121418] border border-[#3b3e4f] rounded px-2 py-1 text-center font-mono text-xs text-white focus:border-[#e05e2b] focus:outline-none font-bold"
-                    />
-                  </td>
-
-                  <!-- معالجة الصنف: المطابقة والتجزئة الذكية -->
-                  <td class="p-3 text-center align-middle">
-                    <div class="flex items-center justify-center gap-2">
-                      <!-- 1. زر التجزئة التلقائية عند العجز الجزئي -->
-                      <button
-                        v-if="canSplitRow(row)"
-                        type="button"
-                        @click="handleSplitRow(row, idx)"
-                        class="px-2 py-1 bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
-                        title="صرف المتوفر بالمستودع وشراء المتبقي آلياً"
-                      >
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                          />
-                        </svg>
-                        <span>تجزئة تلقائية</span>
-                      </button>
-
-                      <!-- 2. زر التراجع عن التجزئة -->
-                      <button
-                        v-if="row.is_split_parent"
-                        type="button"
-                        @click="handleRevertSplit(row, idx)"
-                        class="text-[10px] text-gray-400 hover:text-white underline font-semibold"
-                        title="إلغاء التجزئة ودمج السطرين"
-                      >
-                        دمج السطرين
-                      </button>
-
-                      <!-- 3. زر مطابقة الصنف المخصص (يفتح نافذة منبثقة سريعة) -->
-                      <button
-                        v-if="row.is_free_text"
-                        type="button"
-                        @click="openMatchingDialog(row)"
-                        class="px-2 py-1 bg-[#282b36] hover:bg-[#343846] text-[#e05e2b] border border-[#e05e2b]/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1"
-                      >
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                          />
-                        </svg>
-                        <span>ربط بالدليل</span>
-                      </button>
-
-                      <!-- 4. زر التراجع عن المطابقة اليدوية -->
-                      <button
-                        v-if="row.is_manually_matched"
-                        type="button"
-                        @click="handleRevertMatch(row)"
-                        class="text-[10px] text-rose-400 hover:text-rose-300 underline font-semibold"
-                        title="إلغاء المطابقة والعودة للاسم الحر"
-                      >
-                        إلغاء الربط
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
           </div>
-        </div>
 
-        <div v-else class="py-16 text-center text-gray-400 text-xs font-medium">
-          يرجى اختيار المستودع من القائمة أعلاه لعرض أرصدة وتوجيه الأصناف.
-        </div>
-      </div>
+          <div class="min-w-[150px]">
+            <span class="text-xs font-black text-text-primary block">مستودع الفحص والصرف</span>
+            <span class="text-[10px] text-text-muted">تحديث أرصدة الأصناف ومسارات التوجيه</span>
+          </div>
 
-      <!-- تذييل النافذة والأزرار -->
-      <div
-        class="px-5 py-4 bg-[#23252e] border-t border-[#3b3e4f] flex flex-col sm:flex-row justify-between items-center gap-3"
-      >
-        <div class="flex items-center gap-4 text-xs font-bold">
-          <span class="flex items-center gap-1.5 text-gray-300">
-            <span class="w-2 h-2 rounded-full bg-[#e05e2b]"></span>
-            <span
-              >صرف مخزني: <strong class="font-mono text-white">{{ issueCount }}</strong> بند</span
-            >
-          </span>
-          <span class="flex items-center gap-1.5 text-gray-300">
-            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-            <span
-              >شراء خارجي:
-              <strong class="font-mono text-white">{{ purchaseCount }}</strong> بند</span
-            >
-          </span>
-        </div>
-
-        <div class="flex items-center gap-2.5 w-full sm:w-auto">
-          <button
-            type="button"
-            @click="handleClose"
-            :disabled="isSubmitting"
-            class="px-4 py-2 text-xs font-bold text-gray-300 bg-[#343746] hover:bg-[#3f4354] rounded-xl transition-all w-full sm:w-auto"
+          <div
+            class="relative w-full sm:w-64 h-9 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
           >
-            إلغاء وتراجع
-          </button>
-
-          <button
-            type="button"
-            @click="handleExecuteTriage"
-            :disabled="isSubmitting || !selectedWarehouseId || triageRows.length === 0"
-            class="px-5 py-2 text-xs font-bold text-white bg-[#e05e2b] hover:bg-[#d04f1e] rounded-xl transition-all shadow-[0_0_15px_rgba(224,94,43,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto"
-          >
+            <select
+              v-model="selectedWarehouseId"
+              @change="handleWarehouseChange"
+              :disabled="loadingWarehouses || requisitionStore.triageLoading"
+              class="block w-full h-full pr-3 pl-8 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-50"
+            >
+              <option value="" disabled class="bg-surface-section text-text-muted">
+                -- اختر المستودع --
+              </option>
+              <option
+                v-for="wh in warehousesList"
+                :key="wh.id"
+                :value="wh.id"
+                class="bg-surface-section text-text-primary font-bold"
+              >
+                {{ wh.name }} {{ wh.code ? `(${wh.code})` : '' }}
+              </option>
+            </select>
             <span
-              v-if="isSubmitting"
-              class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"
-            ></span>
-            <span>اعتماد التوجيه وتنفيذ الإجراءات</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- نافذة مطابقة الصنف المنبثقة الخفيفة (بدون تشويه الجدول) -->
-    <div
-      v-if="activeMatchingRow"
-      class="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
-    >
-      <div
-        class="bg-[#1e2027] border border-[#484c60] rounded-2xl w-full max-w-lg shadow-2xl p-5 space-y-4 text-right"
-      >
-        <div class="flex items-center justify-between border-b border-[#3b3e4f] pb-3">
-          <div>
-            <h3 class="text-xs font-bold text-white flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-[#e05e2b]"></span>
-              <span>مطابقة البند مع دليل الأصناف</span>
-            </h3>
-            <span class="text-[11px] text-gray-400 font-mono block mt-0.5">
-              البند الحالي: "{{
-                activeMatchingRow.original_item_name || activeMatchingRow.item_name
-              }}"
+              class="absolute left-3 inset-y-0 flex items-center text-text-muted pointer-events-none text-[9px]"
+            >
+              ▼
             </span>
           </div>
-
-          <button
-            type="button"
-            @click="closeMatchingDialog"
-            class="text-gray-400 hover:text-white p-1 rounded-lg"
-          >
-            ✕
-          </button>
         </div>
 
-        <!-- حقل البحث اللحظي من السيرفر -->
-        <div class="relative">
-          <input
-            type="text"
-            v-model="matchSearchQuery"
-            @input="onMatchSearchInput"
-            placeholder="اكتب اسم الصنف، الكود، أو الباركود..."
-            class="w-full h-10 px-3 bg-[#121418] border border-[#3b3e4f] focus:border-[#e05e2b] rounded-xl text-white text-xs font-semibold outline-none transition-all"
-            autofocus
-          />
-        </div>
-
-        <!-- مؤشر التحميل وقائمة النتائج -->
-        <div
-          class="min-h-[160px] max-h-[220px] overflow-y-auto divide-y divide-[#2a2d3a] border border-[#2e3240] rounded-xl bg-[#14161c]"
+        <!-- زر إعادة التوجيه الذكي بنقرة واحدة -->
+        <button
+          type="button"
+          @click="applySmartAutoAllocation"
+          :disabled="requisitionStore.triageLoading || triageRows.length === 0"
+          class="h-9 px-3.5 bg-surface-card hover:bg-primary hover:text-white text-primary border border-primary/45 hover:border-primary text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div
-            v-if="isSearchingMatch"
-            class="p-6 text-center text-gray-400 text-xs flex items-center justify-center gap-2"
-          >
-            <span
-              class="w-3.5 h-3.5 border-2 border-[#e05e2b] border-t-transparent rounded-full animate-spin"
-            ></span>
-            <span>جاري البحث في دليل الأصناف...</span>
-          </div>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+          </svg>
+          <span>توزيع تلقائي ذكي</span>
+        </button>
+      </div>
 
-          <div v-else-if="matchResults.length === 0" class="p-6 text-center text-gray-500 text-xs">
-            {{
-              matchSearchQuery.trim().length < 2
-                ? 'اكتب حرفين على الأقل للبحث...'
-                : 'لا توجد نتائج مطابقة.'
-            }}
-          </div>
+      <!-- مؤشر التحميل أثناء قراءة الأرصدة -->
+      <div
+        v-if="requisitionStore.triageLoading"
+        class="py-14 flex flex-col items-center justify-center space-y-3 bg-surface-section rounded-2xl border border-surface-border"
+      >
+        <div
+          class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"
+        ></div>
+        <span class="text-xs font-bold text-text-secondary">
+          جاري قراءة الأرصدة اللحظية للمستودع المختار...
+        </span>
+      </div>
 
-          <template v-else>
-            <div
-              v-for="prod in matchResults"
-              :key="prod.id"
-              @click="handleSelectMatch(prod)"
-              class="p-2.5 hover:bg-[#222530] cursor-pointer flex items-center justify-between transition-colors"
-            >
-              <div class="flex flex-col gap-0.5">
-                <span class="text-xs font-bold text-white">{{ prod.name }}</span>
-                <span class="text-[10px] text-gray-400 font-mono">كود: PRD-{{ prod.id }}</span>
-              </div>
-              <span
-                class="text-[10px] font-bold text-[#e05e2b] bg-[#e05e2b]/10 px-2 py-0.5 rounded"
+      <!-- منصة جدول التوجيه المجسّمة بعد الفرز الآلي -->
+      <div
+        v-else-if="triageRows.length > 0"
+        class="invoice-stage-3d rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse text-xs">
+            <thead class="invoice-thead-3d select-none h-11 tracking-tight">
+              <tr>
+                <th
+                  class="px-3 py-2.5 text-center w-12 text-slate-400 dark:text-slate-600 font-mono"
+                >
+                  #
+                </th>
+                <th
+                  class="px-3 py-2.5 min-w-[240px] text-right font-black text-white dark:text-slate-900 text-[13px]"
+                >
+                  <span class="inline-flex items-center gap-2">
+                    <span
+                      class="w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/25 inline-block"
+                    ></span>
+                    بيان الصنف أو الخدمة
+                  </span>
+                </th>
+                <th
+                  class="px-2.5 py-2.5 text-center w-28 font-bold text-slate-200 dark:text-slate-800"
+                >
+                  المطلوب / المتبقي
+                </th>
+                <th class="px-2.5 py-2.5 text-center w-28 font-bold text-sky-300 dark:text-sky-700">
+                  الرصيد بالمستودع
+                </th>
+                <th
+                  class="px-2.5 py-2.5 text-center min-w-[195px] font-bold text-slate-200 dark:text-slate-800"
+                >
+                  مسار التنفيذ
+                </th>
+                <th
+                  class="px-2.5 py-2.5 text-center w-24 font-bold text-slate-200 dark:text-slate-800"
+                >
+                  الكمية الموجهة
+                </th>
+                <th
+                  class="px-2.5 py-2.5 text-center min-w-[135px] font-bold text-slate-300 dark:text-slate-700"
+                >
+                  إجراءات ومعالجة
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-surface-border/70">
+              <tr
+                v-for="(row, idx) in triageRows"
+                :key="row.unique_row_id || row.requisition_item_id + '-' + idx"
+                class="invoice-row-3d h-13"
+                :class="row.is_split_child ? 'invoice-row-empty' : 'invoice-row-filled'"
               >
-                ربط بالبند ↵
-              </span>
-            </div>
-          </template>
-        </div>
+                <!-- الرقم التسلسلي والتمييز -->
+                <td class="px-2.5 py-2 font-mono text-center align-middle">
+                  <span
+                    v-if="!row.is_split_child"
+                    class="w-5 h-5 rounded-md inline-flex items-center justify-center font-black text-[11px] bg-primary text-white shadow-2xs"
+                  >
+                    {{ idx + 1 }}
+                  </span>
+                  <span v-else class="text-primary text-xs font-black">”</span>
+                </td>
 
-        <div class="flex justify-end pt-1">
-          <button
-            type="button"
-            @click="closeMatchingDialog"
-            class="px-4 py-1.5 text-xs font-bold text-gray-300 bg-[#2b2e3a] hover:bg-[#343846] rounded-xl transition-all"
-          >
-            إلغاء
-          </button>
+                <!-- تفاصيل الصنف وشارات التمييز -->
+                <td class="px-3 py-2 align-middle">
+                  <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <AppBadge
+                        :variant="
+                          row.is_free_text
+                            ? 'warning'
+                            : row.is_manually_matched
+                              ? 'info'
+                              : 'success'
+                        "
+                        size="xs"
+                      >
+                        {{
+                          row.is_free_text
+                            ? 'مخصص'
+                            : row.is_manually_matched
+                              ? 'تمت المطابقة'
+                              : 'مخزني'
+                        }}
+                      </AppBadge>
+
+                      <span class="font-bold text-text-primary text-xs">{{ row.item_name }}</span>
+
+                      <AppBadge v-if="row.is_split_parent" variant="success" size="xs">
+                        تجزئة: صرف المخزون
+                      </AppBadge>
+
+                      <AppBadge v-if="row.is_split_child" variant="info" size="xs">
+                        تجزئة: استكمال بالشراء
+                      </AppBadge>
+                    </div>
+
+                    <div
+                      v-if="row.specifications"
+                      class="text-[10px] text-text-muted truncate max-w-xs"
+                    >
+                      {{ row.specifications }}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- الكمية المطلوبة والمتبقية -->
+                <td class="px-2.5 py-2 text-center font-mono align-middle">
+                  <span class="text-text-primary font-black text-xs">
+                    {{ row.remaining_quantity }}
+                  </span>
+                  <span class="text-[10px] text-text-muted block">
+                    من {{ row.quantity_requested }}
+                  </span>
+                </td>
+
+                <!-- الرصيد المتاح بالمستودع -->
+                <td class="px-2.5 py-2 text-center align-middle">
+                  <div v-if="row.is_free_text" class="text-text-muted text-[10px] font-medium">
+                    غير مسجل بالمستودع
+                  </div>
+                  <div v-else class="flex justify-center">
+                    <AppBadge
+                      :variant="
+                        row.available_stock >= row.remaining_quantity
+                          ? 'success'
+                          : row.available_stock > 0
+                            ? 'warning'
+                            : 'danger'
+                      "
+                      size="xs"
+                      pill
+                      class="font-mono font-bold"
+                    >
+                      {{ row.available_stock }}
+                    </AppBadge>
+                  </div>
+                </td>
+
+                <!-- مسار التنفيذ -->
+                <td class="px-2.5 py-2 text-center align-middle">
+                  <div
+                    class="inline-flex bg-surface-ground p-1 rounded-xl border border-surface-border gap-1 shadow-2xs"
+                  >
+                    <button
+                      type="button"
+                      @click="row.action = 'issue'"
+                      :disabled="!row.can_issue_from_warehouse || row.remaining_quantity <= 0"
+                      class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      :class="
+                        row.action === 'issue'
+                          ? 'bg-primary text-white shadow-2xs'
+                          : 'text-text-secondary hover:text-text-primary'
+                      "
+                    >
+                      <svg
+                        class="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span>صرف مخزني</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      @click="row.action = 'purchase'"
+                      :disabled="row.remaining_quantity <= 0"
+                      class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      :class="
+                        row.action === 'purchase'
+                          ? 'bg-info text-white shadow-2xs'
+                          : 'text-text-secondary hover:text-text-primary'
+                      "
+                    >
+                      <svg
+                        class="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                      <span>شراء خارجي</span>
+                    </button>
+                  </div>
+                </td>
+
+                <!-- الكمية الموجهة -->
+                <td class="px-2.5 py-2 text-center align-middle">
+                  <input
+                    type="number"
+                    v-model.number="row.quantity"
+                    :max="row.remaining_quantity"
+                    min="0.0001"
+                    step="any"
+                    class="invoice-pill-editable w-20 h-8 px-2 border rounded-xl text-center font-mono text-xs text-text-primary outline-none font-black transition-all"
+                  />
+                </td>
+
+                <!-- معالجة الصنف: المطابقة والتجزئة الذكية -->
+                <td class="px-2.5 py-2 text-center align-middle">
+                  <div class="flex items-center justify-center gap-2">
+                    <!-- 1. زر التجزئة التلقائية عند العجز الجزئي -->
+                    <button
+                      v-if="canSplitRow(row)"
+                      type="button"
+                      @click="handleSplitRow(row, idx)"
+                      class="px-2.5 py-1 bg-warning/12 hover:bg-warning hover:text-white text-warning border border-warning/35 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                      title="صرف المتوفر بالمستودع وشراء المتبقي آلياً"
+                    >
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                        />
+                      </svg>
+                      <span>تجزئة تلقائية</span>
+                    </button>
+
+                    <!-- 2. زر التراجع عن التجزئة -->
+                    <button
+                      v-if="row.is_split_parent"
+                      type="button"
+                      @click="handleRevertSplit(row, idx)"
+                      class="text-[10px] text-text-secondary hover:text-primary underline font-bold cursor-pointer"
+                      title="إلغاء التجزئة ودمج السطرين"
+                    >
+                      دمج السطرين
+                    </button>
+
+                    <!-- 3. زر مطابقة الصنف المخصص -->
+                    <button
+                      v-if="row.is_free_text"
+                      type="button"
+                      @click="openMatchingDialog(row)"
+                      class="px-2.5 py-1 bg-primary/10 hover:bg-primary hover:text-white text-primary border border-primary/30 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                        />
+                      </svg>
+                      <span>ربط بالدليل</span>
+                    </button>
+
+                    <!-- 4. زر التراجع عن المطابقة اليدوية -->
+                    <button
+                      v-if="row.is_manually_matched"
+                      type="button"
+                      @click="handleRevertMatch(row)"
+                      class="text-[10px] text-danger hover:underline font-bold cursor-pointer"
+                      title="إلغاء المطابقة والعودة للاسم الحر"
+                    >
+                      إلغاء الربط
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
+
+      <div
+        v-else
+        class="py-14 text-center text-text-muted text-xs font-medium bg-surface-section rounded-2xl border border-surface-border"
+      >
+        يرجى اختيار المستودع من القائمة أعلاه لعرض أرصدة وتوجيه الأصناف.
+      </div>
     </div>
-  </div>
+
+    <!-- تذييل النافذة والأزرار -->
+    <template #footer>
+      <div
+        class="w-full flex flex-col sm:flex-row justify-between items-center gap-3 text-right font-sans"
+        dir="rtl"
+      >
+        <div class="flex items-center gap-2.5 text-xs font-bold flex-wrap">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/25 text-text-primary"
+          >
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span>صرف مخزني:</span>
+            <strong class="font-mono text-primary font-black">{{ issueCount }}</strong>
+            <span>بند</span>
+          </span>
+
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-info/10 border border-info/25 text-text-primary"
+          >
+            <span class="w-2 h-2 rounded-full bg-info"></span>
+            <span>شراء خارجي:</span>
+            <strong class="font-mono text-info font-black">{{ purchaseCount }}</strong>
+            <span>بند</span>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <AppButton
+            type="button"
+            variant="secondary"
+            size="sm"
+            :disabled="isSubmitting"
+            @click="handleClose"
+          >
+            إلغاء وتراجع
+          </AppButton>
+
+          <AppButton
+            type="button"
+            size="sm"
+            :disabled="isSubmitting || !selectedWarehouseId || triageRows.length === 0"
+            @click="handleExecuteTriage"
+          >
+            <span v-if="isSubmitting">جاري الاعتماد والتنفيذ...</span>
+            <span v-else>اعتماد التوجيه وتنفيذ الإجراءات</span>
+          </AppButton>
+        </div>
+      </div>
+    </template>
+
+    <!-- نافذة مطابقة الصنف المنبثقة الخفيفة -->
+    <Teleport to="body">
+      <div
+        v-if="activeMatchingRow"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+        dir="rtl"
+        @click.self="closeMatchingDialog"
+      >
+        <div
+          class="bg-surface-section border border-surface-border border-t-4 border-t-primary rounded-xl w-full max-w-lg shadow-2xl overflow-hidden text-right font-sans"
+        >
+          <div
+            class="flex items-center justify-between px-4 py-3 border-b border-surface-border bg-surface-card/40"
+          >
+            <div>
+              <h3 class="text-xs font-black text-text-primary flex items-center gap-1.5">
+                <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+                <span>مطابقة البند مع دليل الأصناف</span>
+              </h3>
+              <span class="text-[11px] text-text-muted font-mono block mt-0.5">
+                البند الحالي: "{{
+                  activeMatchingRow.original_item_name || activeMatchingRow.item_name
+                }}"
+              </span>
+            </div>
+
+            <button
+              type="button"
+              @click="closeMatchingDialog"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="p-4 space-y-3 bg-surface-header/40">
+            <!-- حقل البحث اللحظي من السيرفر -->
+            <div
+              class="relative w-full h-10 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-2xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 overflow-hidden"
+            >
+              <span class="absolute right-3 text-text-muted pointer-events-none">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </span>
+              <input
+                type="text"
+                v-model="matchSearchQuery"
+                @input="onMatchSearchInput"
+                placeholder="اكتب اسم الصنف، الكود، أو الباركود..."
+                class="w-full h-full pr-9 pl-3 bg-transparent text-text-primary placeholder:text-text-muted text-xs font-semibold outline-none"
+                autofocus
+              />
+            </div>
+
+            <!-- مؤشر التحميل وقائمة النتائج -->
+            <div
+              class="min-h-[160px] max-h-[220px] overflow-y-auto divide-y divide-surface-border/60 border border-surface-border rounded-xl bg-surface-card shadow-2xs"
+            >
+              <div
+                v-if="isSearchingMatch"
+                class="p-6 text-center text-text-muted text-xs flex items-center justify-center gap-2 font-semibold"
+              >
+                <span
+                  class="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"
+                ></span>
+                <span>جاري البحث في دليل الأصناف...</span>
+              </div>
+
+              <div
+                v-else-if="matchResults.length === 0"
+                class="p-6 text-center text-text-muted text-xs font-medium"
+              >
+                {{
+                  matchSearchQuery.trim().length < 2
+                    ? 'اكتب حرفين على الأقل للبحث...'
+                    : 'لا توجد نتائج مطابقة.'
+                }}
+              </div>
+
+              <template v-else>
+                <div
+                  v-for="prod in matchResults"
+                  :key="prod.id"
+                  @click="handleSelectMatch(prod)"
+                  class="p-2.5 hover:bg-primary/10 cursor-pointer flex items-center justify-between transition-colors"
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-xs font-bold text-text-primary">{{ prod.name }}</span>
+                    <span class="text-[10px] text-text-muted font-mono">
+                      كود: PRD-{{ prod.id }}
+                    </span>
+                  </div>
+                  <span
+                    class="text-[10px] font-bold text-primary bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-lg"
+                  >
+                    ربط بالبند ↵
+                  </span>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="px-4 py-3 border-t border-surface-border bg-surface-card/20 flex justify-end">
+            <AppButton type="button" variant="secondary" size="sm" @click="closeMatchingDialog">
+              إلغاء
+            </AppButton>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </AppDialog>
 </template>
 
 <script setup>
@@ -522,6 +577,9 @@ import { ref, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { usePurchaseRequisitionStore } from '@/modules/purchasing/stores/purchaseRequisitionStore'
 import apiClient from '@/services/apiClient'
+import AppDialog from '@/components/ui/AppDialog.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -664,7 +722,7 @@ const handleSplitRow = (row, index) => {
 }
 
 // إلغاء التجزئة ودمج السطرين
-const handleRevertSplit = (parentRow, parentIndex) => {
+const handleRevertSplit = (parentRow) => {
   const childIndex = triageRows.value.findIndex(
     (r) => r.is_split_child && r.split_parent_id === parentRow.requisition_item_id,
   )
@@ -829,6 +887,7 @@ const handleExecuteTriage = async () => {
 }
 
 const handleClose = () => {
+  if (isSubmitting.value) return
   emit('update:modelValue', false)
   emit('close')
 }
@@ -846,16 +905,3 @@ watch(
   },
 )
 </script>
-
-<style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #181a20;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #383c4b;
-  border-radius: 3px;
-}
-</style>
