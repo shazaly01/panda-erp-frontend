@@ -13,6 +13,14 @@ import {
 } from '@heroicons/vue/24/outline'
 
 export default [
+  // --- 0. لوحة تحكم المحاسبة ---
+  {
+    name: 'لوحة تحكم المحاسبة',
+    routeName: 'accounting.dashboard',
+    icon: PresentationChartLineIcon,
+    permission: 'dashboard.view',
+  },
+
   // --- 1. مجموعة العمليات اليومية والتخطيط ---
   {
     name: 'العمليات المالية',

@@ -19,7 +19,7 @@
     >
       <button
         :ref="(el) => setModuleRef('accounting', el)"
-        @click="appStore.setActiveModule('accounting')"
+        @click="handleSelectModule('accounting')"
         :class="[
           appStore.activeModule === 'accounting'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
@@ -33,7 +33,7 @@
 
       <button
         :ref="(el) => setModuleRef('sales', el)"
-        @click="appStore.setActiveModule('sales')"
+        @click="handleSelectModule('sales')"
         :class="[
           appStore.activeModule === 'sales'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
@@ -47,7 +47,7 @@
 
       <button
         :ref="(el) => setModuleRef('purchasing', el)"
-        @click="appStore.setActiveModule('purchasing')"
+        @click="handleSelectModule('purchasing')"
         :class="[
           appStore.activeModule === 'purchasing'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
@@ -61,7 +61,7 @@
 
       <button
         :ref="(el) => setModuleRef('inventory', el)"
-        @click="appStore.setActiveModule('inventory')"
+        @click="handleSelectModule('inventory')"
         :class="[
           appStore.activeModule === 'inventory'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
@@ -75,7 +75,7 @@
 
       <button
         :ref="(el) => setModuleRef('hr', el)"
-        @click="appStore.setActiveModule('hr')"
+        @click="handleSelectModule('hr')"
         :class="[
           appStore.activeModule === 'hr'
             ? 'bg-primary text-white shadow-md shadow-primary/20'
@@ -126,6 +126,7 @@
 
 <script setup>
 import { ref, watch, onMounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useAppStore } from '@/stores/appStore'
 import { useThemeStore } from '@/stores/themeStore'
@@ -140,10 +141,26 @@ import {
   ShoppingCartIcon,
 } from '@heroicons/vue/24/outline'
 
-defineEmits(['open-sidebar'])
+const emit = defineEmits(['open-sidebar', 'module-selected'])
+const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 const themeStore = useThemeStore()
+
+// خريطة مسارات لوحات التحكم لكل موديول (قابلة للتوسع عند بناء لوحات باقي الموديولات)
+const moduleDashboards = {
+  accounting: 'accounting.dashboard',
+}
+
+const handleSelectModule = (moduleKey) => {
+  appStore.setActiveModule(moduleKey)
+  emit('module-selected', moduleKey)
+
+  const targetRouteName = moduleDashboards[moduleKey]
+  if (targetRouteName && router.hasRoute(targetRouteName)) {
+    router.push({ name: targetRouteName })
+  }
+}
 
 const moduleRefs = ref({})
 

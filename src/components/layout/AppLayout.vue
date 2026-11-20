@@ -47,7 +47,11 @@
           تمت إضافة z-20 و relative هنا لضمان أن الهيدر دائمًا قابل للنقر
           ويكون فوق المحتوى ولكن تحت الـ Dialog (z-50)
         -->
-        <TheHeader @open-sidebar="isSidebarOpen = true" class="relative z-20" />
+        <TheHeader
+          @open-sidebar="isSidebarOpen = true"
+          @module-selected="handleModuleSelected"
+          class="relative z-20"
+        />
         <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
           <RouterView />
         </main>
@@ -65,4 +69,10 @@ import TheSidebar from './TheSidebar.vue'
 import TheHeader from './TheHeader.vue'
 
 const isSidebarOpen = ref(false)
+
+const handleModuleSelected = () => {
+  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+    isSidebarOpen.value = true
+  }
+}
 </script>

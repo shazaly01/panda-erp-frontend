@@ -1,4 +1,7 @@
 //src\modules\accounting\router.js
+// --- استيراد لوحة تحكم المحاسبة ---
+const AccountingDashboardView = () => import('./views/dashboard/AccountingDashboardView.vue')
+
 // --- استيراد شاشات المحاسبة (Lazy Loading) ---
 // تأكد أن المسارات هنا تطابق تماماً أسماء المجلدات التي أنشأتها على جهازك
 const AccountsList = () => import('./views/accounts/AccountsList.vue')
@@ -51,6 +54,16 @@ export default [
   {
     path: 'accounting',
     children: [
+      // ==========================================
+      // 0. لوحة تحكم المحاسبة (Dashboard)
+      // ==========================================
+      {
+        path: 'dashboard',
+        name: 'accounting.dashboard',
+        component: AccountingDashboardView,
+        meta: { permission: 'dashboard.view' },
+      },
+
       {
         path: 'accounts',
         name: 'AccountsList',

@@ -1,7 +1,7 @@
 <!--src\components\layout\TheSidebar.vue-->
 <template>
   <aside
-    class="flex h-full flex-col bg-surface-section border-l border-surface-border lg:border-l-0 lg:border-r transition-colors duration-200"
+    class="flex h-full flex-col bg-surface-section border-l border-surface-border lg:border-l-0 lg:border-r transition-colors duration-200 overflow-x-hidden"
   >
     <!-- رأس القائمة الجانبية -->
     <div
@@ -37,130 +37,165 @@
       </button>
     </div>
 
-    <!-- مساحة التمرير والروابط -->
-    <div class="flex flex-1 flex-col justify-between overflow-y-auto mt-2">
-      <nav class="space-y-1 px-4">
-        <template v-for="(item, itemIndex) in filteredNavLinks" :key="item.name || itemIndex">
-          <!-- فاصل عنوان رئيسي بين الكتل -->
-          <div v-if="item.type === 'header'" class="px-2 pt-4 pb-1.5 select-none">
-            <span class="text-[11px] font-bold text-text-muted/70 uppercase tracking-wider block">
-              {{ item.name }}
-            </span>
-          </div>
-
-          <!-- رابط مفرد مباشر -->
-          <RouterLink
-            v-else-if="!item.children"
-            :to="{ name: item.routeName }"
-            class="nav-link group"
-            @click="$emit('close-sidebar')"
-          >
-            <component
-              :is="item.icon"
-              class="h-5 w-5 transition-transform duration-200 group-hover:scale-110 flex-shrink-0"
-              :class="getTheme(item.theme).rootIcon"
-              stroke-width="1.5"
-            />
-            <span class="mx-2.5 text-sm font-medium">{{ item.name }}</span>
-          </RouterLink>
-
-          <!-- مجموعة منسدلة -->
-          <div v-else class="my-0.5">
-            <button
-              @click="toggleGroup(item.name)"
-              class="nav-group-button group"
-              :class="[
-                isGroupOpen(item.name) ? getTheme(item.theme).groupOpenHeader : '',
-                isGroupActive(item) ? getTheme(item.theme).activeGroupHeader : '',
-              ]"
-            >
-              <div class="flex items-center min-w-0">
-                <div
-                  class="flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0"
-                  :class="getTheme(item.theme).iconContainer"
-                >
-                  <component
-                    :is="item.icon"
-                    class="h-5 w-5 transition-transform duration-200 group-hover:scale-105 flex-shrink-0"
-                    stroke-width="1.5"
-                  />
-                </div>
-                <span class="mx-2.5 text-sm font-semibold truncate">{{ item.name }}</span>
-              </div>
-              <ChevronDownIcon
-                class="h-4 w-4 transform transition-transform duration-200 text-text-muted flex-shrink-0"
-                :class="{ 'rotate-180': isGroupOpen(item.name) }"
-              />
-            </button>
-
-            <!-- حاوية العناصر الفرعية مع تدرج لوني وحد جانبي مميز للموديول -->
-            <transition
-              enter-active-class="transition-all ease-in-out duration-300"
-              leave-active-class="transition-all ease-in-out duration-200"
-              enter-from-class="max-h-0 opacity-0"
-              enter-to-class="max-h-[600px] opacity-100"
-              leave-from-class="max-h-[600px] opacity-100"
-              leave-to-class="max-h-0 opacity-0"
+    <!-- مساحة التمرير والروابط مع حركة انتقال انسيابية عند تغيير الموديول -->
+    <div class="flex flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden mt-2">
+      <Transition name="sidebar-module-slide" mode="out-in">
+        <div :key="appStore.activeModule" class="space-y-3">
+          <!-- بطاقة هوية الموديول النشط -->
+          <div v-if="activeModuleMeta && !appStore.isSidebarCollapsed" class="px-4 pt-1">
+            <div
+              class="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-all duration-300"
+              :class="activeModuleMeta.bannerBg"
             >
               <div
-                v-show="isGroupOpen(item.name)"
-                class="mt-1 mr-2 space-y-1 overflow-hidden rounded-lg py-1.5 px-1.5 transition-colors duration-200"
-                :class="getTheme(item.theme).subContainer"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                :class="activeModuleMeta.iconBox"
               >
-                <template
-                  v-for="(child, childIndex) in item.children"
-                  :key="child.name || childIndex"
-                >
-                  <!-- عنوان تصنيف داخلي -->
-                  <div
-                    v-if="child.type === 'header'"
-                    class="px-3 pt-2.5 pb-1 select-none border-t border-surface-border/50 first:border-t-0 first:pt-1 mt-1.5 first:mt-0"
-                  >
-                    <span
-                      class="text-[10px] font-extrabold uppercase tracking-wider block"
-                      :class="getTheme(item.theme).subHeaderColor"
-                    >
-                      {{ child.name }}
-                    </span>
-                  </div>
-
-                  <!-- الروابط الفرعية داخل المجموعة المنسدلة -->
-                  <RouterLink
-                    v-else
-                    :to="{ name: child.routeName }"
-                    v-slot="{ isExactActive, navigate, href }"
-                    custom
-                    @click="$emit('close-sidebar')"
-                  >
-                    <a
-                      :href="href"
-                      @click="navigate"
-                      class="nav-link nav-sub-link group"
-                      :class="[
-                        isExactActive
-                          ? getTheme(item.theme).activeSubLink
-                          : 'text-text-secondary hover:bg-surface-ground/70 hover:text-text-primary',
-                      ]"
-                    >
-                      <span
-                        class="h-1.5 w-1.5 rounded-full transition-all duration-200 ml-1 flex-shrink-0"
-                        :class="[
-                          isExactActive
-                            ? getTheme(item.theme).activeDot
-                            : 'bg-text-muted/40 group-hover:bg-text-muted',
-                        ]"
-                      ></span>
-                      <span class="mx-2 text-[13px] font-medium leading-none">{{
-                        child.name
-                      }}</span>
-                    </a>
-                  </RouterLink>
-                </template>
+                <component :is="activeModuleMeta.icon" class="h-4 w-4" stroke-width="2" />
               </div>
-            </transition>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="h-1.5 w-1.5 rounded-full animate-pulse"
+                    :class="activeModuleMeta.dotColor"
+                  ></span>
+                  <p class="text-xs font-extrabold truncate" :class="activeModuleMeta.titleColor">
+                    {{ activeModuleMeta.label }}
+                  </p>
+                </div>
+                <p class="text-[10px] text-text-muted truncate">
+                  {{ activeModuleMeta.subtitle }}
+                </p>
+              </div>
+            </div>
           </div>
-        </template>
-      </nav>
+
+          <nav class="space-y-1 px-4">
+            <template v-for="(item, itemIndex) in filteredNavLinks" :key="item.name || itemIndex">
+              <!-- فاصل عنوان رئيسي بين الكتل -->
+              <div v-if="item.type === 'header'" class="px-2 pt-4 pb-1.5 select-none">
+                <span
+                  class="text-[11px] font-bold text-text-muted/70 uppercase tracking-wider block"
+                >
+                  {{ item.name }}
+                </span>
+              </div>
+
+              <!-- رابط مفرد مباشر -->
+              <RouterLink
+                v-else-if="!item.children"
+                :to="{ name: item.routeName }"
+                class="nav-link group"
+                @click="$emit('close-sidebar')"
+              >
+                <component
+                  :is="item.icon"
+                  class="h-5 w-5 transition-transform duration-200 group-hover:scale-110 flex-shrink-0"
+                  :class="getTheme(item.theme).rootIcon"
+                  stroke-width="1.5"
+                />
+                <span class="mx-2.5 text-sm font-medium">{{ item.name }}</span>
+              </RouterLink>
+
+              <!-- مجموعة منسدلة -->
+              <div v-else class="my-0.5">
+                <button
+                  @click="toggleGroup(item.name)"
+                  class="nav-group-button group"
+                  :class="[
+                    isGroupOpen(item.name) ? getTheme(item.theme).groupOpenHeader : '',
+                    isGroupActive(item) ? getTheme(item.theme).activeGroupHeader : '',
+                  ]"
+                >
+                  <div class="flex items-center min-w-0">
+                    <div
+                      class="flex h-7 w-7 items-center justify-center rounded-md transition-colors flex-shrink-0"
+                      :class="getTheme(item.theme).iconContainer"
+                    >
+                      <component
+                        :is="item.icon"
+                        class="h-5 w-5 transition-transform duration-200 group-hover:scale-105 flex-shrink-0"
+                        stroke-width="1.5"
+                      />
+                    </div>
+                    <span class="mx-2.5 text-sm font-semibold truncate">{{ item.name }}</span>
+                  </div>
+                  <ChevronDownIcon
+                    class="h-4 w-4 transform transition-transform duration-200 text-text-muted flex-shrink-0"
+                    :class="{ 'rotate-180': isGroupOpen(item.name) }"
+                  />
+                </button>
+
+                <!-- حاوية العناصر الفرعية مع تدرج لوني وحد جانبي مميز للموديول -->
+                <transition
+                  enter-active-class="transition-all ease-in-out duration-300"
+                  leave-active-class="transition-all ease-in-out duration-200"
+                  enter-from-class="max-h-0 opacity-0"
+                  enter-to-class="max-h-[600px] opacity-100"
+                  leave-from-class="max-h-[600px] opacity-100"
+                  leave-to-class="max-h-0 opacity-0"
+                >
+                  <div
+                    v-show="isGroupOpen(item.name)"
+                    class="mt-1 mr-2 space-y-1 overflow-hidden rounded-lg py-1.5 px-1.5 transition-colors duration-200"
+                    :class="getTheme(item.theme).subContainer"
+                  >
+                    <template
+                      v-for="(child, childIndex) in item.children"
+                      :key="child.name || childIndex"
+                    >
+                      <!-- عنوان تصنيف داخلي -->
+                      <div
+                        v-if="child.type === 'header'"
+                        class="px-3 pt-2.5 pb-1 select-none border-t border-surface-border/50 first:border-t-0 first:pt-1 mt-1.5 first:mt-0"
+                      >
+                        <span
+                          class="text-[10px] font-extrabold uppercase tracking-wider block"
+                          :class="getTheme(item.theme).subHeaderColor"
+                        >
+                          {{ child.name }}
+                        </span>
+                      </div>
+
+                      <!-- الروابط الفرعية داخل المجموعة المنسدلة -->
+                      <RouterLink
+                        v-else
+                        :to="{ name: child.routeName }"
+                        v-slot="{ isExactActive, navigate, href }"
+                        custom
+                        @click="$emit('close-sidebar')"
+                      >
+                        <a
+                          :href="href"
+                          @click="navigate"
+                          class="nav-link nav-sub-link group"
+                          :class="[
+                            isExactActive
+                              ? getTheme(item.theme).activeSubLink
+                              : 'text-text-secondary hover:bg-surface-ground/70 hover:text-text-primary',
+                          ]"
+                        >
+                          <span
+                            class="h-1.5 w-1.5 rounded-full transition-all duration-200 ml-1 flex-shrink-0"
+                            :class="[
+                              isExactActive
+                                ? getTheme(item.theme).activeDot
+                                : 'bg-text-muted/40 group-hover:bg-text-muted',
+                            ]"
+                          ></span>
+                          <span class="mx-2 text-[13px] font-medium leading-none">{{
+                            child.name
+                          }}</span>
+                        </a>
+                      </RouterLink>
+                    </template>
+                  </div>
+                </transition>
+              </div>
+            </template>
+          </nav>
+        </div>
+      </Transition>
 
       <!-- فوتر القائمة الجانبية (تسجيل الخروج) -->
       <div class="mt-auto border-t border-surface-border px-3 py-3">
@@ -179,7 +214,16 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useAppStore } from '@/stores/appStore'
 import { useBrandingStore } from '@/stores/brandingStore'
-import { ArrowLeftOnRectangleIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowLeftOnRectangleIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+  BanknotesIcon,
+  ReceiptPercentIcon,
+  ShoppingCartIcon,
+  CubeIcon,
+  UserGroupIcon,
+} from '@heroicons/vue/24/outline'
 import { appMenus } from '@/core/menus'
 
 defineEmits(['close-sidebar'])
@@ -192,6 +236,61 @@ const appStore = useAppStore()
 // جعل allNavLinks تتغير آلياً عندما يضغط المستخدم على زر المبدل في الأعلى
 const allNavLinks = computed(() => {
   return appMenus[appStore.activeModule] || []
+})
+
+// تعريف هوية كل موديول لتمييز القائمة الجانبية بصرياً عند التبديل
+const moduleMetaMap = {
+  accounting: {
+    label: 'الإدارة المالية والمحاسبة',
+    subtitle: 'النظام المحاسبي المتكامل',
+    icon: BanknotesIcon,
+    bannerBg:
+      'bg-emerald-500/10 border-emerald-500/30 dark:bg-emerald-400/10 dark:border-emerald-400/30',
+    iconBox: 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30',
+    titleColor: 'text-emerald-700 dark:text-emerald-300',
+    dotColor: 'bg-emerald-500',
+  },
+  sales: {
+    label: 'إدارة المبيعات',
+    subtitle: 'الفواتير ونقاط البيع',
+    icon: ReceiptPercentIcon,
+    bannerBg: 'bg-primary/10 border-primary/30 dark:bg-primary/15 dark:border-primary/30',
+    iconBox: 'bg-primary text-white shadow-sm shadow-primary/30',
+    titleColor: 'text-primary dark:text-primary-light',
+    dotColor: 'bg-primary',
+  },
+  purchasing: {
+    label: 'إدارة المشتريات',
+    subtitle: 'التوريد والموردون',
+    icon: ShoppingCartIcon,
+    bannerBg:
+      'bg-indigo-500/10 border-indigo-500/30 dark:bg-indigo-400/10 dark:border-indigo-400/30',
+    iconBox: 'bg-indigo-500 text-white shadow-sm shadow-indigo-500/30',
+    titleColor: 'text-indigo-700 dark:text-indigo-300',
+    dotColor: 'bg-indigo-500',
+  },
+  inventory: {
+    label: 'إدارة المخازن',
+    subtitle: 'المستودعات والأرصدة',
+    icon: CubeIcon,
+    bannerBg: 'bg-sky-500/10 border-sky-500/30 dark:bg-sky-400/10 dark:border-sky-400/30',
+    iconBox: 'bg-sky-500 text-white shadow-sm shadow-sky-500/30',
+    titleColor: 'text-sky-700 dark:text-sky-300',
+    dotColor: 'bg-sky-500',
+  },
+  hr: {
+    label: 'الموارد البشرية',
+    subtitle: 'شؤون الموظفين والرواتب',
+    icon: UserGroupIcon,
+    bannerBg: 'bg-slate-500/10 border-slate-500/30 dark:bg-slate-400/10 dark:border-slate-400/30',
+    iconBox: 'bg-slate-600 text-white shadow-sm shadow-slate-500/30',
+    titleColor: 'text-slate-700 dark:text-slate-200',
+    dotColor: 'bg-slate-500',
+  },
+}
+
+const activeModuleMeta = computed(() => {
+  return moduleMetaMap[appStore.activeModule] || null
 })
 
 // تعريف سمات التصميم البصرية لكل موديول بصيغة Tailwind كاملة لمنع الـ Purge

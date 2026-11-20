@@ -1,3 +1,4 @@
+<!---src\views\dashboard\DashboardView.vue-->
 <template>
   <div class="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
     <div
