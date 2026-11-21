@@ -1,4 +1,4 @@
-<!--src/components/layout/TheHeader.vue-->
+<!-- src/components/layout/TheHeader.vue -->
 <template>
   <header
     class="flex h-16 items-center justify-between bg-surface-section border-b border-surface-border px-2.5 sm:px-6 lg:px-8 gap-1.5 sm:gap-3 flex-shrink-0 transition-colors duration-200"
@@ -12,79 +12,25 @@
       <Bars3Icon class="h-6 w-6" />
     </button>
 
-    <!-- أزرار التبديل بين موديولات الـ ERP -->
+    <!-- أزرار التبديل بين موديولات الـ ERP المتاحة لصلاحيات المستخدم -->
     <nav
       aria-label="أقسام النظام"
       class="flex-1 min-w-0 flex items-center justify-start lg:justify-center gap-1.5 sm:gap-3 px-1 sm:px-4 overflow-x-auto no-scrollbar scroll-smooth"
     >
       <button
-        :ref="(el) => setModuleRef('accounting', el)"
-        @click="handleSelectModule('accounting')"
+        v-for="mod in visibleModules"
+        :key="mod.key"
+        :ref="(el) => setModuleRef(mod.key, el)"
+        @click="handleSelectModule(mod.key)"
         :class="[
-          appStore.activeModule === 'accounting'
+          appStore.activeModule === mod.key
             ? 'bg-primary text-white shadow-md shadow-primary/20'
             : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
           'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
         ]"
       >
-        <BanknotesIcon class="w-5 h-5 hidden sm:block" />
-        <span>المحاسبة</span>
-      </button>
-
-      <button
-        :ref="(el) => setModuleRef('sales', el)"
-        @click="handleSelectModule('sales')"
-        :class="[
-          appStore.activeModule === 'sales'
-            ? 'bg-primary text-white shadow-md shadow-primary/20'
-            : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
-        ]"
-      >
-        <ReceiptPercentIcon class="w-5 h-5 hidden sm:block" />
-        <span>المبيعات</span>
-      </button>
-
-      <button
-        :ref="(el) => setModuleRef('purchasing', el)"
-        @click="handleSelectModule('purchasing')"
-        :class="[
-          appStore.activeModule === 'purchasing'
-            ? 'bg-primary text-white shadow-md shadow-primary/20'
-            : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
-        ]"
-      >
-        <ShoppingCartIcon class="w-5 h-5 hidden sm:block" />
-        <span>المشتريات</span>
-      </button>
-
-      <button
-        :ref="(el) => setModuleRef('inventory', el)"
-        @click="handleSelectModule('inventory')"
-        :class="[
-          appStore.activeModule === 'inventory'
-            ? 'bg-primary text-white shadow-md shadow-primary/20'
-            : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
-        ]"
-      >
-        <CubeIcon class="w-5 h-5 hidden sm:block" />
-        <span>المخازن</span>
-      </button>
-
-      <button
-        :ref="(el) => setModuleRef('hr', el)"
-        @click="handleSelectModule('hr')"
-        :class="[
-          appStore.activeModule === 'hr'
-            ? 'bg-primary text-white shadow-md shadow-primary/20'
-            : 'text-text-secondary hover:bg-surface-ground hover:text-text-primary',
-          'px-3 sm:px-5 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer',
-        ]"
-      >
-        <UserGroupIcon class="w-5 h-5 hidden sm:block" />
-        <span>الموارد البشرية</span>
+        <component :is="mod.icon" class="w-5 h-5 hidden sm:block" />
+        <span>{{ mod.label }}</span>
       </button>
     </nav>
 
@@ -125,11 +71,12 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useAppStore } from '@/stores/appStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { getAccessibleModules, resolveModuleLandingRoute } from '@/core/navigation/accessResolver'
 import {
   Bars3Icon,
   SunIcon,
@@ -147,18 +94,27 @@ const authStore = useAuthStore()
 const appStore = useAppStore()
 const themeStore = useThemeStore()
 
-// خريطة مسارات لوحات التحكم لكل موديول (قابلة للتوسع عند بناء لوحات باقي الموديولات)
-const moduleDashboards = {
-  accounting: 'accounting.dashboard',
-}
+const allModulesConfig = [
+  { key: 'accounting', label: 'المحاسبة', icon: BanknotesIcon },
+  { key: 'sales', label: 'المبيعات', icon: ReceiptPercentIcon },
+  { key: 'purchasing', label: 'المشتريات', icon: ShoppingCartIcon },
+  { key: 'inventory', label: 'المخازن', icon: CubeIcon },
+  { key: 'hr', label: 'الموارد البشرية', icon: UserGroupIcon },
+]
+
+// عرض الموديولات التي يملك المستخدم صلاحيات تشغيلية داخلها فقط
+const visibleModules = computed(() => {
+  const allowedKeys = getAccessibleModules(authStore, router)
+  return allModulesConfig.filter((mod) => allowedKeys.includes(mod.key))
+})
 
 const handleSelectModule = (moduleKey) => {
   appStore.setActiveModule(moduleKey)
   emit('module-selected', moduleKey)
 
-  const targetRouteName = moduleDashboards[moduleKey]
-  if (targetRouteName && router.hasRoute(targetRouteName)) {
-    router.push({ name: targetRouteName })
+  const targetRoute = resolveModuleLandingRoute(moduleKey, authStore, router)
+  if (targetRoute) {
+    router.push(targetRoute)
   }
 }
 

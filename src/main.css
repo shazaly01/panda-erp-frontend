@@ -912,6 +912,23 @@ html:not(.dark) .activity-beam-row {
   animation: dashboardAlertPulse 2.4s infinite ease-in-out;
 }
 
+/* دمج حركة الظهور التدريجي مع نبض التنبيهات النشطة لمنع تعارض خاصية animation */
+.dashboard-enter.dashboard-alert-beacon {
+  animation:
+    dashboardCardEntrance 0.5s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--stagger-index, 0) * 65ms)
+      forwards,
+    dashboardAlertPulse 2.4s infinite ease-in-out calc(var(--stagger-index, 0) * 65ms + 0.5s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-enter,
+  .dashboard-enter.dashboard-alert-beacon {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
 /* حركة انتقال القائمة الجانبية عند تغيير الموديول من الرأس */
 .sidebar-module-slide-enter-active {
   transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);

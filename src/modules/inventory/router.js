@@ -1,6 +1,23 @@
+// src/modules/inventory/router.js
 const PlaceholderView = () => import('@/views/PlaceholderView.vue')
 
 const inventoryRoutes = [
+  // ==========================================
+  // 0. لوحة تحكم المخازن والمستودعات (Dashboard)
+  // ==========================================
+  {
+    path: 'inventory/dashboard',
+    name: 'inventory.dashboard',
+    component: () => import('@/modules/inventory/views/dashboard/InventoryDashboardView.vue'),
+    meta: {
+      permission: 'inventory.dashboard.view',
+      pageTitle: 'لوحة تحكم المخازن والمستودعات',
+    },
+  },
+
+  // ==========================================
+  // 1. البيانات الأساسية والتهيئة للمخزون
+  // ==========================================
   {
     path: 'inventory/units',
     name: 'InventoryUnitsList',

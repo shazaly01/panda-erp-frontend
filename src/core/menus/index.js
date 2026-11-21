@@ -1,6 +1,5 @@
-//src\core\menus\index.js
+// src/core/menus/index.js
 import {
-  HomeIcon,
   UsersIcon,
   ShieldCheckIcon,
   CircleStackIcon,
@@ -14,15 +13,8 @@ import inventoryMenu from '@/modules/inventory/menu'
 import purchasingMenu from '@/modules/purchasing/menu'
 import salesMenu from '@/modules/sales/menu'
 
-// عناصر مشتركة تظهر في جميع القوائم الجانبية
-const commonDashboard = {
-  name: 'لوحة التحكم',
-  routeName: 'Dashboard',
-  icon: HomeIcon,
-  permission: 'dashboard.view',
-}
-
-const systemSettings = {
+// قائمة إدارة النظام المشتركة بين الموديولات
+export const systemSettingsMenu = {
   name: 'إدارة النظام',
   icon: Cog6ToothIcon,
   children: [
@@ -55,9 +47,9 @@ const systemSettings = {
 
 // كائن يحتوي على القوائم لكل نظام/موديول
 export const appMenus = {
-  accounting: [commonDashboard, ...accountingMenu, systemSettings],
-  sales: [commonDashboard, ...salesMenu, systemSettings],
-  hr: [commonDashboard, ...hrMenu, systemSettings],
-  inventory: [commonDashboard, ...inventoryMenu, systemSettings],
-  purchasing: [commonDashboard, ...purchasingMenu, systemSettings],
+  accounting: [...accountingMenu, systemSettingsMenu],
+  sales: [...salesMenu, systemSettingsMenu],
+  hr: [...hrMenu, systemSettingsMenu],
+  inventory: [...inventoryMenu, systemSettingsMenu],
+  purchasing: [...purchasingMenu, systemSettingsMenu],
 }

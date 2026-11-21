@@ -1,4 +1,4 @@
-<!-- src/modules/auth/views/LoginView.vue -->
+<!-- src/views/LoginView.vue -->
 <template>
   <AuthCardWrapper
     :title="brandingStore.appName"
@@ -143,12 +143,15 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useAppStore } from '@/stores/appStore'
 import { useRouter } from 'vue-router'
 import AuthCardWrapper from './AuthCardWrapper.vue'
 import { useBrandingStore } from '@/stores/brandingStore'
+import { resolveBestLandingTarget } from '@/core/navigation/accessResolver'
 
 const brandingStore = useBrandingStore()
 const authStore = useAuthStore()
+const appStore = useAppStore()
 const router = useRouter()
 
 const credentials = reactive({ phone: '', password: '' })
@@ -180,7 +183,10 @@ const handleLogin = async () => {
     } else {
       localStorage.removeItem('remembered_phone')
     }
-    router.push(authStore.returnUrl || '/app/dashboard')
+
+    const landingTarget = resolveBestLandingTarget(authStore, appStore, router, authStore.returnUrl)
+    authStore.returnUrl = null
+    await router.push(landingTarget)
   } catch (error) {
     if (error.response && error.response.status === 403) {
       errorMessage.value =

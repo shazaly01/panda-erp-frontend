@@ -1,4 +1,8 @@
-//src\modules\purchasing\router.js
+// src/modules/purchasing/router.js
+
+// --- استيراد لوحة تحكم المشتريات وسلسلة الإمداد (Lazy Loading) ---
+const PurchasingDashboardView = () => import('./views/dashboard/PurchasingDashboardView.vue')
+
 // --- استيراد شاشات طلبات الشراء الداخلية (Lazy Loading) ---
 const PurchaseRequisitionsList = () => import('./views/requisitions/PurchaseRequisitionsList.vue')
 const PurchaseRequisitionFormPage = () =>
@@ -27,6 +31,19 @@ export default [
   {
     path: 'purchasing',
     children: [
+      // ==========================================
+      // 0. لوحة تحكم المشتريات وسلسلة الإمداد (Dashboard)
+      // ==========================================
+      {
+        path: 'dashboard',
+        name: 'purchasing.dashboard',
+        component: PurchasingDashboardView,
+        meta: {
+          permission: 'purchasing.dashboard.view',
+          pageTitle: 'لوحة تحكم المشتريات وسلسلة الإمداد',
+        },
+      },
+
       // ==========================================
       // 1. مسارات طلبات الشراء الداخلية (Purchase Requisitions)
       // ==========================================

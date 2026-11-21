@@ -1,6 +1,11 @@
 <!--src/modules/accounting/views/vouchers/components/VoucherForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit(false)" class="space-y-3.5 font-sans text-right" dir="rtl">
+  <form
+    @submit.prevent
+    @keydown.ctrl.enter.prevent="handleCtrlEnter"
+    class="space-y-3.5 font-sans text-right"
+    dir="rtl"
+  >
     <!-- تنبيه يظهر فقط عند تعديل سند مُرحّل مسبقاً -->
     <div
       v-if="isPostedEdit"
@@ -9,14 +14,14 @@
       <span>تعديل مباشر لسند مُرحّل — سيتم تحديث القيد المحاسبي المرتبط بنفس الرقم.</span>
     </div>
 
-    <!-- البطاقة 1: الطرف الأول (طريقة الدفع + الخزينة/البنك + التاريخ + الفرع) -->
+    <!-- البطاقة 1: الطرف الأول (طريقة الدفع + الخزينة/البنك + الرصيد الحالي + التاريخ) -->
     <div
-      class="voucher-card bg-surface-section/70 border border-surface-border p-4 rounded-xl space-y-3.5 transition-all duration-200"
+      class="voucher-card bg-surface-section/70 border border-surface-border p-4 rounded-xl transition-all duration-200"
     >
-      <!-- حالة الدفع النقدي (خزينة) -->
+      <!-- حالة الدفع النقدي (خزينة) - صف واحد (4 حقول) -->
       <div
         v-if="paymentMethodType === 'box'"
-        class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start"
+        class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start"
       >
         <!-- طريقة الدفع -->
         <div class="md:col-span-3 flex flex-col">
@@ -43,26 +48,11 @@
           </div>
         </div>
 
-        <!-- الخزينة المحددة + الرصيد الحالي -->
-        <div class="md:col-span-4">
-          <div class="flex items-center justify-between gap-2 mb-1.5">
-            <label for="voucher-box" class="block text-xs font-bold text-text-secondary">
-              الخزينة المحددة *
-            </label>
-            <span
-              v-if="selectedTreasury"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold border transition-colors"
-              :class="
-                isBalanceInsufficient
-                  ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300 border-rose-500/35'
-                  : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
-              "
-            >
-              <span class="font-sans opacity-80">الرصيد:</span>
-              <span>{{ formatNumber(currentTreasuryBalance) }}</span>
-              <span class="text-[10px] opacity-80">{{ selectedTreasuryCurrencyCode }}</span>
-            </span>
-          </div>
+        <!-- الخزينة المحددة -->
+        <div class="md:col-span-3">
+          <label for="voucher-box" class="block text-xs font-bold text-text-secondary mb-1.5">
+            الخزينة المحددة *
+          </label>
           <AppDropdown
             id="voucher-box"
             v-model="form.box_id"
@@ -73,6 +63,26 @@
             class="bg-surface-card"
             required
           />
+        </div>
+
+        <!-- الرصيد الحالي للخزينة -->
+        <div class="md:col-span-3">
+          <label class="block text-xs font-bold text-text-secondary mb-1.5">الرصيد الحالي</label>
+          <div
+            class="h-[40px] px-3 rounded-lg border flex items-center justify-between gap-2 font-mono font-black text-xs select-none transition-colors"
+            :class="
+              !selectedTreasury
+                ? 'bg-surface-card border-surface-border text-text-muted'
+                : isBalanceInsufficient
+                  ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300 border-rose-500/35'
+                  : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+            "
+          >
+            <span v-if="selectedTreasury" class="truncate">
+              {{ formatCurrency(currentTreasuryBalance) }}
+            </span>
+            <span v-else class="font-sans font-normal">—</span>
+          </div>
         </div>
 
         <!-- تاريخ السند -->
@@ -92,137 +102,105 @@
             {{ fiscalYearError }}
           </p>
         </div>
+      </div>
 
-        <!-- الفرع -->
-        <div class="md:col-span-2">
-          <label for="voucher-branch" class="block text-xs font-bold text-text-secondary mb-1.5">
-            الفرع *
+      <!-- حالة التحويل البنكي - صف واحد مدمج (5 حقول: 2 + 3 + 3 + 2 + 2 = 12) -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-start">
+        <!-- طريقة الدفع -->
+        <div class="md:col-span-2 flex flex-col">
+          <label class="block text-xs font-bold text-text-secondary mb-1.5">طريقة الدفع *</label>
+          <div
+            class="grid grid-cols-2 gap-1 p-1 bg-surface-card border border-surface-border rounded-lg h-[40px] items-center box-border"
+          >
+            <button
+              type="button"
+              @click="handlePaymentMethodChange('box')"
+              class="flex items-center justify-center gap-1 h-full rounded-md text-xs font-black transition-all duration-200 select-none cursor-pointer text-text-secondary hover:text-text-primary hover:bg-surface-ground/70"
+            >
+              <span class="text-sm">💵</span>
+              <span>نقدي</span>
+            </button>
+            <button
+              type="button"
+              @click="handlePaymentMethodChange('bank')"
+              class="flex items-center justify-center gap-1 h-full rounded-md text-xs font-black transition-all duration-200 select-none cursor-pointer bg-sky-600 text-white shadow-xs"
+            >
+              <span class="text-sm">🏦</span>
+              <span>بنك</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- الحساب البنكي المحدد -->
+        <div class="md:col-span-3">
+          <label for="voucher-bank" class="block text-xs font-bold text-text-secondary mb-1.5">
+            الحساب البنكي *
           </label>
           <AppDropdown
-            id="voucher-branch"
-            v-model="form.branch_id"
-            :options="branches"
-            option-label="name"
+            id="voucher-bank"
+            v-model="form.bank_account_id"
+            :options="formattedBankAccounts"
+            option-label="displayName"
             option-value="id"
-            placeholder="اختر الفرع..."
+            placeholder="اختر الحساب..."
             class="bg-surface-card"
             required
           />
         </div>
+
+        <!-- الرصيد الحالي للحساب البنكي -->
+        <div class="md:col-span-3">
+          <label class="block text-xs font-bold text-text-secondary mb-1.5">الرصيد الحالي</label>
+          <div
+            class="h-[40px] px-3 rounded-lg border flex items-center justify-between gap-2 font-mono font-black text-xs select-none transition-colors"
+            :class="
+              !selectedTreasury
+                ? 'bg-surface-card border-surface-border text-text-muted'
+                : isBalanceInsufficient
+                  ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300 border-rose-500/35'
+                  : 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25'
+            "
+          >
+            <span v-if="selectedTreasury" class="truncate">
+              {{ formatCurrency(currentTreasuryBalance) }}
+            </span>
+            <span v-else class="font-sans font-normal">—</span>
+          </div>
+        </div>
+
+        <!-- رقم الشيك / العملية -->
+        <div class="md:col-span-2">
+          <label for="bank-ref-number" class="block text-xs font-bold text-text-secondary mb-1.5">
+            رقم العملية / الشيك
+          </label>
+          <AppInput
+            id="bank-ref-number"
+            type="text"
+            v-model="form.bank_ref_number"
+            @keydown.enter.prevent="focusInput('voucher-date')"
+            placeholder="رقم العملية..."
+            class="bg-surface-card"
+          />
+        </div>
+
+        <!-- تاريخ السند -->
+        <div class="md:col-span-2">
+          <label for="voucher-date" class="block text-xs font-bold text-text-secondary mb-1.5">
+            تاريخ السند *
+          </label>
+          <AppInput
+            id="voucher-date"
+            type="date"
+            v-model="form.date"
+            class="bg-surface-card font-mono font-bold"
+            dir="ltr"
+            required
+          />
+          <p v-if="fiscalYearError" class="mt-1 text-xs text-danger font-bold">
+            {{ fiscalYearError }}
+          </p>
+        </div>
       </div>
-
-      <!-- حالة التحويل البنكي -->
-      <template v-else>
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
-          <!-- طريقة الدفع -->
-          <div class="md:col-span-4 flex flex-col">
-            <label class="block text-xs font-bold text-text-secondary mb-1.5">طريقة الدفع *</label>
-            <div
-              class="grid grid-cols-2 gap-1 p-1 bg-surface-card border border-surface-border rounded-lg h-[40px] items-center box-border"
-            >
-              <button
-                type="button"
-                @click="handlePaymentMethodChange('box')"
-                class="flex items-center justify-center gap-1.5 h-full rounded-md text-xs font-black transition-all duration-200 select-none cursor-pointer text-text-secondary hover:text-text-primary hover:bg-surface-ground/70"
-              >
-                <span class="text-sm">💵</span>
-                <span>نقدي (خزينة)</span>
-              </button>
-              <button
-                type="button"
-                @click="handlePaymentMethodChange('bank')"
-                class="flex items-center justify-center gap-1.5 h-full rounded-md text-xs font-black transition-all duration-200 select-none cursor-pointer bg-sky-600 text-white shadow-xs"
-              >
-                <span class="text-sm">🏦</span>
-                <span>تحويل (بنك)</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- الحساب البنكي المحدد + الرصيد الحالي -->
-          <div class="md:col-span-5">
-            <div class="flex items-center justify-between gap-1.5 mb-1.5">
-              <label for="voucher-bank" class="block text-xs font-bold text-text-secondary">
-                الحساب البنكي *
-              </label>
-              <span
-                v-if="selectedTreasury"
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold border transition-colors truncate"
-                :class="
-                  isBalanceInsufficient
-                    ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300 border-rose-500/35'
-                    : 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25'
-                "
-              >
-                <span class="font-sans opacity-80">الرصيد:</span>
-                <span>{{ formatNumber(currentTreasuryBalance) }}</span>
-                <span class="text-[10px] opacity-80">{{ selectedTreasuryCurrencyCode }}</span>
-              </span>
-            </div>
-            <AppDropdown
-              id="voucher-bank"
-              v-model="form.bank_account_id"
-              :options="formattedBankAccounts"
-              option-label="displayName"
-              option-value="id"
-              placeholder="اختر الحساب البنكي..."
-              class="bg-surface-card"
-              required
-            />
-          </div>
-
-          <!-- رقم الشيك / العملية -->
-          <div class="md:col-span-3">
-            <label for="bank-ref-number" class="block text-xs font-bold text-text-secondary mb-1.5">
-              رقم الشيك / العملية
-            </label>
-            <AppInput
-              id="bank-ref-number"
-              type="text"
-              v-model="form.bank_ref_number"
-              placeholder="رقم الشيك أو الحوالة..."
-              class="bg-surface-card"
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
-          <!-- تاريخ السند -->
-          <div class="md:col-span-6">
-            <label for="voucher-date" class="block text-xs font-bold text-text-secondary mb-1.5">
-              تاريخ السند *
-            </label>
-            <AppInput
-              id="voucher-date"
-              type="date"
-              v-model="form.date"
-              class="bg-surface-card font-mono font-bold"
-              dir="ltr"
-              required
-            />
-            <p v-if="fiscalYearError" class="mt-1 text-xs text-danger font-bold">
-              {{ fiscalYearError }}
-            </p>
-          </div>
-
-          <!-- الفرع -->
-          <div class="md:col-span-6">
-            <label for="voucher-branch" class="block text-xs font-bold text-text-secondary mb-1.5">
-              الفرع *
-            </label>
-            <AppDropdown
-              id="voucher-branch"
-              v-model="form.branch_id"
-              :options="branches"
-              option-label="name"
-              option-value="id"
-              placeholder="اختر الفرع..."
-              class="bg-surface-card"
-              required
-            />
-          </div>
-        </div>
-      </template>
     </div>
 
     <!-- البطاقة 2: الطرف المقابل والمبلغ ومركز التكلفة (حساب واحد افتراضياً) -->
@@ -310,7 +288,7 @@
             :input-class="`h-[40px] !bg-surface-section !border-primary/50 focus:!border-primary rounded-lg text-base font-black ${
               isReceipt ? '!text-emerald-600 dark:!text-emerald-400' : '!text-primary'
             }`"
-            @keydown.enter.prevent="focusInput('payee-name')"
+            @keydown.enter.prevent="focusInput('single-cost-center')"
             required
           />
         </div>
@@ -327,7 +305,13 @@
             <select
               id="single-cost-center"
               v-model="singleLine.cost_center_id"
-              @keydown.enter.prevent="focusInput('payee-name')"
+              @mousedown="isCostCenterKeyNav = false"
+              @keydown.up="isCostCenterKeyNav = true"
+              @keydown.down="isCostCenterKeyNav = true"
+              @keydown.home="isCostCenterKeyNav = true"
+              @keydown.end="isCostCenterKeyNav = true"
+              @change="handleSingleCostCenterChange"
+              @keydown.enter.prevent="handleSingleCostCenterEnter"
               class="w-full h-[40px] pr-3 pl-7 bg-surface-section border border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-text-primary text-xs font-bold outline-none appearance-none cursor-pointer transition-all"
             >
               <option value="" class="bg-surface-section text-text-muted">-- بدون مركز --</option>
@@ -423,7 +407,11 @@
                 </td>
 
                 <td class="px-3 py-2 align-middle">
-                  <div v-if="!line.account_id" class="voucher-account-search w-full">
+                  <div
+                    v-if="!line.account_id"
+                    :id="`account-search-${index}`"
+                    class="voucher-account-search w-full"
+                  >
                     <AccountPartySearchGrid
                       :placeholder="
                         isReceipt
@@ -536,6 +524,7 @@
                         :id="`desc-${index}`"
                         type="text"
                         v-model="line.description"
+                        @keydown.enter.prevent="handleLineDescEnter(index)"
                         placeholder="ملاحظة السطر..."
                         class="invoice-pill-editable w-full h-9 px-3 border rounded-xl text-text-primary text-xs font-semibold outline-none transition-all placeholder:text-text-muted placeholder:font-normal"
                       />
@@ -638,6 +627,7 @@
             id="voucher-description"
             type="text"
             v-model="form.description"
+            @keydown.enter.prevent="focusInput('btn-primary-submit')"
             placeholder="شرح سبب الصرف أو القبض..."
             class="bg-surface-card"
             required
@@ -667,9 +657,8 @@
       <span>
         لا يمكن إتمام الصرف: إجمالي المبلغ ({{ formatNumber(computedTotalAmount) }}
         {{ selectedCurrencyCode }}) يتجاوز الرصيد المتاح ({{
-          formatNumber(effectiveAvailableBalance)
-        }}
-        {{ selectedTreasuryCurrencyCode }}).
+          formatCurrency(effectiveAvailableBalance)
+        }}).
       </span>
     </div>
 
@@ -680,10 +669,11 @@
       <div class="flex flex-wrap items-center gap-2.5 justify-start">
         <template v-if="isPostedEdit">
           <AppButton
+            id="btn-primary-submit"
             type="button"
             @click="handleSubmit(false)"
             :disabled="isSaving || computedTotalAmount <= 0 || isBalanceInsufficient"
-            class="bg-primary text-white font-black px-5 py-2 rounded-xl"
+            class="bg-primary text-white font-black px-5 py-2 rounded-xl focus:ring-2 focus:ring-primary/40"
           >
             <span v-if="isSaving">جاري حفظ التعديلات...</span>
             <span v-else>حفظ التعديلات وتحديث القيد</span>
@@ -692,10 +682,11 @@
 
         <template v-else>
           <AppButton
+            id="btn-primary-submit"
             type="button"
             @click="handleSubmit(true)"
             :disabled="isSaving || computedTotalAmount <= 0 || isBalanceInsufficient"
-            class="bg-primary text-white font-black px-5 py-2 rounded-xl"
+            class="bg-primary text-white font-black px-5 py-2 rounded-xl focus:ring-2 focus:ring-primary/40"
           >
             <span v-if="isSaving">جاري الحفظ...</span>
             <span v-else>{{ isEditMode ? 'تحديث وترحيل مباشر' : 'حفظ وترحيل مباشر' }}</span>
@@ -761,16 +752,17 @@ import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AccountPartySearchGrid from '@/components/ui/AccountPartySearchGrid.vue'
+import { formatCurrency } from '@/utils/formatters'
 
 const props = defineProps({
   initialData: { type: Object, default: null },
   type: { type: String, required: true },
   isSaving: { type: Boolean, default: false },
-  branches: { type: Array, default: () => [] },
   boxes: { type: Array, default: () => [] },
   bankAccounts: { type: Array, default: () => [] },
   currencies: { type: Array, default: () => [] },
   costCenters: { type: Array, default: () => [] },
+  defaultCostCenterId: { type: [Number, String], default: '' },
   fiscalYearError: { type: String, default: '' },
 })
 
@@ -784,14 +776,15 @@ const isPostedEdit = computed(() => isEditMode.value && props.initialData?.statu
 const paymentMethodType = ref('box')
 const isMultiAccountMode = ref(false)
 const lastAutoDescription = ref('')
+const isCostCenterKeyNav = ref(false)
 
-const createEmptyLine = (defaultBranchId = '') => ({
+const createEmptyLine = () => ({
   _key: Date.now() + Math.random(),
   _autoDescription: '',
   account_id: null,
   account_code: '',
   account_name: '',
-  cost_center_id: defaultBranchId || (props.branches.length > 0 ? props.branches[0].id : ''),
+  cost_center_id: props.defaultCostCenterId || '',
   amount: '',
   description: '',
   party_type: null,
@@ -805,7 +798,7 @@ const form = ref({
   id: null,
   type: props.type,
   date: new Date().toISOString().split('T')[0],
-  branch_id: '',
+  branch_id: null,
   box_id: '',
   bank_account_id: null,
   bank_ref_number: '',
@@ -869,10 +862,6 @@ const effectiveAvailableBalance = computed(() => {
   return available
 })
 
-const selectedTreasuryCurrencyCode = computed(() => {
-  return selectedTreasury.value?.currency?.code || selectedCurrencyCode.value
-})
-
 const selectedTreasuryName = computed(() => {
   if (!selectedTreasury.value) return ''
   if (paymentMethodType.value === 'bank') {
@@ -905,8 +894,7 @@ watch(
 
       paymentMethodType.value = isBank ? 'bank' : 'box'
 
-      const resolvedBranchId =
-        newVal.branch?.id || newVal.branch_id || (props.branches[0]?.id ?? '')
+      const resolvedBranchId = newVal.branch?.id || newVal.branch_id || null
 
       const resolvedBoxId = !isBank
         ? newVal.payment_method?.type === 'box'
@@ -941,7 +929,7 @@ watch(
               account_id: d.account?.id || d.account_id,
               account_code: d.account?.code || d.account_code || '',
               account_name: d.account?.name || d.account_name || '',
-              cost_center_id: d.cost_center?.id || d.cost_center_id || resolvedBranchId,
+              cost_center_id: d.cost_center?.id || d.cost_center_id || '',
               amount: Number(d.amount) || '',
               description: d.description || '',
               party_type: d.party_type || null,
@@ -950,24 +938,23 @@ watch(
               reference_id: d.reference_id ? Number(d.reference_id) : null,
               reference_label: d.reference_label || null,
             }))
-          : [createEmptyLine(resolvedBranchId)],
+          : [createEmptyLine()],
       }
     } else {
       isMultiAccountMode.value = false
       paymentMethodType.value = 'box'
-      const defaultBranchId = props.branches[0]?.id ?? ''
       form.value = {
         id: null,
         type: props.type,
         date: new Date().toISOString().split('T')[0],
-        branch_id: defaultBranchId,
+        branch_id: null,
         box_id: props.boxes[0]?.id ?? '',
         bank_account_id: null,
         bank_ref_number: '',
         currency_id: props.currencies[0]?.id || '',
         payee_name: '',
         description: '',
-        details: [createEmptyLine(defaultBranchId)],
+        details: [createEmptyLine()],
       }
     }
   },
@@ -988,7 +975,7 @@ const toggleMultiAccountMode = () => {
     } else if (filledLines.length === 1) {
       form.value.details = [filledLines[0]]
     } else {
-      form.value.details = [createEmptyLine(form.value.branch_id)]
+      form.value.details = [createEmptyLine()]
     }
     isMultiAccountMode.value = false
   }
@@ -1031,8 +1018,8 @@ const handleSelectAccount = (index, item) => {
   line.party_type = item.party_type || item.type || null
   line.party_id = item.party_id || item.id ? String(item.party_id || item.id) : null
 
-  if (!line.cost_center_id) {
-    line.cost_center_id = form.value.branch_id || ''
+  if (!line.cost_center_id && props.defaultCostCenterId) {
+    line.cost_center_id = props.defaultCostCenterId
   }
 
   const generatedDesc = (item.name || '').trim()
@@ -1083,26 +1070,55 @@ const resetLineAccount = (index) => {
 }
 
 const addNewEmptyLine = () => {
-  form.value.details.push(createEmptyLine(form.value.branch_id))
+  form.value.details.push(createEmptyLine())
 }
 
 const removeLine = (index) => {
   if (form.value.details.length > 1) {
     form.value.details.splice(index, 1)
   } else {
-    form.value.details = [createEmptyLine(form.value.branch_id)]
+    form.value.details = [createEmptyLine()]
     lastAutoDescription.value = ''
   }
+}
+
+const handleSingleCostCenterChange = () => {
+  if (!isCostCenterKeyNav.value) {
+    focusInput('payee-name')
+  }
+}
+
+const handleSingleCostCenterEnter = () => {
+  isCostCenterKeyNav.value = false
+  focusInput('payee-name')
+}
+
+const handleLineDescEnter = (index) => {
+  const nextIndex = index + 1
+  if (nextIndex < form.value.details.length) {
+    const nextLine = form.value.details[nextIndex]
+    focusInput(nextLine.account_id ? `amount-${nextIndex}` : `account-search-${nextIndex}`)
+  } else {
+    focusInput('payee-name')
+  }
+}
+
+const handleCtrlEnter = () => {
+  if (props.isSaving || computedTotalAmount.value <= 0 || isBalanceInsufficient.value) return
+  handleSubmit(!isPostedEdit.value)
 }
 
 const focusInput = (elementId) => {
   const el = document.getElementById(elementId)
   if (el) {
-    const input = el.tagName === 'INPUT' || el.tagName === 'SELECT' ? el : el.querySelector('input')
-    if (input) {
-      input.focus()
-      if (typeof input.select === 'function') {
-        input.select()
+    const target =
+      el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'BUTTON'
+        ? el
+        : el.querySelector('input, select, button')
+    if (target) {
+      target.focus()
+      if (typeof target.select === 'function') {
+        target.select()
       }
     }
   }
@@ -1113,7 +1129,6 @@ const handleSubmit = (postAfterSave = false) => {
     return toast.error('لا يمكن الحفظ: ' + props.fiscalYearError)
   }
   if (!form.value.date) return toast.error('تاريخ السند مطلوب.')
-  if (!form.value.branch_id) return toast.error('الرجاء اختيار الفرع.')
 
   const isBank = paymentMethodType.value === 'bank'
   if (!isBank && !form.value.box_id) {
@@ -1125,7 +1140,7 @@ const handleSubmit = (postAfterSave = false) => {
 
   if (isBalanceInsufficient.value) {
     return toast.error(
-      `رصيد ${selectedTreasuryName.value} غير كافٍ للصرف. الرصيد المتاح: ${formatNumber(effectiveAvailableBalance.value)}`,
+      `رصيد ${selectedTreasuryName.value} غير كافٍ للصرف. الرصيد المتاح: ${formatCurrency(effectiveAvailableBalance.value)}`,
     )
   }
 
@@ -1166,7 +1181,7 @@ const handleSubmit = (postAfterSave = false) => {
 
   const payload = {
     type: props.type,
-    branch_id: form.value.branch_id,
+    branch_id: form.value.branch_id || null,
     date: form.value.date,
     payee_name: form.value.payee_name.trim(),
     description: form.value.description.trim(),

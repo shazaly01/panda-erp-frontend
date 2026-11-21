@@ -1,7 +1,20 @@
 // src/modules/sales/menu.js
-import { BanknotesIcon, ComputerDesktopIcon, DocumentTextIcon } from '@heroicons/vue/24/outline'
+import {
+  BanknotesIcon,
+  ComputerDesktopIcon,
+  DocumentTextIcon,
+  PresentationChartLineIcon,
+} from '@heroicons/vue/24/outline'
 
 export default [
+  // --- 0. لوحة تحكم المبيعات ---
+  {
+    name: 'لوحة تحكم المبيعات',
+    routeName: 'sales.dashboard',
+    icon: PresentationChartLineIcon,
+    permission: 'sales.dashboard.view',
+  },
+
   // --- 1. عمليات المبيعات ونقاط البيع ---
   {
     name: 'عمليات المبيعات',

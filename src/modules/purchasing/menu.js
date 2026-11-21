@@ -1,4 +1,4 @@
-//src\modules\purchasing\menu.js
+// src/modules/purchasing/menu.js
 import {
   ShoppingCartIcon,
   ClipboardDocumentCheckIcon,
@@ -8,9 +8,18 @@ import {
   ChartPieIcon,
   UserGroupIcon,
   Cog8ToothIcon,
+  PresentationChartLineIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
+  // --- 0. لوحة تحكم المشتريات ---
+  {
+    name: 'لوحة تحكم المشتريات',
+    routeName: 'purchasing.dashboard',
+    icon: PresentationChartLineIcon,
+    permission: 'purchasing.dashboard.view',
+  },
+
   // --- 1. العمليات اليومية وإدارة التوريد والصرف ---
   {
     name: 'عمليات المشتريات',

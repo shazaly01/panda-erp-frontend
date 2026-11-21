@@ -1,4 +1,4 @@
-<!--src\components\layout\TheSidebar.vue-->
+<!-- src/components/layout/TheSidebar.vue -->
 <template>
   <aside
     class="flex h-full flex-col bg-surface-section border-l border-surface-border lg:border-l-0 lg:border-r transition-colors duration-200 overflow-x-hidden"
@@ -7,7 +7,7 @@
     <div
       class="flex h-16 items-center justify-between px-5 flex-shrink-0 border-b border-surface-border/50"
     >
-      <RouterLink :to="{ name: 'Dashboard' }" class="flex items-center gap-2.5 min-w-0">
+      <RouterLink :to="brandHomeTarget" class="flex items-center gap-2.5 min-w-0">
         <img
           v-if="
             appStore.isSidebarCollapsed
@@ -210,10 +210,11 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useAppStore } from '@/stores/appStore'
 import { useBrandingStore } from '@/stores/brandingStore'
+import { resolveBestLandingTarget } from '@/core/navigation/accessResolver'
 import {
   ArrowLeftOnRectangleIcon,
   XMarkIcon,
@@ -230,8 +231,14 @@ defineEmits(['close-sidebar'])
 
 const authStore = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 const brandingStore = useBrandingStore()
 const appStore = useAppStore()
+
+// الوجهة الافتراضية الذكية عند النقر على الشعار حسب صلاحيات المستخدم
+const brandHomeTarget = computed(() => {
+  return resolveBestLandingTarget(authStore, appStore, router)
+})
 
 // جعل allNavLinks تتغير آلياً عندما يضغط المستخدم على زر المبدل في الأعلى
 const allNavLinks = computed(() => {
@@ -383,10 +390,9 @@ const filteredNavLinks = computed(() => {
         const filteredChildren = item.children.filter(
           (child) => child.type === 'header' || authStore.can(child.permission),
         )
-        const hasParentPermission = item.permission ? authStore.can(item.permission) : false
         const hasValidChildren = filteredChildren.some((c) => c.type !== 'header')
 
-        if (hasValidChildren || hasParentPermission) {
+        if (hasValidChildren) {
           return { ...item, children: filteredChildren }
         }
         return null

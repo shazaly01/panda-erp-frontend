@@ -1,6 +1,12 @@
-//src\router\index.js
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import { useAppStore } from '@/stores/appStore'
+import {
+  canAccessRoute,
+  detectModuleFromRoute,
+  resolveBestLandingTarget,
+} from '@/core/navigation/accessResolver'
 
 // --- استيراد التخطيطات الرئيسية (Layouts) ---
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -10,6 +16,7 @@ import AuthLayout from '@/components/layout/AuthLayout.vue'
 const UsersList = () => import('@/views/users/UsersList.vue')
 const RolesList = () => import('@/views/roles/RolesList.vue')
 const BackupsList = () => import('@/views/settings/BackupsList.vue')
+const UnauthorizedView = () => import('@/views/errors/UnauthorizedView.vue')
 
 // --- استيراد مكونات موديول طلبات الدعم والمنح ---
 const GrantRequestsList = () => import('@/views/grantRequests/GrantRequestsListView.vue')
@@ -87,6 +94,11 @@ const routes = [
         component: DashboardView,
         meta: { permission: 'dashboard.view' },
       },
+      {
+        path: 'unauthorized',
+        name: 'Unauthorized',
+        component: UnauthorizedView,
+      },
 
       // ==============================================================
       // 🌟 دمج مسارات الموديولات هنا كأبناء لـ AppLayout
@@ -135,7 +147,14 @@ const routes = [
         component: BackupsList,
         meta: { permission: 'backup.view' },
       },
-      { path: '', redirect: '/app/dashboard' },
+      {
+        path: '',
+        redirect: () => {
+          const authStore = useAuthStore()
+          const appStore = useAppStore()
+          return resolveBestLandingTarget(authStore, appStore, router)
+        },
+      },
     ],
   },
 
@@ -153,24 +172,41 @@ const router = createRouter({
 // --- حارس التنقل العام (Global Navigation Guard) ---
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+  const appStore = useAppStore()
 
-  if (to.meta.requiresAuth) {
+  const requiresAuth = to.matched.some((record) => record.meta?.requiresAuth)
+  const requiresGuest = to.matched.some((record) => record.meta?.requiresGuest)
+
+  if (requiresAuth) {
     if (!authStore.isAuthenticated) {
       authStore.returnUrl = to.fullPath
       next({ name: 'Login' })
-    } else {
-      const requiredPermission = to.meta.permission
-      if (requiredPermission && !authStore.can(requiredPermission)) {
-        console.warn(
-          `Access denied: route "${String(to.name)}" requires permission "${requiredPermission}"`,
-        )
-        next({ name: 'Dashboard' })
-      } else {
-        next()
-      }
+      return
     }
-  } else if (to.matched.some((record) => record.meta.requiresGuest) && authStore.isAuthenticated) {
-    next({ name: 'Dashboard' })
+
+    if (!canAccessRoute(to, authStore)) {
+      console.warn(
+        `Access denied to route "${String(to.name || to.path)}" due to missing permission.`,
+      )
+
+      // عند الدخول الأولي عبر رابط محفوظ (مثل /app/dashboard) بدون صلاحية، نوجّه لأول شاشة متاحة
+      if (!from.name && to.name === 'Dashboard') {
+        next(resolveBestLandingTarget(authStore, appStore, router))
+      } else {
+        next({ name: 'Unauthorized' })
+      }
+      return
+    }
+
+    // مزامنة الموديول النشط تلقائياً عند التنقل المباشر إلى أي مسار تابع لموديول
+    const detectedModule = detectModuleFromRoute(to)
+    if (detectedModule && appStore.activeModule !== detectedModule) {
+      appStore.setActiveModule(detectedModule)
+    }
+
+    next()
+  } else if (requiresGuest && authStore.isAuthenticated) {
+    next(resolveBestLandingTarget(authStore, appStore, router))
   } else {
     next()
   }

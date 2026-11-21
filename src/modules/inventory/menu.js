@@ -1,3 +1,4 @@
+// src/modules/inventory/menu.js
 import {
   CubeIcon,
   ScaleIcon,
@@ -20,9 +21,20 @@ import {
   TrashIcon,
   MinusCircleIcon,
   PlusCircleIcon,
+  PresentationChartLineIcon,
 } from '@heroicons/vue/24/outline'
 
 const inventoryMenu = [
+  // ==========================================
+  // 0. لوحة تحكم المخازن والمستودعات
+  // ==========================================
+  {
+    name: 'لوحة تحكم المخازن',
+    routeName: 'inventory.dashboard',
+    icon: PresentationChartLineIcon,
+    permission: 'inventory.dashboard.view',
+  },
+
   // ==========================================
   // 1. البيانات الأساسية والتهيئة للمخزون
   // ==========================================

@@ -1,5 +1,8 @@
 // src/modules/sales/router.js
 
+// --- استيراد لوحة تحكم المبيعات ونقاط البيع (Lazy Loading) ---
+const SalesDashboardView = () => import('./views/dashboard/SalesDashboardView.vue')
+
 // --- استيراد شاشات فواتير المبيعات ونقطة البيع (Lazy Loading) ---
 const SalesInvoicesListView = () => import('./views/invoices/SalesInvoicesListView.vue')
 const SalesInvoiceFormView = () => import('./views/invoices/SalesInvoiceFormView.vue')
@@ -24,6 +27,19 @@ export default [
   {
     path: 'sales',
     children: [
+      // ==========================================
+      // 0. لوحة تحكم المبيعات ونقاط البيع (Dashboard)
+      // ==========================================
+      {
+        path: 'dashboard',
+        name: 'sales.dashboard',
+        component: SalesDashboardView,
+        meta: {
+          permission: 'sales.dashboard.view',
+          pageTitle: 'لوحة تحكم المبيعات ونقاط البيع',
+        },
+      },
+
       // ==========================================
       // 1. فواتير المبيعات (Sales Invoices)
       // ==========================================

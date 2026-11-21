@@ -21,11 +21,11 @@
       :initial-data="initialData"
       :type="type"
       :is-saving="isSubmitting"
-      :branches="branches"
       :boxes="boxes"
       :bank-accounts="bankAccounts"
       :currencies="currencies"
       :cost-centers="activeCostCenters"
+      :default-cost-center-id="defaultCostCenterId"
       :fiscal-year-error="fiscalYearError"
       @submit="saveVoucher"
       @cancel="handleClose"
@@ -89,7 +89,7 @@ const dialogBorderColor = computed(() => 'border-primary')
 const activeCostCenters = computed(
   () => costCenterStore.activeCostCenters || costCenterStore.costCenters || [],
 )
-const branches = computed(() => activeCostCenters.value)
+const defaultCostCenterId = computed(() => authStore.user?.default_cost_center_id ?? '')
 const boxes = computed(() => boxStore.boxes || [])
 const bankAccounts = computed(() => bankAccountStore.bankAccounts || [])
 const currencies = computed(() => currencyStore.currencies || [])
@@ -98,7 +98,7 @@ const buildDefaultFormData = () => {
   const defaultData = {
     currency_id: currencyStore.baseCurrency?.id || (currencies.value[0]?.id ?? ''),
     date: new Date().toISOString().split('T')[0],
-    branch_id: '',
+    branch_id: null,
     box_id: '',
     bank_account_id: null,
     payee_name: '',
@@ -109,12 +109,6 @@ const buildDefaultFormData = () => {
   }
 
   if (authStore.user) {
-    if (authStore.user.default_cost_center_id) {
-      defaultData.branch_id = authStore.user.default_cost_center_id
-    } else if (branches.value.length > 0) {
-      defaultData.branch_id = branches.value[0].id
-    }
-
     if (authStore.user.default_box_id) {
       defaultData.box_id = authStore.user.default_box_id
     }

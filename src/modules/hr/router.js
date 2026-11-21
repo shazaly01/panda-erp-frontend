@@ -1,6 +1,11 @@
 // src/modules/hr/router.js
 
 // ==========================================
+// 0. لوحة تحكم الموارد البشرية (Dashboard)
+// ==========================================
+const HRDashboardView = () => import('./views/dashboard/HRDashboardView.vue')
+
+// ==========================================
 // 1. إعدادات الموارد البشرية (الهيكل والورديات)
 // ==========================================
 const DepartmentsList = () => import('./views/departments/DepartmentsList.vue')
@@ -68,6 +73,17 @@ export const hrDashboardRoutes = [
   {
     path: 'hr',
     children: [
+      // --- لوحة تحكم الموارد البشرية ---
+      {
+        path: 'dashboard',
+        name: 'hr.dashboard',
+        component: HRDashboardView,
+        meta: {
+          permission: 'hr.dashboard.view',
+          pageTitle: 'لوحة تحكم الموارد البشرية وشؤون الموظفين',
+        },
+      },
+
       // --- شؤون الموظفين ---
       {
         path: 'employees',

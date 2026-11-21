@@ -1,3 +1,4 @@
+// src/modules/hr/menu.js
 import {
   ShieldCheckIcon,
   UserGroupIcon,
@@ -6,9 +7,20 @@ import {
   CurrencyDollarIcon,
   WifiIcon,
   ClipboardDocumentCheckIcon,
+  PresentationChartLineIcon,
 } from '@heroicons/vue/24/outline'
 
 export default [
+  // =========================================================
+  // 0. لوحة تحكم الموارد البشرية
+  // =========================================================
+  {
+    name: 'لوحة تحكم الموارد البشرية',
+    routeName: 'hr.dashboard',
+    icon: PresentationChartLineIcon,
+    permission: 'hr.dashboard.view',
+  },
+
   {
     name: 'ادارة الامن والسلامة',
     icon: ShieldCheckIcon, // أيقونة حماية مخصصة للأمن

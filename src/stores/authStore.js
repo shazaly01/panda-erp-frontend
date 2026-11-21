@@ -1,6 +1,7 @@
-//src\stores\authStore.js
+// src/stores/authStore.js
 import { defineStore } from 'pinia'
 import authService from '@/services/authService'
+import { useAppStore } from '@/stores/appStore'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -12,9 +13,9 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => !!state.token,
     permissions: (state) => {
-      if (state.user && state.user.roles) {
+      if (state.user && Array.isArray(state.user.roles)) {
         const allPermissions = state.user.roles.flatMap((role) =>
-          role.permissions.map((p) => p.name),
+          Array.isArray(role.permissions) ? role.permissions.map((p) => p.name) : [],
         )
         return [...new Set(allPermissions)]
       }
@@ -57,6 +58,9 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Logout API call failed, but clearing local state anyway:', error)
       } finally {
+        const appStore = useAppStore()
+        appStore.clearAppSession()
+
         this.user = null
         this.token = null
         this.returnUrl = null
@@ -69,9 +73,16 @@ export const useAuthStore = defineStore('auth', {
     },
 
     can(permissionName) {
-      if (this.user && this.user.roles.some((role) => role.name === 'Super Admin')) {
+      if (!permissionName) return true
+
+      if (
+        this.user &&
+        Array.isArray(this.user.roles) &&
+        this.user.roles.some((role) => role.name === 'Super Admin')
+      ) {
         return true
       }
+
       return this.permissions.includes(permissionName)
     },
   },
