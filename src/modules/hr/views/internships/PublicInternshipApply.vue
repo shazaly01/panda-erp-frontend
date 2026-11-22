@@ -1,4 +1,4 @@
-<!---src\modules\hr\views\internships\PublicInternshipApply.vue-->
+<!---src\modules\hr\views\internships\PublicInternshipApply.vue--->
 <template>
   <div
     class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100/60 text-slate-800 flex flex-col justify-center items-center font-sans p-3 sm:p-6 antialiased relative overflow-hidden"
@@ -60,16 +60,25 @@
         </div>
         <div>
           <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-950 drop-shadow-sm">
-            {{
-              appName
-                ? `برنامج التدريب الأكاديمي - ${appName}`
-                : 'بوابة التقديم على برنامج التدريب الأكاديمي'
-            }}
+            <template v-if="form.application_type === 'employment'">
+              {{
+                appName
+                  ? `بوابة التوظيف والانضمام - ${appName}`
+                  : 'بوابة التقديم على الوظائف والانضمام'
+              }}
+            </template>
+            <template v-else>
+              {{
+                appName
+                  ? `برنامج التدريب الأكاديمي - ${appName}`
+                  : 'بوابة التقديم على برنامج التدريب الأكاديمي'
+              }}
+            </template>
           </h1>
         </div>
       </div>
 
-      <!-- 🌟 أزرار التبديل العلوية الاحترافية بين التقديم والمتابعة (تختفي في حالة عرض نتيجة النجاح الفورية) -->
+      <!-- 🌟 أزرار التبديل العلوية الاحترافية بين التقديم والمتابعة -->
       <div
         v-if="!isRegistered && currentView !== 'tracked_dashboard'"
         class="flex bg-slate-100 p-1 rounded-2xl max-w-xs mx-auto border border-slate-200/40 shadow-sm"
@@ -112,10 +121,58 @@
         <!-- شاشة التقديم لأول مرة (Apply Tab) -->
         <!-- ========================================== -->
         <div v-if="currentTab === 'apply' && !isRegistered" class="space-y-5 animate-fadeIn">
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-slate-700 tracking-wide"
-              >التحقق الرقمي واللقطة الحية الشخصية *</label
+          <!-- اختيار مسار التقديم: تدريب أكاديمي أم طلب توظيف -->
+          <div
+            class="grid grid-cols-2 gap-2.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/70"
+          >
+            <button
+              type="button"
+              @click="switchApplicationType('internship')"
+              :class="[
+                'py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5',
+                form.application_type === 'internship'
+                  ? 'bg-white text-emerald-700 shadow-sm border border-emerald-200/60'
+                  : 'text-slate-500 hover:text-slate-800',
+              ]"
             >
+              <span>🎓 التدريب الأكاديمي</span>
+            </button>
+
+            <button
+              type="button"
+              @click="switchApplicationType('employment')"
+              :class="[
+                'py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5',
+                form.application_type === 'employment'
+                  ? 'bg-white text-sky-700 shadow-sm border border-sky-200/60'
+                  : 'text-slate-500 hover:text-slate-800',
+              ]"
+            >
+              <span>💼 طلب توظيف</span>
+            </button>
+          </div>
+
+          <!-- تنبيه في حال كان التقديم لهذا المسار مغلقاً حالياً -->
+          <div
+            v-if="isCurrentTypeClosed"
+            class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 text-xs font-bold text-center"
+          >
+            {{
+              form.application_type === 'employment'
+                ? 'عذراً، استقبال طلبات التوظيف مغلق حالياً من قبل الإدارة.'
+                : 'عذراً، استقبال طلبات التدريب الأكاديمي مغلق حالياً من قبل الإدارة.'
+            }}
+          </div>
+
+          <!-- قسم الكاميرا الحية (إلزامي للتدريب واختياري للتوظيف) -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 tracking-wide">
+              {{
+                form.application_type === 'internship'
+                  ? 'التحقق الرقمي واللقطة الحية الشخصية *'
+                  : 'الصورة الشخصية عبر الكاميرا (اختياري)'
+              }}
+            </label>
             <div
               class="relative w-full aspect-video bg-slate-950 border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center group/cam"
             >
@@ -131,7 +188,7 @@
                 v-if="capturedImage"
                 :src="capturedImage"
                 class="w-full h-full object-cover transform -scale-x-100 animate-scaleUp"
-                alt="اللقطة الحية للمتدرب"
+                alt="اللقطة الحية للمتقدم"
               />
 
               <div v-if="!isCameraOpen && !capturedImage" class="text-center p-6 space-y-2 z-10">
@@ -242,62 +299,121 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-slate-700 tracking-wide"
-                >الجامعة أو المعهد الأكاديمي *</label
-              >
-              <input
-                v-model="form.academic_institution"
-                type="text"
-                placeholder=""
-                class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
-              />
+          <!-- حقول التدريب الأكاديمي -->
+          <template v-if="form.application_type === 'internship'">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 tracking-wide"
+                  >الجامعة أو المعهد الأكاديمي *</label
+                >
+                <input
+                  v-model="form.academic_institution"
+                  type="text"
+                  placeholder=""
+                  class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 tracking-wide"
+                  >التخصص الأكاديمي الرئيسي *</label
+                >
+                <input
+                  v-model="form.academic_major"
+                  type="text"
+                  placeholder=""
+                  class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
+                />
+              </div>
             </div>
 
             <div class="space-y-1.5">
               <label class="block text-xs font-bold text-slate-700 tracking-wide"
-                >التخصص الأكاديمي الرئيسي *</label
+                >الساعات التدريبية المطلوبة *</label
               >
               <input
-                v-model="form.academic_major"
-                type="text"
-                placeholder=""
-                class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm"
+                v-model.number="form.required_training_hours"
+                type="number"
+                min="1"
+                placeholder="مثال: 120 ساعة"
+                class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-mono"
               />
             </div>
-          </div>
+          </template>
 
-          <!-- تم تعديلها لتصبح حقل واحد ممتد بالكامل خاص بالساعات فقط -->
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700 tracking-wide"
-              >الساعات التدريبية المطلوبة *</label
-            >
-            <input
-              v-model.number="form.required_training_hours"
-              type="number"
-              min="1"
-              placeholder="مثال: 120 ساعة"
-              class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm text-right font-mono"
-            />
-          </div>
+          <!-- حقول طلب التوظيف -->
+          <template v-else>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 tracking-wide"
+                  >المؤهل العلمي *</label
+                >
+                <input
+                  v-model="form.qualification"
+                  type="text"
+                  placeholder="مثال: بكالوريوس محاسبة / إدارة أعمال..."
+                  class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-600/5 transition-all duration-300 shadow-sm"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 tracking-wide"
+                  >سنوات الخبرة العملية</label
+                >
+                <input
+                  v-model.number="form.experience_years"
+                  type="number"
+                  min="0"
+                  max="60"
+                  placeholder="مثال: 2"
+                  class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-600 focus:ring-4 focus:ring-sky-600/5 transition-all duration-300 shadow-sm text-right font-mono"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700 tracking-wide"
+                >السيرة الذاتية CV (PDF / Word / صورة - اختياري)</label
+              >
+              <input
+                ref="cvInputRef"
+                type="file"
+                accept=".pdf,.doc,.docx,image/jpeg,image/png,image/jpg"
+                @change="onCvSelected"
+                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-600 file:ml-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 transition-all shadow-sm"
+              />
+            </div>
+          </template>
 
           <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700 tracking-wide"
-              >ملاحظات أو متطلبات تدريبية خاصة من الجامعة</label
-            >
+            <label class="block text-xs font-bold text-slate-700 tracking-wide">
+              {{
+                form.application_type === 'employment'
+                  ? 'الوظيفة المرغوبة وملاحظات إضافية'
+                  : 'ملاحظات أو متطلبات تدريبية خاصة من الجامعة'
+              }}
+            </label>
             <textarea
               v-model="form.notes"
               rows="3"
-              placeholder="اكتب أي ملاحظات إضافية ترغب في إطلاع إدارة الموارد البشرية عليها..."
+              :placeholder="
+                form.application_type === 'employment'
+                  ? 'اكتب المسمى الوظيفي الذي ترغب بالتقديم عليه وأي خبرات أو مهارات إضافية...'
+                  : 'اكتب أي ملاحظات إضافية ترغب في إطلاع إدارة الموارد البشرية عليها...'
+              "
               class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 transition-all duration-300 shadow-sm resize-none"
             ></textarea>
           </div>
 
           <button
             @click="handleSubmit"
-            :disabled="store.loading"
-            class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl py-4 text-sm font-bold shadow-[0_10px_25px_-5px_rgba(16,185,129,0.3)] hover:shadow-[0_15px_30px_rgba(16,185,129,0.4)] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-5 flex items-center justify-center gap-2"
+            :disabled="store.loading || isCurrentTypeClosed"
+            :class="[
+              'w-full text-white rounded-xl py-4 text-sm font-bold active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-5 flex items-center justify-center gap-2',
+              form.application_type === 'employment'
+                ? 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 shadow-[0_10px_25px_-5px_rgba(2,132,199,0.3)]'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-[0_10px_25px_-5px_rgba(16,185,129,0.3)]',
+            ]"
           >
             <span v-if="store.loading" class="flex items-center gap-2">
               <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -315,9 +431,15 @@
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              جاري رفع الصورة ومستندات التدريب...
+              جاري رفع البيانات والمستندات...
             </span>
-            <span v-else>تقديم طلب التدريب رسمياً</span>
+            <span v-else>
+              {{
+                form.application_type === 'employment'
+                  ? 'تقديم طلب التوظيف رسمياً'
+                  : 'تقديم طلب التدريب رسمياً'
+              }}
+            </span>
           </button>
         </div>
 
@@ -343,9 +465,15 @@
           </div>
 
           <div>
-            <h2 class="text-2xl font-black text-slate-900">تم تسجيل طلب التدريب بنجاح!</h2>
+            <h2 class="text-2xl font-black text-slate-900">
+              {{
+                applicationData?.application_type === 'employment'
+                  ? 'تم تسجيل طلب التوظيف بنجاح!'
+                  : 'تم تسجيل طلب التدريب بنجاح!'
+              }}
+            </h2>
             <p class="text-xs text-slate-500 font-medium mt-1">
-              تم إرسال مستنداتك إلى إدارة الموارد البشرية بنجاح، يرجى حفظ كود المتابعة وتذكرة
+              تم إرسال بياناتك إلى إدارة الموارد البشرية بنجاح، يرجى حفظ كود المتابعة وتذكرة
               المراجعة أدناه.
             </p>
           </div>
@@ -356,6 +484,7 @@
             class="bg-gradient-to-b from-slate-50 to-slate-100/50 rounded-2xl p-5 border border-slate-200/60 shadow-inner relative max-w-sm mx-auto overflow-hidden animate-fadeIn"
           >
             <div
+              v-if="capturedImage"
               class="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md mb-4 bg-slate-200"
             >
               <img
@@ -365,7 +494,14 @@
               />
             </div>
 
-            <!-- 🌟 حقل كود المتابعة البارز الجديد -->
+            <div
+              v-else
+              class="w-20 h-20 mx-auto rounded-full flex items-center justify-center border-4 border-white shadow-md mb-4 bg-sky-100 text-sky-700 text-2xl font-black"
+            >
+              💼
+            </div>
+
+            <!-- 🌟 حقل كود المتابعة البارز -->
             <div
               class="mb-4 bg-indigo-950 border border-indigo-900 p-3 rounded-xl text-center shadow-md"
             >
@@ -381,7 +517,7 @@
               <div
                 class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
               >
-                <span class="text-slate-400 font-semibold">اسـم المتــدرب:</span>
+                <span class="text-slate-400 font-semibold">اسـم المتقـدم:</span>
                 <span class="font-extrabold text-slate-800 text-sm tracking-wide">{{
                   applicationData?.full_name
                 }}</span>
@@ -394,22 +530,50 @@
                   applicationData?.phone
                 }}</span>
               </div>
-              <div
-                class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
-              >
-                <span class="text-slate-400 font-semibold">المنشأة التعليمية:</span>
-                <span class="text-slate-800 font-extrabold">{{
-                  applicationData?.academic_institution
-                }}</span>
-              </div>
-              <div
-                class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
-              >
-                <span class="text-slate-400 font-semibold">التخصص الدراسي:</span>
-                <span class="text-indigo-600 font-black">{{
-                  applicationData?.academic_major
-                }}</span>
-              </div>
+
+              <template v-if="applicationData?.application_type === 'employment'">
+                <div
+                  v-if="applicationData?.qualification"
+                  class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
+                >
+                  <span class="text-slate-400 font-semibold">المؤهل العلمي:</span>
+                  <span class="text-slate-800 font-extrabold">{{
+                    applicationData?.qualification
+                  }}</span>
+                </div>
+                <div
+                  v-if="
+                    applicationData?.experience_years !== null &&
+                    applicationData?.experience_years !== undefined
+                  "
+                  class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
+                >
+                  <span class="text-slate-400 font-semibold">سنوات الخبرة:</span>
+                  <span class="text-sky-600 font-black"
+                    >{{ applicationData?.experience_years }} سنوات</span
+                  >
+                </div>
+              </template>
+
+              <template v-else>
+                <div
+                  class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
+                >
+                  <span class="text-slate-400 font-semibold">المنشأة التعليمية:</span>
+                  <span class="text-slate-800 font-extrabold">{{
+                    applicationData?.academic_institution
+                  }}</span>
+                </div>
+                <div
+                  class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
+                >
+                  <span class="text-slate-400 font-semibold">التخصص الدراسي:</span>
+                  <span class="text-indigo-600 font-black">{{
+                    applicationData?.academic_major
+                  }}</span>
+                </div>
+              </template>
+
               <div
                 class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-200/40"
               >
@@ -467,13 +631,13 @@
             </button>
           </div>
 
-          <!-- رابط ينقل المتدرب لبوابة المتابعة مباشرة -->
+          <!-- رابط ينقل المتقدم لبوابة المتابعة مباشرة -->
           <div class="pt-3">
             <button
               @click="goToTrackTab"
               class="text-xs font-bold text-indigo-600 hover:text-indigo-500 underline transition-colors"
             >
-              الانتقال لبوابة المتابعة والتعديل الآن &larr;
+              الانتقال لبوابة المتابعة والتعديل الآن ←
             </button>
           </div>
         </div>
@@ -493,17 +657,18 @@
                 @click="exitTrackSession"
                 class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
               >
-                &rarr; تسجيل الخروج من البوابة
+                → تسجيل الخروج من البوابة
               </button>
             </div>
 
+            <!-- أ: إذا كان الطلب مقبولاً (approved) -->
             <div v-if="store.currentTrackedApplication?.status === 'approved'" class="space-y-6">
               <div class="text-center space-y-1">
                 <div
                   class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-3 py-1 text-xs font-black"
                 >
                   <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  تم قبول طلب التدريب رسمياً
+                  تم قبول طلبك لبدء فترة التدريب رسمياً
                 </div>
                 <p class="text-xs text-slate-400 mt-1">
                   يرجى تحميل بطاقتك الرقمية الرسمية الموحدة لإبرازها عند بوابات الدخول ومرافق
@@ -543,14 +708,61 @@
               </div>
             </div>
 
-            <!-- ب: إذا كان الطلب معلقاً (pending) يفتح المكون محرر التعديل الشامل للبيانات -->
+            <!-- ب: إذا كان الطلب في مرحلة المعاينة (interview) -->
+            <div
+              v-else-if="store.currentTrackedApplication?.status === 'interview'"
+              class="text-center py-6 space-y-4 animate-scaleUp"
+            >
+              <div
+                class="mx-auto h-14 w-14 rounded-full bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 text-2xl shadow-sm"
+              >
+                🗓️
+              </div>
+
+              <div class="space-y-1">
+                <span
+                  class="inline-block bg-sky-100 text-sky-800 text-[11px] font-black px-3 py-1 rounded-full"
+                >
+                  مرحلة المعاينة الشخصية
+                </span>
+                <h3 class="text-xl font-black text-slate-900">
+                  مرحباً {{ store.currentTrackedApplication?.full_name }}، تم تحديد موعد معاينتك
+                </h3>
+                <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                  يرجى الحضور في الموعد المحدد أدناه لإجراء المعاينة مع إدارة الموارد البشرية.
+                </p>
+              </div>
+
+              <div
+                class="max-w-sm mx-auto bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-right space-y-2.5 text-xs"
+              >
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-400 font-bold">موعد المعاينة:</span>
+                  <span class="font-mono font-black text-sky-700 text-sm" dir="ltr">
+                    {{ store.currentTrackedApplication?.interview_date || 'سيتم التواصل معك' }}
+                  </span>
+                </div>
+
+                <div
+                  v-if="store.currentTrackedApplication?.interview_notes"
+                  class="pt-2 border-t border-slate-200/70"
+                >
+                  <span class="block text-slate-400 font-bold mb-1">تعليمات وملاحظات الإدارة:</span>
+                  <p class="text-slate-700 font-medium leading-relaxed">
+                    {{ store.currentTrackedApplication?.interview_notes }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ج: إذا كان الطلب معلقاً (pending) يفتح المكون محرر التعديل الشامل للبيانات -->
             <TraineeApplicationEditor
               v-else-if="store.currentTrackedApplication?.status === 'pending'"
               :application="store.currentTrackedApplication"
               @on-updated="handleTrackedUpdate"
             />
 
-            <!-- ج: إذا كان الطلب مرفوضاً -->
+            <!-- د: إذا كان الطلب مرفوضاً -->
             <div v-else class="text-center py-6 space-y-3 animate-scaleUp">
               <div
                 class="mx-auto h-12 w-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-bold"
@@ -559,7 +771,7 @@
               </div>
               <h3 class="text-lg font-black text-slate-900">نعتذر منك، تم رفض الطلب</h3>
               <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                بناءً على مراجعة المستندات والأعداد المتاحة، تعذر قبول طلب تدريبك لهذا الفصل. نتمنى
+                بناءً على مراجعة المستندات والأعداد المتاحة، تعذر قبول طلبك في الفترة الحالية. نتمنى
                 لك التوفيق.
               </p>
             </div>
@@ -573,7 +785,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { toPng } from 'html-to-image'
@@ -585,21 +798,24 @@ import TrackingLogin from './components/TrackingLogin.vue'
 import EmployeeIdentityCard from '../employees/components/EmployeeIdentityCard.vue'
 import TraineeApplicationEditor from './components/TraineeApplicationEditor.vue'
 
+const route = useRoute()
 const brandingStore = useBrandingStore()
 const store = useInternshipStore()
 const toast = useToast()
 
 const { appName } = storeToRefs(brandingStore)
 
-// متغيرات الكاميرا والتحكم باللقطات
+// متغيرات الكاميرا والملفات والتحكم باللقطات
 const videoRef = ref(null)
 const canvasRef = ref(null)
 const passCardRef = ref(null)
+const cvInputRef = ref(null)
 const isCameraOpen = ref(false)
 const capturedImage = ref(null)
 const photoBlob = ref(null)
-const passBadgeRef = ref(null) // المرجع الخاص بلقطة الكارت الجديد
-const isProcessingTrackedImage = ref(false) // حالة معالجة تحميل كارت التتبع المقبول
+const cvFile = ref(null)
+const passBadgeRef = ref(null)
+const isProcessingTrackedImage = ref(false)
 
 // متغيرات الحالة الأساسية
 const currentTab = ref('apply') // التبويب الحالي: apply | track
@@ -608,7 +824,10 @@ const isRegistered = ref(false)
 const isProcessingImage = ref(false)
 const applicationData = ref(null)
 
+const initialType = route.query.type === 'employment' ? 'employment' : 'internship'
+
 const form = ref({
+  application_type: initialType,
   full_name: '',
   phone: '',
   email: '',
@@ -616,13 +835,31 @@ const form = ref({
   academic_institution: '',
   academic_major: '',
   required_training_hours: null,
+  qualification: '',
+  experience_years: null,
   notes: '',
 })
+
+const isCurrentTypeClosed = computed(() => {
+  if (form.value.application_type === 'employment') {
+    return !store.isJobRegistrationOpen
+  }
+  return !store.isRegistrationOpen
+})
+
+const switchApplicationType = (type) => {
+  form.value.application_type = type
+}
+
+const onCvSelected = (e) => {
+  cvFile.value = e.target.files?.[0] || null
+}
 
 onMounted(() => {
   if (!brandingStore.isLoaded) {
     brandingStore.fetchBranding()
   }
+  store.fetchPublicRegistrationStatus()
 })
 
 const startCamera = async () => {
@@ -682,47 +919,75 @@ const stopCamera = () => {
 }
 
 /**
- * إرسال الطلب وحفظ البيانات لأول مرة
+ * إرسال الطلب وحفظ البيانات لأول مرة (تدريب أو توظيف)
  */
 const handleSubmit = async () => {
+  const isInternship = form.value.application_type === 'internship'
+
   if (!form.value.full_name.trim()) return toast.error('يرجى إدخال اسمك بالكامل.')
   if (!form.value.phone.trim()) return toast.error('يرجى إدخال رقم هاتفك الجوال.')
-  if (!form.value.academic_institution.trim()) return toast.error('يرجى تحديد جهتك الأكاديمية.')
-  if (!form.value.academic_major.trim()) return toast.error('يرجى إدخال تخصصك الأكاديمي.')
-  if (!photoBlob.value)
-    return toast.error('برجاء التقاط صورتك الشخصية الحية عبر الكاميرا أولاً لاستكمال الطلب.')
+
+  if (isInternship) {
+    if (!form.value.academic_institution.trim()) return toast.error('يرجى تحديد جهتك الأكاديمية.')
+    if (!form.value.academic_major.trim()) return toast.error('يرجى إدخال تخصصك الأكاديمي.')
+    if (!photoBlob.value) {
+      return toast.error('برجاء التقاط صورتك الشخصية الحية عبر الكاميرا أولاً لاستكمال الطلب.')
+    }
+  } else {
+    if (!form.value.qualification.trim()) return toast.error('يرجى إدخال المؤهل العلمي.')
+  }
 
   const formData = new FormData()
-  formData.append('photo', photoBlob.value, 'intern_live_capture.jpg')
+  formData.append('application_type', form.value.application_type)
+
+  if (photoBlob.value) {
+    formData.append('photo', photoBlob.value, 'applicant_live_capture.jpg')
+  }
+  if (cvFile.value) {
+    formData.append('cv', cvFile.value)
+  }
+
   formData.append('full_name', form.value.full_name.trim())
   formData.append('phone', form.value.phone.trim())
 
   if (form.value.email && form.value.email.trim()) formData.append('email', form.value.email.trim())
-  if (form.value.national_id && form.value.national_id.trim())
+  if (form.value.national_id && form.value.national_id.trim()) {
     formData.append('national_id', form.value.national_id.trim())
+  }
 
-  formData.append('academic_institution', form.value.academic_institution.trim())
-  formData.append('academic_major', form.value.academic_major.trim())
+  if (isInternship) {
+    formData.append('academic_institution', form.value.academic_institution.trim())
+    formData.append('academic_major', form.value.academic_major.trim())
 
-  if (
-    form.value.required_training_hours !== null &&
-    form.value.required_training_hours !== '' &&
-    !isNaN(Number(form.value.required_training_hours))
-  ) {
-    formData.append('required_training_hours', String(form.value.required_training_hours))
+    if (
+      form.value.required_training_hours !== null &&
+      form.value.required_training_hours !== '' &&
+      !isNaN(Number(form.value.required_training_hours))
+    ) {
+      formData.append('required_training_hours', String(form.value.required_training_hours))
+    }
+  } else {
+    formData.append('qualification', form.value.qualification.trim())
+    if (
+      form.value.experience_years !== null &&
+      form.value.experience_years !== '' &&
+      !isNaN(Number(form.value.experience_years))
+    ) {
+      formData.append('experience_years', String(form.value.experience_years))
+    }
   }
 
   if (form.value.notes && form.value.notes.trim()) formData.append('notes', form.value.notes.trim())
 
   try {
-    // استدعاء الأكشن من الـ Store والتحويل للحالة المسجلة بنجاح
     const result = await store.submitPublicApplication(formData)
     applicationData.value = result
     isRegistered.value = true
-    toast.success('تم تسجيل طلب انضمامك للتدريب وإصدار تذكرة المراجعة بنجاح!')
+    toast.success('تم تسجيل طلبك وإصدار تذكرة المراجعة وكود المتابعة بنجاح!')
 
-    // 🌟 الحل: تصفير حقول النموذج فوراً لمنع التكرار عند العودة للتبويب
+    const keptType = form.value.application_type
     form.value = {
+      application_type: keptType,
       full_name: '',
       phone: '',
       email: '',
@@ -730,9 +995,13 @@ const handleSubmit = async () => {
       academic_institution: '',
       academic_major: '',
       required_training_hours: null,
+      qualification: '',
+      experience_years: null,
       notes: '',
     }
-    photoBlob.value = null // تفريغ ملف الصورة القديم من الذاكرة
+    photoBlob.value = null
+    cvFile.value = null
+    if (cvInputRef.value) cvInputRef.value.value = ''
   } catch {
     toast.error(store.error || 'فشلت عملية إرسال الطلب، يرجى مراجعة المدخلات والمحاولة لاحقاً.')
   }
@@ -743,21 +1012,10 @@ const handleTrackedSuccess = () => {
   currentView.value = 'tracked_dashboard'
 }
 
-/**
- * 🌟 عند التعديل بنجاح: نقوم بنقل المستخدم فوراً لشاشة النجاح الموحدة
- * وعرض كارت التذكرة بالبيانات والصورة الجديدة المحدثة
- */
 const handleTrackedUpdate = (updatedApplication) => {
-  // 1. تحديث البيانات في الـ Store للمزامنة
   store.currentTrackedApplication = updatedApplication
-
-  // 2. ضخ البيانات المحدثة داخل كائن كارت النجاح
   applicationData.value = updatedApplication
-
-  // 3. تحديث رابط الصورة المعروضة في الكارت (سواء القديمة أو الملتقطة حديثاً)
   capturedImage.value = updatedApplication.photo_url
-
-  // 4. تفعيل علم النجاح وتبديل التبويب برمجياً لفتح الشاشة الفخمة فوراً
   isRegistered.value = true
   currentTab.value = 'apply'
 }
@@ -775,7 +1033,6 @@ const goToTrackTab = () => {
 
 const handleApplyTabClick = () => {
   currentTab.value = 'apply'
-  // إذا كان هناك تقديم ناجح سابق وقرر العودة للتقديم، نظف لقطة الكاميرا القديمة
   capturedImage.value = null
   applicationData.value = null
 }
@@ -796,8 +1053,8 @@ const downloadPassCard = async () => {
       pixelRatio: 2,
       width: width,
       height: height,
-      skipFonts: true, // 🛡️ الحل الجذري: تخطي فحص الخطوط الخارجية لمنع خطأ SecurityError
-      cacheBust: true, // 🛡️ منع المتصفح من كاش الصور القديم لضمان جلب الصورة الحية
+      skipFonts: true,
+      cacheBust: true,
       style: {
         margin: '0',
         transform: 'none',
@@ -806,10 +1063,10 @@ const downloadPassCard = async () => {
 
     const link = document.createElement('a')
     link.href = dataUrl
-    link.download = `Intern-Application-${applicationData.value?.full_name || 'HR'}.png`
+    link.download = `Application-${applicationData.value?.full_name || 'HR'}.png`
     link.click()
 
-    toast.success('تم تحميل تذكرة طلب التدريب إلى جهازك!')
+    toast.success('تم تحميل تذكرة الطلب إلى جهازك!')
   } catch (error) {
     console.error('Download failed', error)
     toast.error('لم نتمكن من معالجة كارت التذكرة، يرجى حفظ لقطة الشاشة يدوياً.')
@@ -820,33 +1077,30 @@ const downloadPassCard = async () => {
 
 /**
  * 🌟 التقاط وتحميل كارت الهوية الموحد الجديد كصورة للموبيلات
- * محسن ومحمي بنسبة 100% ضد الانضغاط أو التشويه على الشاشات الصغيرة
  */
 const downloadTrackedBadgeImage = async () => {
   if (!passBadgeRef.value) return
   isProcessingTrackedImage.value = true
 
   try {
-    // 🛡️ الحل الجذري: فرض الأبعاد الأصلية للتصميم (340x540) في الذاكرة لتفادي انضغاط الموبايل
     const EXACT_WIDTH = 340
     const EXACT_HEIGHT = 540
 
     const dataUrl = await toPng(passBadgeRef.value, {
-      quality: 1.0, // أعلى جودة ألوان ممكنة بدون فقدان بيانات
-      pixelRatio: 3, // ضرب الأبعاد في 3 لإنتاج صورة سوبر HD (1020x1620) صالحة للقراءة الفورية
+      quality: 1.0,
+      pixelRatio: 3,
       width: EXACT_WIDTH,
       height: EXACT_HEIGHT,
-      skipFonts: true, // تخطي قيود خطوط جوجل لتفادي أخطاء حظر التحميل
-      cacheBust: true, // تصفير الكاش لجلب الصور الشخصية الحديثة حية
+      skipFonts: true,
+      cacheBust: true,
       style: {
         margin: '0',
         transform: 'none',
-        width: `${EXACT_WIDTH}px`, // تثبيت العرض تماماً أثناء القذف والالتقاط
-        height: `${EXACT_HEIGHT}px`, // تثبيت الارتفاع تماماً لمنع المط أو الغفص
+        width: `${EXACT_WIDTH}px`,
+        height: `${EXACT_HEIGHT}px`,
       },
     })
 
-    // تنفيذ إجراء التحميل التلقائي للملف
     const link = document.createElement('a')
     link.href = dataUrl
     link.download = `Official-ID-${store.currentTrackedApplication?.full_name || 'Trainee'}.png`
@@ -860,8 +1114,9 @@ const downloadTrackedBadgeImage = async () => {
     isProcessingTrackedImage.value = false
   }
 }
+
 /**
- * مشاركة التذكرة كملف صورة أصلي متكامل عبر تطبيقات الهاتف بدون حظر أمني
+ * مشاركة التذكرة كملف صورة أصلي متكامل عبر تطبيقات الهاتف
  */
 const sharePassCard = async () => {
   if (!passCardRef.value) return
@@ -876,7 +1131,7 @@ const sharePassCard = async () => {
       pixelRatio: 2,
       width: width,
       height: height,
-      skipFonts: true, // 🛡️ تأمين شاشة المشاركة ضد قيود خطوط جوجل
+      skipFonts: true,
       cacheBust: true,
       style: {
         margin: '0',
@@ -889,14 +1144,14 @@ const sharePassCard = async () => {
 
     if (!blob) return toast.error('حدث خطأ أثناء معالجة الصورة.')
 
-    const fileName = `InternPass-${applicationData.value?.full_name || 'HR'}.png`
+    const fileName = `ApplicationPass-${applicationData.value?.full_name || 'HR'}.png`
     const file = new File([blob], fileName, { type: 'image/png' })
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         files: [file],
-        title: 'تذكرة طلب التدريب الرقمية',
-        text: `مرحباً، تم تسجيل طلب التدريب الخاص بالمتدرب: ${applicationData.value?.full_name || ''}`,
+        title: 'تذكرة طلب المراجعة الرقمية',
+        text: `مرحباً، تم تسجيل الطلب الخاص بالمتقدم: ${applicationData.value?.full_name || ''}`,
       })
     } else {
       const link = document.createElement('a')

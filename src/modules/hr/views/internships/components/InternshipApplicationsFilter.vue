@@ -8,7 +8,7 @@
         <AppInput
           id="internship_search_query"
           :model-value="searchQuery"
-          placeholder="ابحث باسم المتقدم للتدريب، أو رقم الهاتف الجوال..."
+          placeholder="ابحث بالاسم، رقم الهاتف، الهوية، أو كود المتابعة..."
           @update:model-value="$emit('update:searchQuery', $event)"
           clearable
           class="!rounded-xl text-xs"

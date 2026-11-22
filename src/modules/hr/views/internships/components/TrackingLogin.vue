@@ -3,11 +3,11 @@
   <div class="space-y-6 animate-fadeIn">
     <div class="text-center space-y-1.5">
       <h2 class="text-xl font-black text-slate-900 tracking-tight">
-        بوابة متابعة الطلبات الخارجية
+        بوابة متابعة طلبات التوظيف والتدريب
       </h2>
       <p class="text-xs text-slate-400 font-semibold max-w-xs mx-auto leading-relaxed">
-        أدخل رقم الهاتف الجوال وكود المتابعة السري المكون من 5 أرقام للاستعلام عن حالة طلبك أو
-        تعديله.
+        أدخل رقم الهاتف الجوال وكود المتابعة السري المكون من 5 أرقام للاستعلام عن حالة طلبك أو موعد
+        المعاينة أو تعديل بياناتك.
       </p>
     </div>
 
@@ -100,11 +100,8 @@ const handleTrackSubmit = async () => {
   }
 
   try {
-    // الاستدعاء مباشرة دون تخزين النتيجة في متغير غير مستخدم
     await store.trackApplication(loginForm.value.phone.trim(), loginForm.value.tracking_code.trim())
     toast.success('تم التحقق والدخول بنجاح.')
-
-    // إرسال حدث النجاح فقط دون تمرير داتا
     emit('on-tracked')
   } catch {
     toast.error(store.error || 'فشل الدخول، تأكد من صحة رقم الهاتف والرمز السري.')

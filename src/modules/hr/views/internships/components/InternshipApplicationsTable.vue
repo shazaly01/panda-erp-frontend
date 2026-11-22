@@ -20,7 +20,7 @@
     >
       <template #cell-applicant_info="{ item }">
         <div class="flex items-center gap-3 py-1">
-          <!-- صورة المتدرب الشخصية (Avatar) -->
+          <!-- صورة المتقدم الشخصية (Avatar) -->
           <div
             class="w-10 h-10 rounded-full overflow-hidden border border-slate-700/80 bg-slate-800 shrink-0 shadow-sm relative group"
           >
@@ -28,18 +28,18 @@
               v-if="item.photo_url"
               :src="item.photo_url"
               class="w-full h-full object-cover transform -scale-x-100"
-              alt="صورة المتدرب"
+              alt="صورة المتقدم"
             />
             <div
               v-else
-              class="w-full h-full flex items-center justify-center text-[10px] font-black text-slate-500 bg-slate-900/50"
+              class="w-full h-full flex items-center justify-center text-[10px] font-black text-slate-400 bg-slate-900/80"
             >
-              HR
+              {{ item.application_type === 'employment' ? '💼' : 'HR' }}
             </div>
           </div>
 
           <!-- التفاصيل النصية للمتقدم -->
-          <div class="flex flex-col gap-0.5 justify-center">
+          <div class="flex flex-col gap-1 justify-center">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span class="font-extrabold text-sm text-slate-100 tracking-wide">
                 {{ item.full_name }}
@@ -50,11 +50,37 @@
               </span>
             </div>
 
-            <div v-if="item.national_id" class="pt-0.5">
+            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <!-- شارة نوع الطلب -->
               <span
+                :class="[
+                  'inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded border',
+                  item.application_type === 'employment'
+                    ? 'bg-sky-500/10 text-sky-300 border-sky-500/25'
+                    : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25',
+                ]"
+              >
+                {{ item.application_type === 'employment' ? '💼 توظيف' : '🎓 تدريب' }}
+              </span>
+
+              <!-- شارة مصدر الطلب (إلكتروني / يدوي) -->
+              <span
+                v-if="item.source"
+                :class="[
+                  'inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border',
+                  item.source === 'manual'
+                    ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/25'
+                    : 'bg-slate-900 text-slate-400 border-slate-800',
+                ]"
+              >
+                {{ item.source === 'manual' ? 'إدخال يدوي' : 'إلكتروني' }}
+              </span>
+
+              <span
+                v-if="item.national_id"
                 class="inline-block text-[10px] font-mono font-bold text-slate-400 bg-slate-950 border border-slate-800 px-2 py-0.5 rounded shadow-sm"
               >
-                هوية/إقامة: {{ item.national_id }}
+                هوية: {{ item.national_id }}
               </span>
             </div>
           </div>
@@ -73,7 +99,7 @@
         </div>
       </template>
 
-      <!-- خلية تاريخ التقديم المستحدثة -->
+      <!-- خلية تاريخ التقديم -->
       <template #cell-created_at="{ item }">
         <div class="py-1">
           <span
@@ -86,15 +112,59 @@
         </div>
       </template>
 
+      <!-- خلية التفاصيل الأكاديمية (للتدريب) أو المهنية (للتوظيف) -->
       <template #cell-academic_info="{ item }">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-1">
+        <!-- حالة طلب التوظيف -->
+        <div
+          v-if="item.application_type === 'employment'"
+          class="flex flex-wrap items-center gap-x-2.5 gap-y-1 py-1"
+        >
+          <span
+            v-if="item.position?.title || item.position?.name"
+            class="font-extrabold text-xs text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20"
+          >
+            {{ item.position?.title || item.position?.name }}
+          </span>
+          <span v-if="item.qualification" class="font-bold text-xs text-slate-300">
+            {{ item.qualification }}
+          </span>
+          <span
+            v-if="item.experience_years !== null && item.experience_years !== undefined"
+            class="text-[11px] text-slate-400 font-semibold"
+          >
+            ({{ item.experience_years }} سنوات خبرة)
+          </span>
+          <a
+            v-if="item.cv_url"
+            :href="item.cv_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click.stop
+            class="text-[10px] font-black text-indigo-300 hover:text-indigo-200 bg-indigo-500/15 hover:bg-indigo-500/25 px-2 py-0.5 rounded-md border border-indigo-500/30 transition-colors"
+          >
+            📄 السيرة الذاتية
+          </a>
+          <span
+            v-if="
+              !item.position?.title && !item.position?.name && !item.qualification && !item.cv_url
+            "
+            class="text-slate-500 text-[11px] italic"
+          >
+            طلب توظيف مباشر
+          </span>
+        </div>
+
+        <!-- حالة التدريب الأكاديمي -->
+        <div v-else class="flex flex-wrap items-center gap-x-3 gap-y-1 py-1">
           <span class="font-bold text-xs text-slate-300">
-            {{ item.academic_institution }}
+            {{ item.academic_institution || 'غير محدد' }}
           </span>
-          <span class="text-slate-700 font-bold">-</span>
-          <span class="text-[11px] text-slate-400 font-medium">
-            {{ item.academic_major }}
-          </span>
+          <template v-if="item.academic_major">
+            <span class="text-slate-700 font-bold">-</span>
+            <span class="text-[11px] text-slate-400 font-medium">
+              {{ item.academic_major }}
+            </span>
+          </template>
           <span
             v-if="item.required_training_hours"
             class="text-[10px] font-black text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/25 shadow-inner"
@@ -105,7 +175,25 @@
       </template>
 
       <template #cell-duration_details="{ item }">
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 py-1 text-xs font-semibold">
+        <!-- عرض موعد المعاينة إذا كان في مرحلة المعاينة -->
+        <div
+          v-if="getEffectiveStatus(item) === 'interview'"
+          class="flex items-center gap-1.5 py-1 text-xs font-semibold"
+        >
+          <span class="text-slate-500 font-bold text-[11px]">المعاينة:</span>
+          <span
+            class="font-mono text-sky-400 font-bold tracking-wide bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20"
+            dir="ltr"
+          >
+            {{ item.interview_date || 'قيد التحديد' }}
+          </span>
+        </div>
+
+        <!-- عرض تواريخ التدريب إذا كانت محددة -->
+        <div
+          v-else-if="item.internship_start_date || item.internship_end_date"
+          class="flex flex-wrap items-center gap-x-4 gap-y-1 py-1 text-xs font-semibold"
+        >
           <div class="flex items-center gap-1.5">
             <span class="text-slate-500 font-bold text-[11px]">من:</span>
             <span
@@ -121,6 +209,8 @@
             >
           </div>
         </div>
+
+        <span v-else class="text-slate-600 text-[11px] italic">لم تُحدد الفترة بعد</span>
       </template>
 
       <template #cell-status="{ item }">
@@ -135,14 +225,14 @@
         </div>
       </template>
 
-      <!-- عمود الإجراءات المطور والداعم لحالة التدريب اللحظية والاعتماد الباركودي -->
+      <!-- عمود الإجراءات -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end px-2">
           <button
             v-if="item.status === 'approved' || item.status === 'training' || item.approved_barcode"
             @click.stop="$emit('print-card', item)"
             class="p-1.5 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/60 rounded-xl border border-indigo-800/30 transition-all flex items-center justify-center shadow-sm hover:scale-105"
-            title="عرض وطباعة بطاقة الهوية الرسمية للمتدرب"
+            title="عرض وطباعة بطاقة الهوية الرسمية"
           >
             <svg
               class="w-4 h-4"
@@ -158,8 +248,13 @@
               />
             </svg>
           </button>
+          <span
+            v-else-if="getEffectiveStatus(item) === 'interview'"
+            class="text-sky-400 text-[10px] font-bold pl-2"
+            >قيد المعاينة</span
+          >
           <span v-else class="text-slate-600 text-[10px] font-medium pl-2 italic"
-            >بانتظار الاعتماد</span
+            >بانتظار الإجراء</span
           >
         </div>
       </template>
@@ -185,14 +280,14 @@ const props = defineProps({
 
 defineEmits(['page-change', 'row-click', 'print-card'])
 
-// ترويسات الجدول المعمارية مع إضافة عمود تاريخ التقديم
+// ترويسات الجدول المعمارية
 const tableHeaders = computed(() => [
-  { key: 'applicant_info', label: 'بيانات المتدرب الشخصية', class: 'min-w-[280px]' },
-  { key: 'tracking_code', label: 'رقم المتابعة', class: 'min-w-[130px]' },
-  { key: 'created_at', label: 'تاريخ التقديم', class: 'min-w-[130px]' },
-  { key: 'academic_info', label: 'المنشأة والتخصص الأكاديمي', class: 'min-w-[260px]' },
-  { key: 'duration_details', label: 'فترة التدريب المعتمدة', class: 'min-w-[200px]' },
-  { key: 'status', label: 'حالة السجل', class: 'min-w-[100px]' },
+  { key: 'applicant_info', label: 'بيانات المتقدم والنوع', class: 'min-w-[290px]' },
+  { key: 'tracking_code', label: 'رقم المتابعة', class: 'min-w-[125px]' },
+  { key: 'created_at', label: 'تاريخ التقديم', class: 'min-w-[125px]' },
+  { key: 'academic_info', label: 'التفاصيل الأكاديمية / الوظيفية', class: 'min-w-[260px]' },
+  { key: 'duration_details', label: 'المعاينة / فترة التدريب', class: 'min-w-[200px]' },
+  { key: 'status', label: 'حالة السجل', class: 'min-w-[115px]' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])
 
@@ -202,7 +297,7 @@ const formatDate = (dateStr) => {
   return dateStr.split(' ')[0]
 }
 
-// دالة مساعدة لتحديد مفتاح الحالة الفعلي بناءً على تفاصيل التدريب
+// دالة مساعدة لتحديد مفتاح الحالة الفعلي بناءً على تفاصيل السجل
 const getEffectiveStatus = (item) => {
   if (typeof item === 'string') return item
   if (item?.internship_status) {
@@ -216,9 +311,10 @@ const statusLabel = (item) => {
   const status = getEffectiveStatus(item)
   const labels = {
     pending: 'انتظار المراجعة',
-    approved: 'متدرب نشط',
-    training: 'متدرب نشط',
-    active: 'متدرب نشط',
+    interview: 'قيد المعاينة',
+    approved: 'تحت التدريب',
+    training: 'تحت التدريب',
+    active: 'تحت التدريب',
     completed: 'منتهي الفترة',
     converted: 'تم التثبيت',
     rejected: 'طلب مرفوض',
@@ -231,6 +327,7 @@ const statusClasses = (item) => {
   const status = getEffectiveStatus(item)
   const classes = {
     pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    interview: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
     approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     training: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -245,6 +342,7 @@ const statusDotClasses = (item) => {
   const status = getEffectiveStatus(item)
   const classes = {
     pending: 'bg-amber-400 shadow-sm shadow-amber-400/50',
+    interview: 'bg-sky-400 shadow-sm shadow-sky-400/50',
     approved: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
     training: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',
     active: 'bg-emerald-400 shadow-sm shadow-emerald-400/50',

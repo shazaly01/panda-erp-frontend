@@ -2,70 +2,164 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn p-4 sm:p-6 text-right" dir="rtl">
     <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-5"
+      class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-800 pb-5"
     >
       <div>
-        <h1 class="text-2xl font-black text-slate-100 tracking-tight">
-          إدارة برنامج التدريب الأكاديمي
-        </h1>
+        <h1 class="text-2xl font-black text-slate-100 tracking-tight">إدارة التوظيف والتدريب</h1>
         <p class="text-xs md:text-sm text-slate-400 font-medium mt-1">
-          مراجعة وفرز طلبات التدريب الخارجية، وإدارة شؤون المتدربين النشطين وسجلات الأرشيف من شاشة
-          موحدة.
+          مراجعة وفرز طلبات التوظيف والتدريب (الإلكترونية واليدوية)، وإدارة المعاينات والمتدربين
+          النشطين وسجلات الأرشيف من شاشة موحدة.
         </p>
-        
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-        <!-- زر فتح / قفل استقبال طلبات التدريب -->
+      <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
+        <!-- زر الإدخال اليدوي المحلي -->
         <button
-          v-if="authStore.can('hr.internship_applications.toggle_status')"
-          @click="handleToggleStatus"
-          :disabled="loading"
+          v-if="authStore.can('hr.internship_applications.create')"
+          @click="isManualModalOpen = true"
           type="button"
-          :class="[
-            'px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 border shadow-sm',
-            isRegistrationOpen
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-              : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20',
-            loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-          ]"
-          :title="
-            isRegistrationOpen
-              ? 'استقبال الطلبات مفتوح حالياً - اضغط للإغلاق'
-              : 'استقبال الطلبات مغلق حالياً - اضغط للفتح'
-          "
+          class="px-4 py-2 rounded-xl text-xs font-extrabold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
         >
-          <span
-            class="w-2 h-2 rounded-full transition-all"
-            :class="isRegistrationOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"
-          ></span>
-          <span>
-            {{ isRegistrationOpen ? 'التقديم مفتوح (اضغط للقفل)' : 'التقديم مغلق (اضغط للفتح)' }}
-          </span>
+          <span>+ إدخال طلب يدوي</span>
         </button>
 
+        <!-- أزرار فتح / قفل استقبال الطلبات الأونلاين (تدريب / توظيف) -->
+        <template v-if="authStore.can('hr.internship_applications.toggle_status')">
+          <button
+            @click="handleToggleStatus('internship')"
+            :disabled="loading"
+            type="button"
+            :class="[
+              'px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 border shadow-sm',
+              isRegistrationOpen
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20',
+              loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+            ]"
+            :title="
+              isRegistrationOpen
+                ? 'تقديم التدريب مفتوح - اضغط للإغلاق'
+                : 'تقديم التدريب مغلق - اضغط للفتح'
+            "
+          >
+            <span
+              class="w-2 h-2 rounded-full transition-all"
+              :class="isRegistrationOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"
+            ></span>
+            <span>{{ isRegistrationOpen ? 'التدريب: مفتوح' : 'التدريب: مغلق' }}</span>
+          </button>
+
+          <button
+            @click="handleToggleStatus('employment')"
+            :disabled="loading"
+            type="button"
+            :class="[
+              'px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 border shadow-sm',
+              isJobRegistrationOpen
+                ? 'bg-sky-500/10 text-sky-400 border-sky-500/30 hover:bg-sky-500/20'
+                : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20',
+              loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+            ]"
+            :title="
+              isJobRegistrationOpen
+                ? 'تقديم التوظيف مفتوح - اضغط للإغلاق'
+                : 'تقديم التوظيف مغلق - اضغط للفتح'
+            "
+          >
+            <span
+              class="w-2 h-2 rounded-full transition-all"
+              :class="isJobRegistrationOpen ? 'bg-sky-400 animate-pulse' : 'bg-rose-500'"
+            ></span>
+            <span>{{ isJobRegistrationOpen ? 'التوظيف: مفتوح' : 'التوظيف: مغلق' }}</span>
+          </button>
+        </template>
+
+        <!-- روابط البوابة العامة (تدريب / توظيف) -->
         <div
           class="flex items-center bg-slate-900/60 border border-slate-800 rounded-xl p-1 gap-1 shadow-inner"
         >
           <button
-            @click="openPublicLink"
+            @click="openPublicLink('internship')"
             type="button"
-            class="px-3 py-2 text-xs font-bold text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-transparent shadow-sm"
+            class="px-2.5 py-1.5 text-xs font-bold text-emerald-400 hover:bg-slate-800 rounded-lg transition-all duration-200 flex items-center gap-1"
+            title="فتح رابط التقديم للتدريب"
           >
-            <span>فتح رابط التقديم 🔗</span>
+            <span>رابط التدريب 🔗</span>
+          </button>
+
+          <button
+            @click="copyPublicLink('internship')"
+            type="button"
+            class="px-2 py-1.5 text-xs font-bold text-slate-400 hover:bg-slate-800 rounded-lg transition-all duration-200"
+            title="نسخ رابط التقديم للتدريب"
+          >
+            📋
           </button>
 
           <div class="w-[1px] h-4 bg-slate-800"></div>
 
           <button
-            @click="copyPublicLink"
+            @click="openPublicLink('employment')"
             type="button"
-            class="px-3 py-2 text-xs font-bold text-slate-400 hover:bg-slate-800 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-transparent"
-            title="نسخ رابط التقديم الخارجي للمتدربين"
+            class="px-2.5 py-1.5 text-xs font-bold text-sky-400 hover:bg-slate-800 rounded-lg transition-all duration-200 flex items-center gap-1"
+            title="فتح رابط التقديم للتوظيف"
           >
-            <span>نسخ الرابط 📋</span>
+            <span>رابط التوظيف 🔗</span>
+          </button>
+
+          <button
+            @click="copyPublicLink('employment')"
+            type="button"
+            class="px-2 py-1.5 text-xs font-bold text-slate-400 hover:bg-slate-800 rounded-lg transition-all duration-200"
+            title="نسخ رابط التقديم للتوظيف"
+          >
+            📋
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- فلتر سريع حسب نوع الطلب (الكل / تدريب / توظيف) -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div
+        class="inline-flex items-center bg-slate-900/80 border border-slate-800 rounded-xl p-1 gap-1"
+      >
+        <button
+          @click="switchApplicationType('')"
+          type="button"
+          :class="[
+            'px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all',
+            applicationTypeFilter === ''
+              ? 'bg-slate-700 text-white shadow'
+              : 'text-slate-400 hover:text-slate-200',
+          ]"
+        >
+          الكل
+        </button>
+        <button
+          @click="switchApplicationType('internship')"
+          type="button"
+          :class="[
+            'px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all',
+            applicationTypeFilter === 'internship'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              : 'text-slate-400 hover:text-slate-200',
+          ]"
+        >
+          التدريب الأكاديمي 🎓
+        </button>
+        <button
+          @click="switchApplicationType('employment')"
+          type="button"
+          :class="[
+            'px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all',
+            applicationTypeFilter === 'employment'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200',
+          ]"
+        >
+          طلبات التوظيف 💼
+        </button>
       </div>
     </div>
 
@@ -82,7 +176,21 @@
             : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:bg-slate-800/60 hover:text-slate-300',
         ]"
       >
-        طلبات التقديم المعلقة ⏳
+        الطلبات المعلقة ⏳
+      </button>
+
+      <button
+        v-if="authStore.can('hr.internship_applications.view_pending')"
+        @click="switchStatusFilter('interview')"
+        type="button"
+        :class="[
+          'px-4 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-300 border focus:outline-none',
+          currentStatus === 'interview'
+            ? 'bg-sky-500/10 text-sky-400 border-sky-500/30 shadow-md shadow-sky-500/5'
+            : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:bg-slate-800/60 hover:text-slate-300',
+        ]"
+      >
+        قيد المعاينة 🗓️
       </button>
 
       <button
@@ -96,7 +204,7 @@
             : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:bg-slate-800/60 hover:text-slate-300',
         ]"
       >
-        المتدربين النشطين حالياً 🟢
+        تحت التدريب حالياً 🟢
       </button>
 
       <button
@@ -110,7 +218,7 @@
             : 'bg-slate-900/40 text-slate-400 border-slate-800 hover:bg-slate-800/60 hover:text-slate-300',
         ]"
       >
-        المتدربين المنتهية فترتهم 🔴
+        المنتهية فترتهم 🔴
       </button>
 
       <button
@@ -157,6 +265,12 @@
       @refresh="onApplicationProcessed"
     />
 
+    <ManualApplicationModal
+      v-if="isManualModalOpen"
+      v-model:isOpen="isManualModalOpen"
+      @created="onManualApplicationCreated"
+    />
+
     <div
       v-if="isCardModalOpen"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hide-on-print"
@@ -198,6 +312,7 @@ import { useAuthStore } from '@/stores/authStore'
 import SidebarFilter from './components/InternshipApplicationsFilter.vue'
 import InternshipApplicationsTable from './components/InternshipApplicationsTable.vue'
 import InternshipApplicationModal from './components/InternshipApplicationModal.vue'
+import ManualApplicationModal from './components/ManualApplicationModal.vue'
 import EmployeeIdentityCard from '../employees/components/EmployeeIdentityCard.vue'
 
 const internshipStore = useInternshipStore()
@@ -206,18 +321,22 @@ const toast = useToast()
 
 const {
   pendingApplications,
+  interviewApplications,
   activeInterns,
   rejectedApplications,
   completedInterns,
   applicationsPagination,
+  interviewPagination,
   internsPagination,
   rejectedPagination,
   completedPagination,
   loading,
   isRegistrationOpen,
+  isJobRegistrationOpen,
 } = storeToRefs(internshipStore)
 
 const currentStatus = ref('pending')
+const applicationTypeFilter = ref('')
 const searchQuery = ref('')
 const institutionFilter = ref('')
 const dateFrom = ref('')
@@ -227,6 +346,7 @@ let searchTimeout = null
 // توزيع وحساب المصفوفات النشطة تبعاً للتبويب الفعال
 const currentData = computed(() => {
   if (currentStatus.value === 'pending') return pendingApplications.value
+  if (currentStatus.value === 'interview') return interviewApplications.value
   if (currentStatus.value === 'approved') return activeInterns.value
   if (currentStatus.value === 'completed') return completedInterns.value
   if (currentStatus.value === 'rejected') return rejectedApplications.value
@@ -236,6 +356,7 @@ const currentData = computed(() => {
 // حساب كائن الترقيم الفعال المتوافق مع الحالة الحالية
 const currentPagination = computed(() => {
   if (currentStatus.value === 'pending') return applicationsPagination.value
+  if (currentStatus.value === 'interview') return interviewPagination.value
   if (currentStatus.value === 'approved') return internsPagination.value
   if (currentStatus.value === 'completed') return completedPagination.value
   if (currentStatus.value === 'rejected') return rejectedPagination.value
@@ -250,6 +371,12 @@ const onSearch = () => {
   }, 400)
 }
 
+// التبديل بين نوع الطلب (الكل / تدريب / توظيف)
+const switchApplicationType = (type) => {
+  applicationTypeFilter.value = type
+  handlePageChange(1)
+}
+
 // التبديل بين التبويبات وتفريغ حقول البحث تلقائياً لتهيئة المشهد الجديد
 const switchStatusFilter = (status) => {
   currentStatus.value = status
@@ -260,10 +387,11 @@ const switchStatusFilter = (status) => {
   handlePageChange(1)
 }
 
-// دالة جلب وضخ البيانات المركزية مع حقن معاملات البحث وفلاتر النطاق الزمني
+// دالة جلب وضخ البيانات المركزية مع حقن معاملات البحث وفلاتر النطاق الزمني ونوع الطلب
 const handlePageChange = async (page = 1) => {
   const filters = {
     page,
+    application_type: applicationTypeFilter.value || undefined,
     search: searchQuery.value,
     institution: institutionFilter.value,
     date_from: dateFrom.value,
@@ -273,6 +401,8 @@ const handlePageChange = async (page = 1) => {
   try {
     if (currentStatus.value === 'pending') {
       await internshipStore.fetchPendingApplications(filters)
+    } else if (currentStatus.value === 'interview') {
+      await internshipStore.fetchInterviewApplications(filters)
     } else if (currentStatus.value === 'approved') {
       await internshipStore.fetchActiveInterns(filters)
     } else if (currentStatus.value === 'completed') {
@@ -285,15 +415,15 @@ const handlePageChange = async (page = 1) => {
   }
 }
 
-// تبديل حالة استقبال طلبات التدريب مع إظهار إشعار بنتيجة العملية
-const handleToggleStatus = async () => {
+// تبديل حالة استقبال طلبات التدريب أو التوظيف مع إظهار إشعار بنتيجة العملية
+const handleToggleStatus = async (type = 'internship') => {
   try {
-    const res = await internshipStore.toggleRegistrationStatus()
+    const res = await internshipStore.toggleRegistrationStatus(type)
     if (res?.message) {
       toast.success(res.message)
     }
   } catch {
-    toast.error('فشل في تغيير حالة استقبال طلبات التدريب.')
+    toast.error('فشل في تغيير حالة استقبال الطلبات.')
   }
 }
 
@@ -323,6 +453,7 @@ onMounted(() => {
 
 const isModalOpen = ref(false)
 const selectedApplication = ref(null)
+const isManualModalOpen = ref(false)
 
 const openApplicationDetails = (application) => {
   selectedApplication.value = application
@@ -333,6 +464,14 @@ const onApplicationProcessed = () => {
   isModalOpen.value = false
   selectedApplication.value = null
   handlePageChange(currentPagination.value?.current_page || 1)
+}
+
+const onManualApplicationCreated = () => {
+  if (currentStatus.value === 'pending') {
+    handlePageChange(1)
+  } else {
+    switchStatusFilter('pending')
+  }
 }
 
 const isCardModalOpen = ref(false)
@@ -348,20 +487,27 @@ const closeIdentityCardPrint = () => {
   selectedIntern.value = null
 }
 
-const copyPublicLink = () => {
-  const publicUrl = `${window.location.origin}/internship/apply`
+const getPublicUrl = (type = 'internship') => {
+  const base = `${window.location.origin}/internship/apply`
+  return type === 'employment' ? `${base}?type=employment` : base
+}
+
+const copyPublicLink = (type = 'internship') => {
+  const publicUrl = getPublicUrl(type)
+  const label = type === 'employment' ? 'التوظيف' : 'التدريب'
   navigator.clipboard
     .writeText(publicUrl)
     .then(() => {
-      toast.success('تم نسخ رابط بوابة التقديم للتدريب بنجاح!')
+      toast.success(`تم نسخ رابط بوابة التقديم لـ ${label} بنجاح!`)
     })
     .catch(() => {
       toast.error('عذراً، لم نتمكن من نسخ الرابط.')
     })
 }
 
-const openPublicLink = () => {
-  window.open('/internship/apply', '_blank')
+const openPublicLink = (type = 'internship') => {
+  const path = type === 'employment' ? '/internship/apply?type=employment' : '/internship/apply'
+  window.open(path, '_blank')
 }
 </script>
 

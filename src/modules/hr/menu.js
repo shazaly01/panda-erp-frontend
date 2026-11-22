@@ -49,7 +49,7 @@ export default [
       { name: 'قائمة الموظفين', routeName: 'EmployeesList', permission: 'hr.employees.view' },
       { name: 'العقود والتوظيف', routeName: 'ContractsList', permission: 'hr.contracts.view' },
       {
-        name: 'برنامج التدريب الأكاديمي',
+        name: 'التوظيف والتدريب',
         routeName: 'InternshipApplicationsList',
         permission: 'hr.internship_applications.view',
       },

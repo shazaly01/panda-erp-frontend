@@ -8,38 +8,75 @@
       size="max-w-3xl"
     >
       <div class="space-y-6 text-right -mt-2 pb-2" dir="rtl">
+        <!-- بطاقة الترويسة والصورة الشخصية -->
         <div
           class="flex flex-col sm:flex-row justify-between items-center gap-5 bg-slate-950/40 border border-slate-800/60 p-5 rounded-2xl relative overflow-hidden"
         >
           <div class="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto">
             <div
-              @click="isPhotoZoomed = true"
-              class="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-700 shadow-md bg-slate-800 shrink-0 cursor-pointer hover:ring-4 hover:ring-indigo-500/30 hover:border-indigo-400 transition-all duration-300 group relative"
-              title="اضغط لتكبير الصورة الشخصية 🔍"
+              @click="application?.photo_url ? (isPhotoZoomed = true) : null"
+              :class="[
+                'w-20 h-20 rounded-full overflow-hidden border-2 border-slate-700 shadow-md bg-slate-800 shrink-0 transition-all duration-300 group relative',
+                application?.photo_url
+                  ? 'cursor-pointer hover:ring-4 hover:ring-indigo-500/30 hover:border-indigo-400'
+                  : '',
+              ]"
+              :title="application?.photo_url ? 'اضغط لتكبير الصورة الشخصية 🔍' : ''"
             >
               <img
                 v-if="application?.photo_url"
                 :src="application.photo_url"
                 class="w-full h-full object-cover transform -scale-x-100 group-hover:scale-110 transition-transform duration-300"
-                alt="صورة المتدرب"
+                alt="صورة المتقدم"
               />
               <div
                 v-else
-                class="w-full h-full flex items-center justify-center text-slate-500 text-xs font-bold"
+                class="w-full h-full flex items-center justify-center text-slate-400 text-lg font-bold"
               >
-                HR
+                {{ application?.application_type === 'employment' ? '💼' : 'HR' }}
               </div>
               <div
+                v-if="application?.photo_url"
                 class="absolute inset-0 bg-indigo-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-white font-bold"
               >
                 تكبير 👁️
               </div>
             </div>
 
-            <div class="text-center sm:text-right space-y-1">
-              <h4 class="text-base font-black text-slate-100 tracking-wide">
-                {{ application?.full_name }}
-              </h4>
+            <div class="text-center sm:text-right space-y-1.5">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <h4 class="text-base font-black text-slate-100 tracking-wide">
+                  {{ application?.full_name }}
+                </h4>
+
+                <span
+                  :class="[
+                    'text-[10px] font-extrabold px-2 py-0.5 rounded border',
+                    application?.application_type === 'employment'
+                      ? 'bg-sky-500/10 text-sky-300 border-sky-500/25'
+                      : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25',
+                  ]"
+                >
+                  {{
+                    application?.application_type === 'employment'
+                      ? '💼 طلب توظيف'
+                      : '🎓 تدريب أكاديمي'
+                  }}
+                </span>
+
+                <span
+                  v-if="application?.source"
+                  :class="[
+                    'text-[10px] font-bold px-2 py-0.5 rounded border',
+                    application?.source === 'manual'
+                      ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/25'
+                      : 'bg-slate-900 text-slate-400 border-slate-800',
+                  ]"
+                >
+                  {{ application?.source === 'manual' ? 'إدخال يدوي' : 'تقديم إلكتروني' }}
+                </span>
+              </div>
+
               <div
                 class="flex flex-wrap justify-center sm:justify-start items-center gap-x-3 gap-y-1 text-xs"
               >
@@ -51,12 +88,18 @@
                   application?.email
                 }}</span>
               </div>
-              <div class="pt-1">
+              <div class="pt-0.5 flex flex-wrap justify-center sm:justify-start gap-2">
                 <span
                   v-if="application?.national_id"
                   class="inline-block text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-md"
                 >
                   هوية/إقامة: {{ application.national_id }}
+                </span>
+                <span
+                  v-if="application?.tracking_code"
+                  class="inline-block text-[10px] font-mono font-bold bg-indigo-950/60 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded-md"
+                >
+                  كود المتابعة: {{ application.tracking_code }}
                 </span>
               </div>
             </div>
@@ -79,13 +122,56 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- شبكة التفاصيل حسب نوع الطلب (توظيف أو تدريب) -->
+        <div
+          v-if="application?.application_type === 'employment'"
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+        >
+          <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
+            <span class="block text-[10px] font-bold text-slate-500 mb-1">الوظيفة المستهدفة</span>
+            <span class="text-xs font-extrabold text-sky-300">
+              {{ application?.position?.title || application?.position?.name || 'غير محددة' }}
+            </span>
+          </div>
+          <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
+            <span class="block text-[10px] font-bold text-slate-500 mb-1">المؤهل العلمي</span>
+            <span class="text-xs font-extrabold text-slate-200">
+              {{ application?.qualification || 'غير محدد' }}
+            </span>
+          </div>
+          <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
+            <span class="block text-[10px] font-bold text-slate-500 mb-1">سنوات الخبرة</span>
+            <span class="text-xs font-bold font-mono text-amber-400">
+              {{
+                application?.experience_years !== null &&
+                application?.experience_years !== undefined
+                  ? `${application.experience_years} سنوات`
+                  : 'غير محدد'
+              }}
+            </span>
+          </div>
+          <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
+            <span class="block text-[10px] font-bold text-slate-500 mb-1">السيرة الذاتية (CV)</span>
+            <a
+              v-if="application?.cv_url"
+              :href="application.cv_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-xs font-black text-indigo-400 hover:text-indigo-300 underline"
+            >
+              <span>معاينة / تحميل 📄</span>
+            </a>
+            <span v-else class="text-xs text-slate-500 font-medium">لا يوجد ملف</span>
+          </div>
+        </div>
+
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
             <span class="block text-[10px] font-bold text-slate-500 mb-1"
               >المنشأة التعليمية / الجامعة</span
             >
             <span class="text-xs font-extrabold text-slate-200">{{
-              application?.academic_institution
+              application?.academic_institution || 'غير محدد'
             }}</span>
           </div>
           <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
@@ -93,12 +179,12 @@
               >التخصص الدراسي الرئيسي</span
             >
             <span class="text-xs font-extrabold text-slate-200">{{
-              application?.academic_major
+              application?.academic_major || 'غير محدد'
             }}</span>
           </div>
           <div class="border border-slate-800/60 p-3 rounded-xl bg-slate-950/20 shadow-sm">
             <span class="block text-[10px] font-bold text-slate-500 mb-1"
-              >تاريخ بدء التدريب الأكاديمي</span
+              >تاريخ بدء التدريب المعتمد</span
             >
             <span class="text-xs font-bold font-mono text-emerald-400">{{
               application?.internship_start_date || 'لم يحدد بعد'
@@ -114,6 +200,26 @@
           </div>
         </div>
 
+        <!-- بيانات المعاينة المجدولة مسبقاً إن وجدت -->
+        <div
+          v-if="application?.interview_date || application?.interview_notes"
+          class="border border-sky-500/30 p-4 rounded-xl bg-sky-950/15 shadow-sm space-y-1.5"
+        >
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-black text-sky-300">🗓️ بيانات المعاينة المحددة</span>
+            <span
+              v-if="application?.interview_date"
+              class="text-xs font-mono font-bold text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded border border-sky-500/20"
+              dir="ltr"
+            >
+              {{ application.interview_date }}
+            </span>
+          </div>
+          <p v-if="application?.interview_notes" class="text-xs text-slate-300 leading-relaxed">
+            {{ application.interview_notes }}
+          </p>
+        </div>
+
         <div class="border border-slate-800/60 p-4 rounded-xl bg-slate-950/20 shadow-sm">
           <span class="block text-[10px] font-bold text-slate-500 mb-1"
             >ملاحظات خاصة ملحقة بالطلب</span
@@ -123,8 +229,83 @@
           </p>
         </div>
 
+        <!-- ======================================================= -->
+        <!-- قسم جدولة المعاينة (متاح في حالتي المعلق وقيد المعاينة) -->
+        <!-- ======================================================= -->
         <div
-          v-if="statusType === 'pending'"
+          v-if="
+            (statusType === 'pending' || statusType === 'interview') &&
+            authStore.can('hr.internship_applications.interview')
+          "
+          class="border border-sky-800/40 rounded-2xl bg-sky-950/10 p-4 space-y-3"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-3.5 bg-sky-500 rounded-full"></span>
+              <h5 class="text-xs font-black text-sky-300">مرحلة المعاينة والتقييم الأولي</h5>
+            </div>
+
+            <button
+              type="button"
+              @click="showInterviewForm = !showInterviewForm"
+              class="px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 transition-all"
+            >
+              {{
+                showInterviewForm
+                  ? 'إخفاء نموذج المعاينة ▲'
+                  : statusType === 'interview'
+                    ? 'تعديل موعد المعاينة 🗓️'
+                    : 'تحديد موعد معاينة 🗓️'
+              }}
+            </button>
+          </div>
+
+          <div v-if="showInterviewForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-400 mb-1"
+                >تاريخ ووقت المعاينة *</label
+              >
+              <input
+                v-model="interviewForm.interview_date"
+                type="datetime-local"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-100 text-right focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all shadow-sm"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-400 mb-1"
+                >ملاحظات / موقع المعاينة للمتقدم</label
+              >
+              <input
+                v-model="interviewForm.interview_notes"
+                type="text"
+                placeholder="مثال: الحضور لمقر الإدارة مع إحضار أصل الشهادات..."
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all shadow-sm"
+              />
+            </div>
+
+            <div class="sm:col-span-2 flex justify-end">
+              <button
+                type="button"
+                @click="handleScheduleInterview"
+                :disabled="store.loading"
+                class="px-4 py-2 rounded-xl text-xs font-black text-white bg-sky-600 hover:bg-sky-500 shadow-md transition-all disabled:opacity-50"
+              >
+                {{
+                  store.loading
+                    ? 'جاري الحفظ...'
+                    : 'حفظ موعد المعاينة ونقل الطلب لقائمة المعاينات 🗓️'
+                }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- قسم الاعتماد لدخول فترة التدريب (متاح في pending و interview) -->
+        <!-- ======================================================= -->
+        <div
+          v-if="statusType === 'pending' || statusType === 'interview'"
           class="border-t border-dashed border-slate-800 pt-4 space-y-4"
         >
           <div class="flex items-center gap-2">
@@ -132,7 +313,7 @@
               class="w-1.5 h-3.5 bg-indigo-500 rounded-full shadow-sm shadow-indigo-500/50"
             ></span>
             <h5 class="text-xs font-black text-slate-200">
-              إجراءات الاعتماد والتعميد الإداري والمالي
+              إجراءات الاعتماد والتعميد الإداري والمالي (بدء فترة التدريب)
             </h5>
           </div>
 
@@ -150,7 +331,7 @@
 
             <div class="space-y-1.5">
               <label class="block text-xs font-bold text-slate-400 mb-1"
-                >المكافأة المالية المقطوعة شهرياً *</label
+                >المكافأة / الراتب المبدئي شهرياً *</label
               >
               <input
                 v-model.number="approvalForm.basic_salary"
@@ -213,16 +394,12 @@
             <span
               class="w-1.5 h-3.5 bg-emerald-500 rounded-full shadow-sm shadow-emerald-500/50"
             ></span>
-            <h5 class="text-xs font-black text-slate-200">
-              تحديث وتمديد فترات التدريب الأكاديمي المفتوح
-            </h5>
+            <h5 class="text-xs font-black text-slate-200">تحديث وتمديد فترات التدريب المفتوح</h5>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-slate-400 mb-1"
-                >تاريخ بدء التدريب الأكاديمي *</label
-              >
+              <label class="block text-xs font-bold text-slate-400 mb-1">تاريخ بدء التدريب *</label>
               <input
                 v-model="approvalForm.internship_start_date"
                 type="date"
@@ -243,6 +420,7 @@
           </div>
         </div>
 
+        <!-- أزرار الإجراءات السفلية -->
         <div class="border-t border-slate-800 pt-4 mt-2 flex flex-wrap justify-end gap-3 shrink-0">
           <template v-if="statusType === 'approved' || statusType === 'completed'">
             <button
@@ -293,7 +471,7 @@
             إغلاق النافذة
           </button>
 
-          <template v-else-if="statusType === 'pending'">
+          <template v-else-if="statusType === 'pending' || statusType === 'interview'">
             <button
               @click="handleReject"
               :disabled="store.loading"
@@ -330,7 +508,7 @@
                 ></path>
               </svg>
               <span>{{
-                store.loading ? 'جاري التوثيق...' : 'اعتماد وقبول المتدرب رسمياً 🟢'
+                store.loading ? 'جاري التوثيق...' : 'اعتماد وقبول المتقدم للتدريب 🟢'
               }}</span>
             </button>
           </template>
@@ -376,6 +554,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/authStore'
 import { useInternshipStore } from '@/modules/hr/stores/internshipStore'
 import { useDepartmentStore } from '@/modules/hr/stores/departmentStore'
 import { useEmployeeStore } from '@/modules/hr/stores/employeeStore'
@@ -392,6 +571,7 @@ const props = defineProps({
 const emit = defineEmits(['update:isOpen', 'refresh'])
 
 const toast = useToast()
+const authStore = useAuthStore()
 const store = useInternshipStore()
 
 const departmentStore = useDepartmentStore()
@@ -404,6 +584,12 @@ const scheduleStore = useWorkingScheduleStore()
 const { schedules } = storeToRefs(scheduleStore)
 
 const isPhotoZoomed = ref(false)
+const showInterviewForm = ref(false)
+
+const interviewForm = ref({
+  interview_date: '',
+  interview_notes: '',
+})
 
 const approvalForm = ref({
   working_schedule_id: '',
@@ -417,18 +603,25 @@ const approvalForm = ref({
 // دالة تهيئة المنبثقة وحقن البيانات الحالية بشكل تفاعلي ومفتوح
 const initModal = async () => {
   isPhotoZoomed.value = false
+  showInterviewForm.value = false
+
+  interviewForm.value = {
+    interview_date: props.application?.interview_date
+      ? props.application.interview_date.replace(' ', 'T').slice(0, 16)
+      : '',
+    interview_notes: props.application?.interview_notes || '',
+  }
 
   approvalForm.value = {
     working_schedule_id: '',
     basic_salary: 0,
     department_id: props.application?.department_id || null,
     manager_id: props.application?.manager_id || null,
-    // سحب وتعبئة تواريخ التدريب الحالية تلقائياً إذا كان المتدرب نشطاً أو منتهي الفترة
     internship_start_date: props.application?.internship_start_date || '',
     internship_end_date: props.application?.internship_end_date || '',
   }
 
-  if (props.statusType === 'pending') {
+  if (props.statusType === 'pending' || props.statusType === 'interview') {
     try {
       await Promise.all([
         flatDepartments.value.length === 0 ? departmentStore.fetchDepartments() : null,
@@ -438,7 +631,7 @@ const initModal = async () => {
         schedules.value.length === 0 ? scheduleStore.fetchSchedules({ per_page: 100 }) : null,
       ])
     } catch (err) {
-      console.error('Failed to load dropdowns for intern approval workflow', err)
+      console.error('Failed to load dropdowns for approval workflow', err)
     }
   }
 }
@@ -463,6 +656,25 @@ const handleClose = () => {
   emit('update:isOpen', false)
 }
 
+// جدولة موعد المعاينة ونقل الطلب لقائمة المعاينات
+const handleScheduleInterview = async () => {
+  if (!interviewForm.value.interview_date) {
+    return toast.error('برجاء تحديد تاريخ ووقت المعاينة أولاً.')
+  }
+
+  try {
+    await store.scheduleInterview(props.application.id, {
+      interview_date: interviewForm.value.interview_date.replace('T', ' '),
+      interview_notes: interviewForm.value.interview_notes || null,
+    })
+    toast.success(`تم تحديد موعد المعاينة للمتقدم (${props.application.full_name}) بنجاح.`)
+    emit('refresh')
+    emit('update:isOpen', false)
+  } catch {
+    toast.error(store.error || 'فشلت عملية جدولة المعاينة.')
+  }
+}
+
 // دالة معالجة وحفظ تعديلات وتمديد فترات التدريب المفتوحة
 const handleUpdateDates = async () => {
   if (!approvalForm.value.internship_start_date) {
@@ -484,7 +696,7 @@ const handleUpdateDates = async () => {
       internship_end_date: approvalForm.value.internship_end_date,
     }
     await store.updateInternshipDates(props.application.id, payload)
-    toast.success(`تم تحديث وتمديد فترة التدريب للمتدرب (${props.application.full_name}) بنجاح.`)
+    toast.success(`تم تحديث وتمديد فترة التدريب لـ (${props.application.full_name}) بنجاح.`)
     emit('refresh')
     emit('update:isOpen', false)
   } catch {
@@ -501,10 +713,10 @@ const handleApprove = async () => {
     approvalForm.value.basic_salary === undefined ||
     approvalForm.value.basic_salary < 0
   ) {
-    return toast.error('برجاء إدخل قيمة المكافأة المالية المقطوعة.')
+    return toast.error('برجاء إدخال قيمة المكافأة / الراتب المبدئي.')
   }
   if (!approvalForm.value.internship_start_date) {
-    return toast.error('برجاء تحديد تاريخ بدء التدريب المعتمد للمتدرب.')
+    return toast.error('برجاء تحديد تاريخ بدء التدريب المعتمد.')
   }
   if (!approvalForm.value.internship_end_date) {
     return toast.error('برجاء تحديد تاريخ انتهاء فترة التدريب المعتمدة.')
@@ -518,22 +730,22 @@ const handleApprove = async () => {
 
   try {
     await store.approveIntern(props.application.id, approvalForm.value)
-    toast.success(`تم قبول واعتماد المتدرب (${props.application.full_name}) بنجاح.`)
+    toast.success(`تم قبول واعتماد (${props.application.full_name}) لدخول فترة التدريب بنجاح.`)
     emit('refresh')
     emit('update:isOpen', false)
   } catch {
-    toast.error(store.error || 'فشلت عملية اعتماد المتدرب.')
+    toast.error(store.error || 'فشلت عملية اعتماد الطلب.')
   }
 }
 
 const handleReject = async () => {
   try {
     await store.rejectIntern(props.application.id)
-    toast.success(`تم رفض طلب الانضمام المقدم من المتقدم (${props.application.full_name}).`)
+    toast.success(`تم رفض الطلب المقدم من (${props.application.full_name}).`)
     emit('refresh')
     emit('update:isOpen', false)
   } catch {
-    toast.error(store.error || 'فشلت عملية رفض طلب التدريب.')
+    toast.error(store.error || 'فشلت عملية رفض الطلب.')
   }
 }
 </script>
@@ -552,7 +764,8 @@ const handleReject = async () => {
     transform: translateY(0);
   }
 }
-input[type='date']::-webkit-calendar-picker-indicator {
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
   filter: invert(0.7) sepia(1) saturate(5) hue-rotate(175deg);
   cursor: pointer;
 }

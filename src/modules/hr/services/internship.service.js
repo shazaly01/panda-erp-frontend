@@ -2,21 +2,28 @@ import apiClient from '@/services/apiClient'
 
 export const internshipService = {
   /**
-   * جلب حالة استقبال طلبات التدريب الخارجية الحالية (مفتوح / مغلق)
+   * جلب حالة استقبال الطلبات للبوابة العامة الخارجية (تدريب وتوظيف)
+   */
+  getPublicRegistrationStatus() {
+    return apiClient.get('/hr/internship/registration-status')
+  },
+
+  /**
+   * جلب حالة استقبال طلبات التدريب والتوظيف الخارجية الحالية من لوحة الإدارة (مفتوح / مغلق)
    */
   getRegistrationStatus() {
     return apiClient.get('/hr/internship-applications/registration-status')
   },
 
   /**
-   * تبديل حالة استقبال طلبات التدريب الخارجية (فتح / قفل)
+   * تبديل حالة استقبال الطلبات الخارجية (فتح / قفل) للتدريب أو التوظيف
    */
-  toggleRegistrationStatus() {
-    return apiClient.post('/hr/internship-applications/toggle-registration-status')
+  toggleRegistrationStatus(type = 'internship') {
+    return apiClient.post('/hr/internship-applications/toggle-registration-status', { type })
   },
 
   /**
-   * جلب قائمة طلبات التدريب الخارجية المعلقة مع دعم الفلترة والترقيم
+   * جلب قائمة طلبات التدريب والتوظيف المعلقة مع دعم الفلترة والترقيم
    */
   getPendingApplications(params = {}) {
     return apiClient.get('/hr/internship-applications', {
@@ -25,7 +32,16 @@ export const internshipService = {
   },
 
   /**
-   * جلب قائمة طلبات التدريب الخارجية المرفوضة
+   * جلب قائمة الطلبات المحولة لمرحلة المعاينة مع دعم الفلترة والترقيم
+   */
+  getInterviewApplications(params = {}) {
+    return apiClient.get('/hr/internship-applications', {
+      params: { ...params, status: 'interview' },
+    })
+  },
+
+  /**
+   * جلب قائمة الطلبات المرفوضة
    */
   getRejectedApplications(params = {}) {
     return apiClient.get('/hr/internship-applications', {
@@ -34,7 +50,7 @@ export const internshipService = {
   },
 
   /**
-   * جلب قائمة المتدربين الحاليين النشطين في المؤسسة
+   * جلب قائمة المتدربين والمرشحين النشطين تحت التدريب في المؤسسة
    */
   getActiveInterns(params = {}) {
     return apiClient.get('/hr/internship-applications/active-interns', { params })
@@ -55,7 +71,7 @@ export const internshipService = {
   },
 
   /**
-   * الرابط العام الخارجي لتقديم طلب تدريب جديد (استقبال FormData لتمرير الصورة الحية)
+   * الرابط العام الخارجي لتقديم طلب تدريب أو توظيف جديد (استقبال FormData لتمرير الصورة والسيرة الذاتية)
    */
   publicApply(formData) {
     return apiClient.post('/hr/internship/apply', formData, {
@@ -66,14 +82,32 @@ export const internshipService = {
   },
 
   /**
-   * اعتماد وقبول طلب التدريب وتحويله لمتدرب رسمي داخل النظام
+   * إدخال طلب تدريب أو توظيف يدوياً من لوحة الإدارة (لوكال)
+   */
+  storeManualApplication(formData) {
+    return apiClient.post('/hr/internship-applications/manual', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
+  /**
+   * جدولة معاينة ونقل الطلب إلى مرحلة المعاينة
+   */
+  scheduleInterview(id, data) {
+    return apiClient.post(`/hr/internship-applications/${id}/interview`, data)
+  },
+
+  /**
+   * اعتماد وقبول طلب التدريب أو التوظيف وتحويله لمتدرب رسمي داخل النظام
    */
   approveApplication(id, data) {
     return apiClient.post(`/hr/internship-applications/${id}/approve`, data)
   },
 
   /**
-   * رفض طلب التدريب المقدم من شاشة لوحة التحكم
+   * رفض الطلب المقدم من شاشة لوحة التحكم
    */
   rejectApplication(id) {
     return apiClient.post(`/hr/internship-applications/${id}/reject`)
@@ -90,7 +124,7 @@ export const internshipService = {
   },
 
   /**
-   * تحديث وتعديل الطلب الخارجي المعلق (استقبال FormData لدعم تعديل الصورة)
+   * تحديث وتعديل الطلب الخارجي المعلق (استقبال FormData لدعم تعديل الصورة أو السيرة الذاتية)
    */
   updatePublicApplication(id, formData) {
     return apiClient.post(`/hr/internship/update/${id}`, formData, {

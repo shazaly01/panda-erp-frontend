@@ -7,7 +7,11 @@
         class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-3 py-1 text-xs font-black"
       >
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        تم قبول طلب التدريب رسمياً
+        {{
+          application.application_type === 'employment'
+            ? 'تم قبول طلب التوظيف لبدء فترة التدريب رسمياً'
+            : 'تم قبول طلب التدريب رسمياً'
+        }}
       </div>
       <p class="text-xs text-slate-400 font-semibold mt-1">
         يرجى تصوير الشاشة (Screenshot) أو تحميل البطاقة الرقمية لإبرازها عند بوابة الدخول.
@@ -27,18 +31,33 @@
         class="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl transition-opacity duration-500 group-hover:opacity-70"
       ></div>
 
-      <!-- ترويسة البطاقة -->
+      <!-- ترويسة البطاقة الديناميكية المرتبطة بـ brandingStore -->
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-4 mb-5">
         <div class="text-right">
-          <h3 class="text-sm font-black tracking-wide text-slate-100">بطاقة دخول متدرب</h3>
-          <p class="text-[10px] text-indigo-400 font-bold tracking-wider mt-0.5 font-mono">
-            PANDA ERP GATEPASS
+          <h3 class="text-sm font-black tracking-wide text-slate-100">
+            {{
+              application.application_type === 'employment'
+                ? 'بطاقة دخول (تحت التدريب)'
+                : 'بطاقة دخول متدرب'
+            }}
+          </h3>
+          <p class="text-[10px] text-indigo-400 font-bold tracking-wider mt-0.5">
+            {{ brandingStore.appName }}
           </p>
         </div>
+
         <div
-          class="h-9 w-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center"
+          class="h-10 w-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden p-1.5 shrink-0"
         >
+          <img
+            v-if="brandingStore.logoMiniUrl && !logoLoadFailed"
+            :src="brandingStore.logoMiniUrl"
+            :alt="brandingStore.appName"
+            class="w-full h-full object-contain"
+            @error="logoLoadFailed = true"
+          />
           <svg
+            v-else
             xmlns="http://www.w3.org/2000/svg"
             class="h-5 w-5 text-indigo-400"
             fill="none"
@@ -66,13 +85,16 @@
               v-if="application.photo_url"
               :src="application.photo_url"
               class="w-full h-full object-cover transform -scale-x-100"
-              alt="صورة المتدرب"
+              alt="صورة المتقدم"
             />
-            <div v-else class="w-full h-full flex items-center justify-center text-slate-600">
+            <div
+              v-else
+              class="w-full h-full flex items-center justify-center text-slate-600 text-xs"
+            >
               لا توجد صورة
             </div>
           </div>
-          <p class="text-[10px] text-slate-500 font-bold">الصورة الشخصية الحية</p>
+          <p class="text-[10px] text-slate-500 font-bold">الصورة الشخصية</p>
         </div>
 
         <!-- مربع الـ QR Code البوابي المولد ديناميكياً -->
@@ -80,7 +102,6 @@
           <div
             class="w-28 h-28 mx-auto bg-white rounded-2xl p-2 shadow-md flex items-center justify-center border border-slate-800 transition-transform duration-300 group-hover:scale-[1.02]"
           >
-            <!-- توليد الـ QR Code اعتماداً على رابط خدمة التوليد المباشرة الفعالة والمستقرة بناءً على كود الباركود -->
             <img
               v-if="application.barcode"
               :src="`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${application.barcode}&color=0f172a`"
@@ -100,7 +121,7 @@
         </div>
       </div>
 
-      <!-- بيانات المتدرب الأساسية المنظمة باللغة العربية -->
+      <!-- بيانات المتقدم الأساسية المنظمة باللغة العربية -->
       <div class="space-y-2 text-right text-xs">
         <div
           class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
@@ -110,18 +131,45 @@
             application.full_name
           }}</span>
         </div>
-        <div
-          class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
-        >
-          <span class="text-slate-500 font-bold">المنشأة التعليمية:</span>
-          <span class="font-extrabold text-slate-300">{{ application.academic_institution }}</span>
-        </div>
-        <div
-          class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
-        >
-          <span class="text-slate-500 font-bold">التخصص الأكاديمي:</span>
-          <span class="font-black text-indigo-400">{{ application.academic_major }}</span>
-        </div>
+
+        <!-- حقول طلب التوظيف -->
+        <template v-if="application.application_type === 'employment'">
+          <div
+            v-if="application.position?.title || application.position?.name"
+            class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
+          >
+            <span class="text-slate-500 font-bold">الوظيفة المستهدفة:</span>
+            <span class="font-extrabold text-sky-400">{{
+              application.position?.title || application.position?.name
+            }}</span>
+          </div>
+          <div
+            v-if="application.qualification"
+            class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
+          >
+            <span class="text-slate-500 font-bold">المؤهل العلمي:</span>
+            <span class="font-black text-indigo-400">{{ application.qualification }}</span>
+          </div>
+        </template>
+
+        <!-- حقول التدريب الأكاديمي -->
+        <template v-else>
+          <div
+            class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
+          >
+            <span class="text-slate-500 font-bold">المنشأة التعليمية:</span>
+            <span class="font-extrabold text-slate-300">{{
+              application.academic_institution
+            }}</span>
+          </div>
+          <div
+            class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
+          >
+            <span class="text-slate-500 font-bold">التخصص الأكاديمي:</span>
+            <span class="font-black text-indigo-400">{{ application.academic_major }}</span>
+          </div>
+        </template>
+
         <div
           class="bg-slate-900/60 border border-slate-800/40 px-3 py-2 rounded-xl flex justify-between items-center"
         >
@@ -132,10 +180,10 @@
         </div>
       </div>
 
-      <!-- تذييل أمني للبطاقة -->
+      <!-- تذييل البطاقة -->
       <div class="mt-4 pt-3 border-t border-slate-900 text-center">
         <p class="text-[9px] text-slate-600 font-bold tracking-widest">
-          SECURE GATEPASS SYSTEM © 2026
+          {{ brandingStore.appName }} • GATEPASS © {{ new Date().getFullYear() }}
         </p>
       </div>
     </div>
@@ -168,9 +216,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { toPng } from 'html-to-image'
+import { useBrandingStore } from '@/stores/brandingStore'
 
 const props = defineProps({
   application: {
@@ -179,9 +228,17 @@ const props = defineProps({
   },
 })
 
+const brandingStore = useBrandingStore()
 const toast = useToast()
 const passBadgeRef = ref(null)
 const isProcessing = ref(false)
+const logoLoadFailed = ref(false)
+
+onMounted(() => {
+  if (!brandingStore.isLoaded) {
+    brandingStore.fetchBranding()
+  }
+})
 
 /**
  * دالة التقاط البطاقة وتحميلها كصورة PNG مع الحفاظ على سلامة الخط العربي والـ QR وحمايتها من القص
@@ -191,25 +248,26 @@ const downloadBadgeImage = async () => {
   isProcessing.value = true
 
   try {
-    // 🌟 حساب الأبعاد الحقيقية لكارت الـ QR لمنع القص من الأطراف
     const width = passBadgeRef.value.offsetWidth
     const height = passBadgeRef.value.offsetHeight
 
     const dataUrl = await toPng(passBadgeRef.value, {
       quality: 0.98,
-      pixelRatio: 3, // رفع الدقة لـ 3 ليكون الـ QR Code حاداً وسهل القراءة عند كشك الأمن
+      pixelRatio: 3,
       width: width,
       height: height,
+      skipFonts: true,
+      cacheBust: true,
       style: {
         margin: '0',
         transform: 'none',
-        borderRadius: '24px', // المحافظة على انحناء الحواف في الصورة المستخرجة
+        borderRadius: '24px',
       },
     })
 
     const link = document.createElement('a')
     link.href = dataUrl
-    link.download = `InternBadge-${props.application.full_name || 'GatePass'}.png`
+    link.download = `GatePass-${props.application.full_name || 'HR'}.png`
     link.click()
 
     toast.success('تم تحميل بطاقة الدخول الأمنية بنجاح.')
