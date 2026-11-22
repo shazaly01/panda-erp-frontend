@@ -82,14 +82,31 @@
         />
       </div>
 
-      <div class="md:col-span-2">
+      <div :class="isCompanyContribution ? 'md:col-span-1' : 'md:col-span-2'">
         <AppDropdown
           id="rule-mapping"
-          label="الربط مع شجرة الحسابات (المقاصة)"
+          :label="
+            isCompanyContribution ? 'حساب المصروف (المدين) *' : 'الربط مع شجرة الحسابات (المقاصة)'
+          "
           :model-value="modelValue.account_mapping_key"
           @update:model-value="updateField('account_mapping_key', $event)"
           :options="accountMappingOptions"
-          placeholder="اختر الحساب المحاسبي المرتبط"
+          :placeholder="
+            isCompanyContribution ? 'اختر حساب مصروف المساهمة' : 'اختر الحساب المحاسبي المرتبط'
+          "
+          :required="isCompanyContribution"
+        />
+      </div>
+
+      <div v-if="isCompanyContribution" class="md:col-span-1">
+        <AppDropdown
+          id="rule-credit-mapping"
+          label="حساب الالتزام / الهيئة (الدائن) *"
+          :model-value="modelValue.credit_account_mapping_key"
+          @update:model-value="updateField('credit_account_mapping_key', $event)"
+          :options="creditAccountMappingOptions"
+          placeholder="اختر حساب الالتزام المستحق"
+          required
         />
       </div>
     </div>
@@ -125,12 +142,9 @@
 
 <script setup>
 import { onMounted, computed } from 'vue'
-// إزالة apiClient لأنه لم يعد هناك حاجة له
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
-
-// استدعاء المخزن الخاص بالتوجيه المحاسبي
 import { useAccountMappingStore } from '@/modules/accounting/stores/accountMappingStore'
 
 const props = defineProps({
@@ -139,11 +153,19 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const isCompanyContribution = computed(() => props.modelValue.category === 'company_contribution')
+
 const updateField = (field, value) => {
-  emit('update:modelValue', {
+  const updated = {
     ...props.modelValue,
     [field]: value,
-  })
+  }
+
+  if (field === 'category' && value !== 'company_contribution') {
+    updated.credit_account_mapping_key = null
+  }
+
+  emit('update:modelValue', updated)
 }
 
 // ==========================================
@@ -151,20 +173,25 @@ const updateField = (field, value) => {
 // ==========================================
 const accountMappingStore = useAccountMappingStore()
 
-// نستخدم computed لكي تتحدث القائمة المنسدلة تلقائياً إذا تغيرت بيانات الـ Store
 const accountMappingOptions = computed(() => {
-  // 1. تم إزالة الأقواس () لأن groupedMappings أصبحت computed في الـ Store
-  const hrMappings = accountMappingStore.groupedMappings.hr || []
+  const mappings = [
+    ...(accountMappingStore.groupedMappings?.hr || []),
+    ...(accountMappingStore.groupedMappings?.tax || []),
+  ]
 
-  return hrMappings.map((mapping) => ({
+  return mappings.map((mapping) => ({
     id: mapping.key,
-    // 2. استخدام account_code مباشرة لأن هذا هو شكل البيانات في الـ JSON المرسل من السيرفر
     name: mapping.account_code ? `${mapping.name} (${mapping.account_code})` : mapping.name,
   }))
 })
 
+const creditAccountMappingOptions = computed(() => {
+  return accountMappingOptions.value.filter(
+    (option) => option.id !== props.modelValue.account_mapping_key,
+  )
+})
+
 onMounted(async () => {
-  // للتحسين: نطلب البيانات من السيرفر فقط إذا لم تكن موجودة مسبقاً في الـ Store
   if (accountMappingStore.mappings.length === 0) {
     await accountMappingStore.fetchMappings()
   }

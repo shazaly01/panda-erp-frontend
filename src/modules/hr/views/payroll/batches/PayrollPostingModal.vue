@@ -77,10 +77,13 @@
               <p class="text-sm font-bold text-amber-800 dark:text-amber-400">
                 تأكيد عملية الترحيل المالي
               </p>
-              <p class="text-xs text-amber-700 dark:text-amber-500/80 mt-1">
+              <p class="text-xs text-amber-700 dark:text-amber-500/80 mt-1 leading-relaxed">
                 سيتم ترحيل رواتب عدد (<strong>{{ employeeIds.length }}</strong
                 >) موظف. هذه العملية ستقوم بتوليد قيد محاسبي في دفتر الأستاذ بتاريخ نهاية الفترة
-                <span v-if="runType === 'regular'">وسيتم إغلاق الفترة المالية.</span>
+                <span v-if="runType === 'regular'"
+                  >وسيتم إغلاق الفترة المالية تلقائياً عند اكتمال ترحيل كافة الموظفين المؤهلين
+                  فيها،</span
+                >
                 ولن يمكن التراجع عنها إلا بقيد عكسي.
               </p>
             </div>
@@ -176,7 +179,6 @@ import AppButton from '@/components/ui/AppButton.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   employeeIds: { type: Array, required: true },
-  // 🚀 التعديل: استقبال كائن الفترة بالكامل ونوع المسير
   payPeriod: { type: Object, required: true },
   runType: { type: String, required: true },
 })
@@ -194,11 +196,11 @@ watch(
   () => props.modelValue,
   (isOpen) => {
     if (isOpen && props.payPeriod) {
-      // 🚀 التعديل: وصف ذكي يعتمد على نوع التنفيذ واسم الفترة
       const typeLabel = props.runType === 'overtime_only' ? 'الإضافية (Overtime)' : 'الأساسية'
       form.value.description = `إثبات مسير الرواتب ${typeLabel} للموظفين لفترة: ${props.payPeriod.name}`
     }
   },
+  { immediate: true },
 )
 
 const formatCurrency = (value) => {
@@ -217,12 +219,11 @@ const submit = async () => {
   if (!form.value.description.trim()) return toast.error('شرح القيد المحاسبي مطلوب.')
 
   try {
-    // 🚀 التعديل: إرسال الـ IDs الجديدة بدلاً من التواريخ
     await payrollStore.postPayrollBatch({
       employee_ids: props.employeeIds,
       pay_period_id: props.payPeriod.id,
       run_type: props.runType,
-      description: form.value.description,
+      description: form.value.description.trim(),
     })
 
     toast.success('تم الترحيل بنجاح وتم إنشاء القيد المحاسبي.')

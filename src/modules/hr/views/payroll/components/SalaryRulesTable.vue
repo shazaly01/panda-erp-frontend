@@ -45,24 +45,74 @@
       </template>
 
       <template #cell-mapping="{ item }">
-        <div v-if="item.account_details" class="flex flex-col py-1">
-          <span class="text-xs font-bold text-text-primary">
-            {{ item.account_details.account_name }}
-          </span>
-          <span class="text-[11px] font-mono text-text-muted mt-0.5">
-            كود: {{ item.account_details.account_code }}
-          </span>
+        <!-- عرض الطرفين المدين والدائن لمساهمات الشركة -->
+        <div v-if="item.category === 'company_contribution'" class="flex flex-col gap-1.5 py-1">
+          <div class="flex flex-col">
+            <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+              مدين (المصروف):
+            </span>
+            <span
+              v-if="item.account_details?.account_name"
+              class="text-xs font-semibold text-text-primary"
+            >
+              {{ item.account_details.account_name }}
+              <span class="font-mono text-[11px] text-text-muted">
+                ({{ item.account_details.account_code }})
+              </span>
+            </span>
+            <span
+              v-else-if="item.account_mapping_key"
+              class="text-[11px] font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 w-fit"
+            >
+              {{ item.account_mapping_key }} (حساب مفقود)
+            </span>
+            <span v-else class="text-[11px] text-rose-500 italic">غير محدد</span>
+          </div>
+
+          <div class="flex flex-col border-t border-surface-border/60 pt-1">
+            <span class="text-[11px] font-bold text-purple-600 dark:text-purple-400">
+              دائن (الالتزام):
+            </span>
+            <span
+              v-if="item.credit_account_details?.account_name"
+              class="text-xs font-semibold text-text-primary"
+            >
+              {{ item.credit_account_details.account_name }}
+              <span class="font-mono text-[11px] text-text-muted">
+                ({{ item.credit_account_details.account_code }})
+              </span>
+            </span>
+            <span
+              v-else-if="item.credit_account_mapping_key"
+              class="text-[11px] font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 w-fit"
+            >
+              {{ item.credit_account_mapping_key }} (حساب مفقود)
+            </span>
+            <span v-else class="text-[11px] text-rose-500 italic">غير محدد</span>
+          </div>
         </div>
 
-        <span
-          v-else-if="item.account_mapping_key"
-          class="text-xs font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200"
-          title="المفتاح موجود ولكن الحساب غير متوفر بشجرة الحسابات"
-        >
-          {{ item.account_mapping_key }} (حساب مفقود)
-        </span>
+        <!-- عرض الحساب الواحد للاستحقاقات والاستقطاعات -->
+        <template v-else>
+          <div v-if="item.account_details?.account_name" class="flex flex-col py-1">
+            <span class="text-xs font-bold text-text-primary">
+              {{ item.account_details.account_name }}
+            </span>
+            <span class="text-[11px] font-mono text-text-muted mt-0.5">
+              كود: {{ item.account_details.account_code }}
+            </span>
+          </div>
 
-        <span v-else class="text-xs text-text-muted italic"> غير مرتبط </span>
+          <span
+            v-else-if="item.account_mapping_key"
+            class="text-xs font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200"
+            title="المفتاح موجود ولكن الحساب غير متوفر بشجرة الحسابات"
+          >
+            {{ item.account_mapping_key }} (حساب مفقود)
+          </span>
+
+          <span v-else class="text-xs text-text-muted italic"> غير مرتبط </span>
+        </template>
       </template>
 
       <template #cell-status="{ item }">
@@ -144,7 +194,7 @@ const tableHeaders = computed(() => [
   { key: 'rule_info', label: 'القاعدة / الكود', class: 'min-w-[180px]' },
   { key: 'category', label: 'الفئة', class: 'min-w-[120px]' },
   { key: 'calculation', label: 'طريقة الحساب والقيمة', class: 'min-w-[200px]' },
-  { key: 'mapping', label: 'الربط المحاسبي', class: 'min-w-[150px]' },
+  { key: 'mapping', label: 'الربط المحاسبي', class: 'min-w-[210px]' },
   { key: 'status', label: 'الحالة', class: 'min-w-[100px]' },
   { key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' },
 ])

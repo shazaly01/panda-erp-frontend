@@ -60,7 +60,7 @@
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          سجل المسيرات المعتمدة
+          سجل المسيرات
         </button>
       </div>
     </div>
@@ -424,7 +424,7 @@
 
     <!-- تبويب 2: سجل المسيرات السابقة -->
     <div v-if="activeTab === 'history'">
-      <PayrollHistoryTable />
+      <PayrollHistoryTable @rolled-back="onPayrollRolledBack" />
     </div>
 
     <!-- النافذة المنبثقة لمعاينة قسيمة الراتب -->
@@ -535,10 +535,10 @@ const filteredEmployees = computed(() => {
   })
 })
 
-// قائمة الإدارات المتاحة للموظفين المعروضين
+// قائمة الإدارات المتاحة من كافة موظفي المجموعة حتى لا تختفي الإدارات عند التصفية
 const availableDepartments = computed(() => {
   const deps = new Map()
-  filteredEmployees.value.forEach((emp) => {
+  groupEmployees.value.forEach((emp) => {
     if (emp.department) {
       deps.set(emp.department.id, emp.department.name)
     }
@@ -568,6 +568,7 @@ onMounted(async () => {
 watch(selectedPayGroupId, async (newGroupId) => {
   selectedPayPeriodId.value = ''
   selectedEmployees.value = []
+  filterDepartment.value = ''
   payrollStore.eligibleEmployees = []
   if (newGroupId) {
     await payPeriodStore.fetchOpenPeriods(newGroupId)
@@ -581,7 +582,6 @@ watch([selectedPayPeriodId, selectedRunType], async ([newPeriodId, newRunType]) 
   selectedEmployees.value = []
   if (newPeriodId && newRunType) {
     await payrollStore.fetchEligibleEmployees(newPeriodId, newRunType)
-    // التحديد التلقائي لكافة المؤهلين الجاهزين (غير المرحلين) فور اكتمال الجلب
     selectedEmployees.value = selectableEmployees.value.map((emp) => emp.id)
   } else {
     payrollStore.eligibleEmployees = []
@@ -638,21 +638,41 @@ const openPostingModal = () => {
   isPostingModalOpen.value = true
 }
 
-// عند اكتمال الترحيل بنجاح
+// عند اكتمال الترحيل بنجاح (يدعم الترحيل الجزئي والإغلاق التلقائي للفترة عند اكتمال الموظفين)
 const onPayrollPosted = async () => {
   selectedEmployees.value = []
 
-  // تحديث فوري لحالة الموظفين من الخادم (ستتغير حالة الموظفين المرحلين تلقائياً إلى is_processed = true)
-  if (selectedPayPeriodId.value && selectedRunType.value) {
-    await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
-  }
-
-  if (selectedRunType.value === 'regular') {
+  if (selectedRunType.value === 'regular' && selectedPayGroupId.value) {
     await payPeriodStore.fetchOpenPeriods(selectedPayGroupId.value)
-    selectedPayPeriodId.value = ''
+
+    const isPeriodStillOpen = payPeriodStore.periods.some(
+      (period) => period.id === selectedPayPeriodId.value,
+    )
+
+    if (isPeriodStillOpen && selectedPayPeriodId.value) {
+      await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
+    } else {
+      selectedPayPeriodId.value = ''
+      payrollStore.eligibleEmployees = []
+    }
+  } else if (selectedPayPeriodId.value && selectedRunType.value) {
+    await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
   }
 
   activeTab.value = 'history'
   payrollStore.fetchBatchesHistory()
+}
+
+// عند التراجع عن مسير من السجل: تحديث الفترات المفتوحة وحالة الموظفين فوراً
+const onPayrollRolledBack = async () => {
+  selectedEmployees.value = []
+
+  if (selectedPayGroupId.value) {
+    await payPeriodStore.fetchOpenPeriods(selectedPayGroupId.value)
+  }
+
+  if (selectedPayPeriodId.value && selectedRunType.value) {
+    await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
+  }
 }
 </script>

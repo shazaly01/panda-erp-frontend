@@ -15,10 +15,10 @@
               />
             </svg>
           </span>
-          سجل مسيرات الرواتب المعتمدة
+          سجل مسيرات الرواتب
         </h2>
         <p class="text-xs text-text-muted mt-1">
-          قائمة بمسيرات الرواتب التي تم اعتمادها وترحيل قيودها المحاسبية لدفتر الأستاذ.
+          قائمة بمسيرات الرواتب المعتمدة والملغاة وقيودها المحاسبية لأغراض الصرف والتدقيق المالي.
         </p>
       </div>
 
@@ -54,10 +54,11 @@
     >
       <!-- خلية الرقم والتاريخ -->
       <template #cell-batch_info="{ item }">
-        <div class="flex flex-col py-1">
+        <div class="flex flex-col py-1" :class="{ 'opacity-65': isCancelled(item) }">
           <div class="flex items-center gap-1.5">
             <span
-              class="font-mono font-bold text-xs bg-surface-ground px-2 py-0.5 rounded border border-surface-border text-primary"
+              class="font-mono font-bold text-xs bg-surface-ground px-2 py-0.5 rounded border border-surface-border"
+              :class="isCancelled(item) ? 'text-text-muted line-through' : 'text-primary'"
             >
               {{ item.number || `#BATCH-${item.id}` }}
             </span>
@@ -83,8 +84,11 @@
 
       <!-- خلية البيان والفترة -->
       <template #cell-description="{ item }">
-        <div class="flex flex-col py-1">
-          <span class="font-medium text-sm text-text-primary">
+        <div class="flex flex-col py-1" :class="{ 'opacity-65': isCancelled(item) }">
+          <span
+            class="font-medium text-sm"
+            :class="isCancelled(item) ? 'text-text-muted line-through' : 'text-text-primary'"
+          >
             {{ item.name || 'مسير رواتب موظفين' }}
           </span>
           <span v-if="item.pay_period || item.payPeriod" class="text-xs text-text-muted mt-0.5">
@@ -111,10 +115,29 @@
         </span>
       </template>
 
+      <!-- خلية حالة المسير -->
+      <template #cell-status="{ item }">
+        <span
+          v-if="isCancelled(item)"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+          ملغى (تم التراجع)
+        </span>
+        <span
+          v-else
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          معتمد ومُرحّل
+        </span>
+      </template>
+
       <!-- خلية عدد الموظفين -->
       <template #cell-employees_count="{ item }">
         <span
           class="font-mono text-xs font-bold text-text-primary px-2.5 py-1 rounded-lg bg-surface-ground border border-surface-border"
+          :class="{ 'opacity-65': isCancelled(item) }"
         >
           {{ item.employees_count || item.payslips_count || 0 }} موظف
         </span>
@@ -122,7 +145,14 @@
 
       <!-- خلية إجمالي المبلغ المالي -->
       <template #cell-total_amount="{ item }">
-        <span class="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
+        <span
+          class="font-mono font-bold text-sm"
+          :class="
+            isCancelled(item)
+              ? 'text-text-muted line-through'
+              : 'text-emerald-600 dark:text-emerald-400'
+          "
+        >
           {{ formatCurrency(item.total_amount) }}
         </span>
       </template>
@@ -131,7 +161,12 @@
       <template #cell-journal_entry="{ item }">
         <div v-if="item.journal_entry || item.journalEntry" class="flex items-center gap-1">
           <span
-            class="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20"
+            class="text-xs font-mono font-bold px-2 py-0.5 rounded border"
+            :class="
+              isCancelled(item)
+                ? 'text-text-muted bg-surface-ground border-surface-border line-through'
+                : 'text-primary bg-primary/10 border-primary/20'
+            "
           >
             #{{ (item.journal_entry || item.journalEntry)?.entry_number }}
           </span>
@@ -159,9 +194,17 @@
         </span>
       </template>
 
-      <!-- خلية الإجراءات (تصدير البنك + التراجع) -->
+      <!-- خلية الإجراءات (تصدير البنك + التراجع للمسيرات المعتمدة فقط) -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end gap-2">
+        <div v-if="isCancelled(item)" class="flex items-center justify-end">
+          <span
+            class="text-[11px] font-medium text-text-muted bg-surface-ground border border-surface-border px-2.5 py-1 rounded-lg"
+          >
+            تم عكس القيد
+          </span>
+        </div>
+
+        <div v-else class="flex items-center justify-end gap-2">
           <AppButton
             size="sm"
             variant="secondary"
@@ -308,7 +351,7 @@
                 <p class="text-xs text-rose-700 dark:text-rose-500/80 mt-1 leading-relaxed">
                   هذا الإجراء سيقوم تلقائياً بتوليد قيد محاسبي عكسي في دفتر الأستاذ لإلغاء الأثر
                   المالي، وإعادة فتح الفترة المالية، وإعادة أقساط السلف والمدخلات المالية لحالة غير
-                  معالجة حتى تتمكن من تصحيح ومعاينة المسير من جديد.
+                  معالجة مع إبقاء المسير في السجل بحالة ملغى للتدقيق.
                 </p>
               </div>
             </div>
@@ -394,14 +437,19 @@ import AppTable from '@/components/ui/AppTable.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
 
+const emit = defineEmits(['rolled-back'])
+
 const authStore = useAuthStore()
 const payrollStore = usePayrollStore()
 const toast = useToast()
+
+const isCancelled = (batch) => batch?.status === 'cancelled'
 
 const tableHeaders = computed(() => [
   { key: 'batch_info', label: 'المسير / تاريخ الاعتماد', class: 'min-w-[170px]' },
   { key: 'description', label: 'البيان والفترة المالية', class: 'min-w-[200px]' },
   { key: 'run_type', label: 'نوع المسير', class: 'min-w-[130px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[135px]' },
   { key: 'employees_count', label: 'الموظفين', class: 'text-center min-w-[100px]' },
   { key: 'total_amount', label: 'إجمالي الصافي', class: 'text-left min-w-[130px]' },
   { key: 'journal_entry', label: 'رقم القيد', class: 'min-w-[110px]' },
@@ -410,7 +458,7 @@ const tableHeaders = computed(() => [
 ])
 
 const fetchData = () => {
-  payrollStore.fetchBatchesHistory()
+  return payrollStore.fetchBatchesHistory()
 }
 
 onMounted(() => {
@@ -422,6 +470,8 @@ onMounted(() => {
 const downloadingBatchId = ref(null)
 
 const downloadBankFile = async (batch) => {
+  if (isCancelled(batch)) return
+
   try {
     downloadingBatchId.value = batch.id
     const response = await payrollService.exportBankFile(batch.id)
@@ -453,6 +503,7 @@ const selectedBatchForRollback = ref(null)
 const rollbackReason = ref('')
 
 const openRollbackModal = (batch) => {
+  if (isCancelled(batch)) return
   selectedBatchForRollback.value = batch
   rollbackReason.value = ''
   isRollbackModalOpen.value = true
@@ -477,7 +528,8 @@ const confirmRollback = async () => {
     )
     toast.success(res?.message || 'تم التراجع عن مسير الرواتب بنجاح.')
     closeRollbackModal()
-    fetchData()
+    await fetchData()
+    emit('rolled-back')
   } catch (err) {
     // الخطأ يتم عرضه تلقائياً من الـ Store
   }

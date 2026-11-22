@@ -101,6 +101,7 @@ const defaultForm = () => ({
   percentage_of_code: '',
   formula_expression: '',
   account_mapping_key: null,
+  credit_account_mapping_key: null,
   is_active: true,
   description: '',
 })
@@ -121,6 +122,7 @@ watch(
           percentage_of_code: props.ruleToEdit.percentage_of_code || '',
           formula_expression: props.ruleToEdit.formula_expression || '',
           account_mapping_key: props.ruleToEdit.account_mapping_key || null,
+          credit_account_mapping_key: props.ruleToEdit.credit_account_mapping_key || null,
           is_active: props.ruleToEdit.is_active,
           description: props.ruleToEdit.description || '',
         }
@@ -140,6 +142,18 @@ const close = () => {
 const submit = async () => {
   if (!form.value.name.trim()) return toast.error('حقل اسم القاعدة مطلوب.')
   if (!form.value.code.trim()) return toast.error('حقل كود القاعدة مطلوب.')
+
+  if (form.value.category === 'company_contribution') {
+    if (!form.value.account_mapping_key) {
+      return toast.error('يجب تحديد حساب المصروف (المدين) عند اختيار فئة مساهمة شركة.')
+    }
+    if (!form.value.credit_account_mapping_key) {
+      return toast.error('يجب تحديد حساب الالتزام / الهيئة (الدائن) عند اختيار فئة مساهمة شركة.')
+    }
+    if (form.value.account_mapping_key === form.value.credit_account_mapping_key) {
+      return toast.error('لا يمكن أن يكون حساب المصروف وحساب الالتزام متطابقين.')
+    }
+  }
 
   isSaving.value = true
   try {

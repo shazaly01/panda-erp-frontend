@@ -169,38 +169,68 @@
                 </div>
               </div>
 
-              <!-- شريط ملخص دوام الطوارئ وساعات العمل المنجزة (مقربة لخانتين عشريتين) -->
+              <!-- شريط ملخص دوام الطوارئ وساعات العمل المنجزة -->
               <div
                 v-if="rawContext"
-                class="grid grid-cols-4 gap-2 mb-4 p-3 bg-blue-50/60 rounded-lg border border-blue-100 text-center text-xs"
+                class="mb-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-center text-xs space-y-2"
               >
-                <div>
-                  <span class="text-gray-500 block text-[11px]">أيام العمل الفعلية</span>
-                  <span class="font-bold font-mono text-gray-800"
-                    >{{ rawContext.WORKED_DAYS ?? '---' }} يوم</span
-                  >
+                <div class="grid grid-cols-4 gap-2">
+                  <div>
+                    <span class="text-gray-500 block text-[11px]">أيام العمل الفعلية</span>
+                    <span class="font-bold font-mono text-gray-800"
+                      >{{ rawContext.WORKED_DAYS ?? '---' }} يوم</span
+                    >
+                  </div>
+                  <div>
+                    <span class="text-gray-500 block text-[11px]">أيام دوام الطوارئ</span>
+                    <span class="font-bold font-mono text-amber-700"
+                      >{{ rawContext.OT_HOLIDAY_DAYS ?? 0 }} يوم</span
+                    >
+                  </div>
+                  <div>
+                    <span class="text-gray-500 block text-[11px]">ساعات دوام الطوارئ المنفذة</span>
+                    <span class="font-bold font-mono text-amber-800">
+                      {{ totalHolidayHours.toFixed(2) }} س
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-gray-500 block text-[11px]">ساعات إضافي بعد الدوام</span>
+                    <span class="font-bold font-mono text-emerald-700">
+                      {{ totalRegularOtHours.toFixed(2) }} س
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span class="text-gray-500 block text-[11px]">أيام دوام الطوارئ</span>
-                  <span class="font-bold font-mono text-amber-700"
-                    >{{ rawContext.OT_HOLIDAY_DAYS ?? 0 }} يوم</span
+
+                <!-- مؤشرات الغياب والإجازات بدون راتب ودوام الراحات (تظهر عند وجودها فقط) -->
+                <div
+                  v-if="unpaidLeaveDays > 0 || absentDays > 0 || totalWeekendHours > 0"
+                  class="flex flex-wrap items-center justify-center gap-2 border-t border-blue-100 pt-2 text-[11px]"
+                >
+                  <span
+                    v-if="unpaidLeaveDays > 0"
+                    class="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 font-bold text-rose-700"
                   >
-                </div>
-                <div>
-                  <span class="text-gray-500 block text-[11px]">ساعات دوام الطوارئ المنفذة</span>
-                  <span class="font-bold font-mono text-amber-800">
-                    {{ totalHolidayHours.toFixed(2) }} س
+                    إجازة بدون راتب:
+                    <span class="font-mono">{{ unpaidLeaveDays }} يوم</span>
                   </span>
-                </div>
-                <div>
-                  <span class="text-gray-500 block text-[11px]">ساعات إضافي بعد الدوام</span>
-                  <span class="font-bold font-mono text-emerald-700">
-                    {{ totalRegularOtHours.toFixed(2) }} س
+                  <span
+                    v-if="absentDays > 0"
+                    class="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 font-bold text-rose-700"
+                  >
+                    أيام غياب:
+                    <span class="font-mono">{{ absentDays }} يوم</span>
+                  </span>
+                  <span
+                    v-if="totalWeekendHours > 0"
+                    class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800"
+                  >
+                    ساعات راحة أسبوعية:
+                    <span class="font-mono">{{ totalWeekendHours.toFixed(2) }} س</span>
                   </span>
                 </div>
               </div>
 
-              <!-- بطاقة الشفافية وتفاصيل احتساب المستحقات بمسميات مبسطة ومباشرة -->
+              <!-- بطاقة الشفافية وتفاصيل احتساب المستحقات -->
               <div
                 v-if="hasOvertimeOrEmergency"
                 class="mb-6 rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-amber-50/60 p-4 text-xs text-gray-800 shadow-sm"
@@ -292,6 +322,17 @@
                       }}</span>
                     </div>
                     <div
+                      v-if="totalWeekendHours > 0"
+                      class="flex justify-between items-baseline pt-1 border-t border-gray-100"
+                    >
+                      <span class="text-gray-600 text-[11px]"
+                        >ساعات الراحة ({{ totalWeekendHours.toFixed(2) }} س):</span
+                      >
+                      <span class="font-mono font-bold text-amber-800"
+                        >+ {{ formatCurrency(weekendGrossEarnings) }}</span
+                      >
+                    </div>
+                    <div
                       v-if="totalRegularOtHours > 0"
                       class="flex justify-between items-baseline pt-1 border-t border-gray-100"
                     >
@@ -379,6 +420,10 @@
                       totalHolidayHours.toFixed(2)
                     }}
                     س) = {{ formatCurrency(holidayGrossEarnings) }}.
+                    <span v-if="totalWeekendHours > 0">
+                      وساعات الراحة الأسبوعية ({{ totalWeekendHours.toFixed(2) }} س) =
+                      {{ formatCurrency(weekendGrossEarnings) }}.</span
+                    >
                     <span v-if="totalRegularOtHours > 0">
                       بالإضافة إلى إضافي بعد الدوام ({{ totalRegularOtHours.toFixed(2) }} س ×
                       {{ regularRateMultiplier }}x) =
@@ -482,6 +527,41 @@
                 </div>
               </div>
 
+              <!-- مساهمات الشركة (للمعلومية فقط ولا تؤثر على صافي راتب الموظف) -->
+              <div
+                v-if="companyContributions.length > 0"
+                class="mb-6 rounded-lg border border-purple-200 bg-purple-50/50 p-3.5 text-xs"
+              >
+                <div class="flex items-center justify-between border-b border-purple-200 pb-2 mb-2">
+                  <span class="font-bold text-purple-900">
+                    مساهمات المنشأة (للمعلومية فقط — لا تُخصم من صافي الراتب)
+                  </span>
+                  <span class="text-[10px] font-mono text-purple-600">EMPLOYER CONTRIBUTIONS</span>
+                </div>
+                <table class="w-full">
+                  <tbody>
+                    <tr
+                      v-for="(item, i) in companyContributions"
+                      :key="'contrib-' + i"
+                      class="border-b border-purple-100 last:border-b-0"
+                    >
+                      <td class="py-1.5 text-gray-700">{{ item.name }}</td>
+                      <td class="py-1.5 text-left font-mono font-bold text-purple-800">
+                        {{ formatCurrency(item.amount) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div
+                  class="flex justify-between pt-2 mt-1 border-t border-purple-200 font-bold text-purple-950"
+                >
+                  <span>إجمالي مساهمات المنشأة:</span>
+                  <span class="font-mono">{{
+                    formatCurrency(totals.total_company_contributions)
+                  }}</span>
+                </div>
+              </div>
+
               <!-- الصافي النهائي للدفع -->
               <div
                 class="bg-gray-900 text-white rounded-xl p-4 flex justify-between items-center mb-10 print-exact-colors"
@@ -562,6 +642,10 @@ const contractBasicSalary = computed(() => {
   )
 })
 
+// أيام الغياب والإجازات بدون راتب
+const absentDays = computed(() => Number(rawContext.value?.ABSENT_DAYS ?? 0))
+const unpaidLeaveDays = computed(() => Number(rawContext.value?.UNPAID_LEAVE_DAYS ?? 0))
+
 // نسبة وعاء الأجر (من السياسة، الافتراضي 1.0)
 const wageFactor = computed(() => {
   return Number(rawContext.value?.WAGE_FACTOR ?? 1.0)
@@ -589,16 +673,6 @@ const formulaBadge = computed(() => {
   return `طريقة الحساب: (المرتب ÷ ${standardMonthlyHours.value} ساعة)`
 })
 
-// معامل ساعة الطوارئ
-const holidayRateMultiplier = computed(() => {
-  return Number(rawContext.value?.OT_HOL_RATE ?? 2.0)
-})
-
-// معامل ساعة الإضافي بعد الدوام
-const regularRateMultiplier = computed(() => {
-  return Number(rawContext.value?.OT_REG_RATE ?? 1.5)
-})
-
 // أجر الساعة العادية
 const normalHourRate = computed(() => {
   if (rawContext.value?.NORMAL_HOUR_RATE) {
@@ -612,24 +686,44 @@ const normalHourRate = computed(() => {
 
 // أجر ساعة الطوارئ والعطلات
 const holidayHourRate = computed(() => {
-  return Number(
-    rawContext.value?.HOLIDAY_HOUR_RATE || normalHourRate.value * holidayRateMultiplier.value,
-  )
+  return Number(rawContext.value?.HOLIDAY_HOUR_RATE || normalHourRate.value * 2.0)
 })
 
 // أجر ساعة الإضافي بعد الدوام
 const regularOtHourRate = computed(() => {
-  return Number(
-    rawContext.value?.REGULAR_OT_HOUR_RATE || normalHourRate.value * regularRateMultiplier.value,
-  )
+  return Number(rawContext.value?.REGULAR_OT_HOUR_RATE || normalHourRate.value * 1.5)
 })
 
-// ساعات الطوارئ الفعلية المنفذة
+// استنتاج معامل الطوارئ والإضافي الفعلي بدقة من أجر الساعة المحسوب في الخلفية
+const holidayRateMultiplier = computed(() => {
+  if (rawContext.value?.OT_HOL_RATE !== undefined) {
+    return Number(rawContext.value.OT_HOL_RATE)
+  }
+  if (normalHourRate.value > 0 && rawContext.value?.HOLIDAY_HOUR_RATE) {
+    return Number((holidayHourRate.value / normalHourRate.value).toFixed(2))
+  }
+  return 2.0
+})
+
+const regularRateMultiplier = computed(() => {
+  if (rawContext.value?.OT_REG_RATE !== undefined) {
+    return Number(rawContext.value.OT_REG_RATE)
+  }
+  if (normalHourRate.value > 0 && rawContext.value?.REGULAR_OT_HOUR_RATE) {
+    return Number((regularOtHourRate.value / normalHourRate.value).toFixed(2))
+  }
+  return 1.5
+})
+
+// ساعات الطوارئ والراحة الأسبوعية والإضافي العادي المنفذة
 const totalHolidayHours = computed(() => {
   return Number(rawContext.value?.OT_HOL_HOURS ?? rawContext.value?.OT_HOLIDAY_HOURS ?? 0)
 })
 
-// ساعات الإضافي العادي بعد انتهاء الدوام
+const totalWeekendHours = computed(() => {
+  return Number(rawContext.value?.OT_WKD_HOURS ?? rawContext.value?.OT_WEEKEND_HOURS ?? 0)
+})
+
 const totalRegularOtHours = computed(() => {
   return Number(rawContext.value?.OT_REG_HOURS ?? rawContext.value?.OT_REGULAR_HOURS ?? 0)
 })
@@ -650,6 +744,14 @@ const grossOvertimeAmount = computed(() => {
     return Number(rawContext.value.OVERTIME_GROSS)
   }
   return holidayGrossEarnings.value + regularOtGrossEarnings.value
+})
+
+// استحقاق ساعات الراحة الأسبوعية (الفارق الدقيق من الإجمالي القادم من الخلفية)
+const weekendGrossEarnings = computed(() => {
+  if (totalWeekendHours.value <= 0) return 0
+  const remainder =
+    grossOvertimeAmount.value - holidayGrossEarnings.value - regularOtGrossEarnings.value
+  return remainder > 0 ? remainder : totalWeekendHours.value * holidayHourRate.value
 })
 
 // فحص عامل اليومية
@@ -679,24 +781,30 @@ const hasOvertimeOrEmergency = computed(() => {
   if (!rawContext.value) return false
   return (
     totalHolidayHours.value > 0 ||
+    totalWeekendHours.value > 0 ||
     totalRegularOtHours.value > 0 ||
     grossOvertimeAmount.value > 0 ||
     props.runType === 'overtime_only'
   )
 })
 
-// استخراج قائمة الاستحقاقات
+// استخراج قوائم الاستحقاقات والاستقطاعات ومساهمات المنشأة
 const displayedAllowances = computed(() => {
   if (!payrollStore.payslipPreview) return []
   const lines = payrollStore.payslipPreview.lines || []
   return lines.filter((l) => l.category === 'allowance')
 })
 
-// استخراج قائمة الاستقطاعات
 const deductions = computed(() => {
   if (!payrollStore.payslipPreview) return []
   const lines = payrollStore.payslipPreview.lines || []
   return lines.filter((l) => l.category === 'deduction')
+})
+
+const companyContributions = computed(() => {
+  if (!payrollStore.payslipPreview) return []
+  const lines = payrollStore.payslipPreview.lines || []
+  return lines.filter((l) => l.category === 'company_contribution')
 })
 
 // إجماليات الراتب
@@ -705,6 +813,7 @@ const totals = computed(() => {
   return {
     total_allowances: Number(t?.total_allowances || 0),
     total_deductions: Number(t?.total_deductions || 0),
+    total_company_contributions: Number(t?.total_company_contributions || 0),
     net_salary: Number(t?.net_salary || 0),
   }
 })
