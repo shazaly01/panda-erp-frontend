@@ -40,7 +40,7 @@
                   />
                 </svg>
               </span>
-              معاينة قسيمة الراتب
+              تفاصيل ومعاينة قسيمة الراتب
             </h3>
 
             <div class="flex items-center gap-3">
@@ -87,7 +87,7 @@
             >
               <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-3"></div>
               <span class="text-sm font-medium text-text-muted"
-                >جاري احتساب استحقاقات الراتب...</span
+                >جاري احتساب استحقاقات الراتب وتجميع التفاصيل...</span
               >
             </div>
 
@@ -172,13 +172,14 @@
               <!-- شريط ملخص دوام الطوارئ وساعات العمل المنجزة -->
               <div
                 v-if="rawContext"
-                class="mb-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-center text-xs space-y-2"
+                class="mb-5 rounded-lg border border-blue-100 bg-blue-50/60 p-3 text-center text-xs space-y-2"
               >
                 <div class="grid grid-cols-4 gap-2">
                   <div>
                     <span class="text-gray-500 block text-[11px]">أيام العمل الفعلية</span>
                     <span class="font-bold font-mono text-gray-800"
-                      >{{ rawContext.WORKED_DAYS ?? '---' }} يوم</span
+                      >{{ rawContext.WORKED_DAYS ?? '---' }} /
+                      {{ rawContext.EFFECTIVE_DAYS ?? rawContext.PERIOD_DAYS ?? '---' }} يوم</span
                     >
                   </div>
                   <div>
@@ -201,9 +202,9 @@
                   </div>
                 </div>
 
-                <!-- مؤشرات الغياب والإجازات بدون راتب ودوام الراحات (تظهر عند وجودها فقط) -->
+                <!-- مؤشرات الغياب والتأخير والإجازات بدون راتب ودوام الراحات -->
                 <div
-                  v-if="unpaidLeaveDays > 0 || absentDays > 0 || totalWeekendHours > 0"
+                  v-if="hasAttendanceDeductionDetails || totalWeekendHours > 0"
                   class="flex flex-wrap items-center justify-center gap-2 border-t border-blue-100 pt-2 text-[11px]"
                 >
                   <span
@@ -221,6 +222,20 @@
                     <span class="font-mono">{{ absentDays }} يوم</span>
                   </span>
                   <span
+                    v-if="delayMinutes > 0"
+                    class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800"
+                  >
+                    تأخير صباحي:
+                    <span class="font-mono">{{ delayMinutes }} دقيقة</span>
+                  </span>
+                  <span
+                    v-if="earlyLeaveMinutes > 0"
+                    class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800"
+                  >
+                    انصراف مبكر:
+                    <span class="font-mono">{{ earlyLeaveMinutes }} دقيقة</span>
+                  </span>
+                  <span
                     v-if="totalWeekendHours > 0"
                     class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800"
                   >
@@ -230,7 +245,7 @@
                 </div>
               </div>
 
-              <!-- بطاقة الشفافية وتفاصيل احتساب المستحقات -->
+              <!-- بطاقة الشفافية وتفاصيل احتساب العمل الإضافي وبدل الطوارئ -->
               <div
                 v-if="hasOvertimeOrEmergency"
                 class="mb-6 rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-amber-50/60 p-4 text-xs text-gray-800 shadow-sm"
@@ -451,7 +466,7 @@
               </div>
 
               <!-- جدولا الاستحقاقات والاستقطاعات المتقابلان -->
-              <div class="grid grid-cols-2 gap-6 mb-6">
+              <div class="grid grid-cols-2 gap-6 mb-5">
                 <!-- جدول الاستحقاقات -->
                 <div>
                   <div class="border-b border-gray-300 pb-2 mb-2 flex justify-between items-center">
@@ -527,6 +542,164 @@
                 </div>
               </div>
 
+              <!-- بطاقة الشفافية الكاملة: أسباب الحوافز والجزاءات وتواريخ الغياب وموقف السلف -->
+              <div
+                v-if="hasTransparencyDetails"
+                class="mb-6 rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-xs space-y-4"
+              >
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span class="font-bold text-slate-900 text-sm">
+                    بيان الشفافية وتفصيل الحركات المؤثرة في الراتب
+                  </span>
+                  <span class="text-[10px] font-mono text-slate-500">TRANSPARENCY BREAKDOWN</span>
+                </div>
+
+                <!-- 1. تفصيل الحوافز والبدلات والجزاءات والاستقطاعات المتغيرة بالأسباب والتواريخ -->
+                <div v-if="inputItems.length > 0" class="space-y-1.5">
+                  <h4 class="font-bold text-slate-700 text-[11px]">
+                    أولاً: الحوافز والبدلات والجزاءات المسجلة (بالسبب والتاريخ)
+                  </h4>
+                  <table
+                    class="w-full text-[11px] bg-white rounded-lg border border-slate-200 overflow-hidden"
+                  >
+                    <thead class="bg-slate-100 text-slate-600">
+                      <tr>
+                        <th class="py-1.5 px-2.5 text-right font-bold">التاريخ</th>
+                        <th class="py-1.5 px-2.5 text-right font-bold">نوع الحركة</th>
+                        <th class="py-1.5 px-2.5 text-right font-bold">السبب / البيان</th>
+                        <th class="py-1.5 px-2.5 text-left font-bold">المبلغ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="item in inputItems"
+                        :key="'input-' + item.id"
+                        class="border-t border-slate-100"
+                      >
+                        <td class="py-1.5 px-2.5 font-mono text-slate-600 whitespace-nowrap">
+                          {{ item.date || '---' }}
+                        </td>
+                        <td class="py-1.5 px-2.5 whitespace-nowrap">
+                          <span
+                            class="px-2 py-0.5 rounded font-bold text-[10px]"
+                            :class="
+                              isAdditionInput(item.type)
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            "
+                          >
+                            {{ formatInputType(item.type) }}
+                          </span>
+                        </td>
+                        <td class="py-1.5 px-2.5 text-slate-800">
+                          {{ item.reason || 'بدون بيان إضافي' }}
+                        </td>
+                        <td
+                          class="py-1.5 px-2.5 text-left font-mono font-bold whitespace-nowrap"
+                          :class="isAdditionInput(item.type) ? 'text-emerald-700' : 'text-rose-600'"
+                        >
+                          {{ isAdditionInput(item.type) ? '+' : '-' }}
+                          {{ formatCurrency(item.amount) }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- 2. كشف تواريخ الغياب والإجازات بدون راتب والتأخير -->
+                <div v-if="hasAttendanceDeductionDetails" class="space-y-1.5">
+                  <h4 class="font-bold text-slate-700 text-[11px]">
+                    ثانياً: كشف أيام الغياب والإجازات غير المدفوعة والتأخير
+                  </h4>
+                  <div
+                    class="bg-white rounded-lg border border-slate-200 p-3 space-y-2 text-[11px]"
+                  >
+                    <div v-if="absentDates.length > 0" class="flex flex-wrap items-center gap-1.5">
+                      <span class="font-bold text-rose-700"
+                        >تواريخ الغياب ({{ absentDates.length }} يوم):</span
+                      >
+                      <span
+                        v-for="d in absentDates"
+                        :key="'abs-' + d"
+                        class="font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200"
+                      >
+                        {{ d }}
+                      </span>
+                    </div>
+
+                    <div
+                      v-if="unpaidLeaveRanges.length > 0"
+                      class="flex flex-wrap items-center gap-1.5"
+                    >
+                      <span class="font-bold text-rose-700">فترات الإجازة بدون راتب:</span>
+                      <span
+                        v-for="(rng, idx) in unpaidLeaveRanges"
+                        :key="'ul-' + idx"
+                        class="font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200"
+                      >
+                        من {{ rng.start_date }} إلى {{ rng.end_date }} ({{ rng.days }} يوم)
+                      </span>
+                    </div>
+
+                    <div
+                      v-if="delayMinutes > 0 || earlyLeaveMinutes > 0"
+                      class="flex flex-wrap items-center gap-4 text-slate-700"
+                    >
+                      <span v-if="delayMinutes > 0">
+                        إجمالي دقائق التأخير:
+                        <strong class="font-mono">{{ delayMinutes }} دقيقة</strong>
+                      </span>
+                      <span v-if="earlyLeaveMinutes > 0">
+                        إجمالي الانصراف المبكر:
+                        <strong class="font-mono">{{ earlyLeaveMinutes }} دقيقة</strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. موقف أقساط السلف والرصيد المتبقي منها -->
+                <div v-if="loanItems.length > 0" class="space-y-1.5">
+                  <h4 class="font-bold text-slate-700 text-[11px]">
+                    ثالثاً: موقف السلف والأقساط المستحقة
+                  </h4>
+                  <table
+                    class="w-full text-[11px] bg-white rounded-lg border border-slate-200 overflow-hidden"
+                  >
+                    <thead class="bg-slate-100 text-slate-600">
+                      <tr>
+                        <th class="py-1.5 px-2.5 text-right font-bold">رقم السلفة</th>
+                        <th class="py-1.5 px-2.5 text-right font-bold">تاريخ استحقاق القسط</th>
+                        <th class="py-1.5 px-2.5 text-left font-bold">قيمة القسط المخصوم</th>
+                        <th class="py-1.5 px-2.5 text-left font-bold">المتبقي من السلفة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="loan in loanItems"
+                        :key="'loan-' + loan.id"
+                        class="border-t border-slate-100"
+                      >
+                        <td class="py-1.5 px-2.5 font-mono font-bold text-slate-800">
+                          #LOAN-{{ loan.loan_id }}
+                        </td>
+                        <td class="py-1.5 px-2.5 font-mono text-slate-600">
+                          {{ loan.due_month || '---' }}
+                        </td>
+                        <td class="py-1.5 px-2.5 text-left font-mono font-bold text-rose-600">
+                          {{ formatCurrency(loan.amount) }}
+                        </td>
+                        <td class="py-1.5 px-2.5 text-left font-mono text-slate-700">
+                          {{ formatCurrency(loan.remaining_amount) }}
+                          <span class="text-[10px] text-slate-500">
+                            ({{ loan.remaining_count }} قسط متبقٍ)
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               <!-- مساهمات الشركة (للمعلومية فقط ولا تؤثر على صافي راتب الموظف) -->
               <div
                 v-if="companyContributions.length > 0"
@@ -562,21 +735,58 @@
                 </div>
               </div>
 
-              <!-- الصافي النهائي للدفع -->
-              <div
-                class="bg-gray-900 text-white rounded-xl p-4 flex justify-between items-center mb-10 print-exact-colors"
-              >
-                <div>
-                  <span class="text-xs text-gray-400 block"
-                    >صافي الراتب المستحق للصرف (Net Pay)</span
-                  >
-                  <span class="text-[11px] text-gray-300"
-                    >يُحوّل إلى الحساب البنكي المعتمد للموظف.</span
-                  >
+              <!-- الصافي النهائي للدفع وبيان الصرف الفعلي والمديونية المتبقية للموظف -->
+              <div class="bg-gray-900 text-white rounded-xl p-5 mb-10 print-exact-colors space-y-4">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <span class="text-xs text-gray-400 block"
+                      >صافي الراتب المستحق عن الفترة (100% Net Pay)</span
+                    >
+                    <span class="text-[11px] text-gray-300"
+                      >مثبت بالكامل في ذمة المنشأة لصالح الموظف.</span
+                    >
+                  </div>
+                  <span class="text-2xl font-black font-mono tracking-wider text-emerald-400">
+                    {{ formatCurrency(totals.net_salary) }}
+                  </span>
                 </div>
-                <span class="text-2xl font-black font-mono tracking-wider text-emerald-400">
-                  {{ formatCurrency(totals.net_salary) }}
-                </span>
+
+                <!-- تفاصيل الصرف الفعلي والمتبقي في حساب الموظف -->
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-gray-700 text-xs"
+                >
+                  <div class="bg-gray-800/80 rounded-lg p-2.5 border border-gray-700">
+                    <span class="text-gray-400 block text-[11px]">
+                      المصروف هذه الدفعة ({{ liveDisbursement.percentage }}%)
+                    </span>
+                    <span class="font-mono font-bold text-sm text-emerald-300">
+                      {{ formatCurrency(liveDisbursement.paid_amount) }}
+                    </span>
+                  </div>
+
+                  <div class="bg-gray-800/80 rounded-lg p-2.5 border border-gray-700">
+                    <span class="text-gray-400 block text-[11px]">
+                      المتبقي من هذا الشهر (مديونية للموظف)
+                    </span>
+                    <span
+                      class="font-mono font-bold text-sm"
+                      :class="
+                        liveDisbursement.remaining_amount > 0 ? 'text-amber-300' : 'text-gray-300'
+                      "
+                    >
+                      {{ formatCurrency(liveDisbursement.remaining_amount) }}
+                    </span>
+                  </div>
+
+                  <div class="bg-gray-800/80 rounded-lg p-2.5 border border-gray-700">
+                    <span class="text-gray-400 block text-[11px]">
+                      رصيد متراكم من فترات سابقة
+                    </span>
+                    <span class="font-mono font-bold text-sm text-blue-300">
+                      {{ formatCurrency(previousUnpaidBalance) }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <!-- قسم التوقيعات الرسمي للطباعة -->
@@ -617,12 +827,17 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const payrollStore = usePayrollStore()
 
-// استدعاء الحساب التقديري فور فتح النافذة
+// استدعاء الحساب التقديري فور فتح النافذة مع تمرير معرف المسير الجاري تعديله إن وجد
 watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen && props.employee && props.payPeriod) {
-      await payrollStore.previewPayroll(props.employee.id, props.payPeriod.id, props.runType)
+      await payrollStore.previewPayroll(
+        props.employee.id,
+        props.payPeriod.id,
+        props.runType,
+        payrollStore.editingBatchId,
+      )
     } else {
       payrollStore.clearPreview()
     }
@@ -630,33 +845,69 @@ watch(
   { immediate: true },
 )
 
-// استخراج البيانات الأولية وسياق الحساب المالي
 const rawContext = computed(() => {
   return payrollStore.payslipPreview?.raw_inputs || null
 })
 
-// الراتب التعاقدي الأساسي
+const transparency = computed(() => {
+  return payrollStore.payslipPreview?.transparency || {}
+})
+
+const inputItems = computed(() => transparency.value.input_items || [])
+const loanItems = computed(() => transparency.value.loan_items || [])
+const absentDates = computed(() => transparency.value.absent_dates || [])
+const unpaidLeaveRanges = computed(() => transparency.value.unpaid_leave_ranges || [])
+const delayMinutes = computed(() =>
+  Number(transparency.value.delay_minutes ?? rawContext.value?.DELAY_MINUTES ?? 0),
+)
+const earlyLeaveMinutes = computed(() =>
+  Number(transparency.value.early_leave_minutes ?? rawContext.value?.EARLY_LEAVE_MINUTES ?? 0),
+)
+
+const hasAttendanceDeductionDetails = computed(() => {
+  return (
+    absentDates.value.length > 0 ||
+    unpaidLeaveRanges.value.length > 0 ||
+    delayMinutes.value > 0 ||
+    earlyLeaveMinutes.value > 0
+  )
+})
+
+const hasTransparencyDetails = computed(() => {
+  return (
+    inputItems.value.length > 0 || loanItems.value.length > 0 || hasAttendanceDeductionDetails.value
+  )
+})
+
+const isAdditionInput = (type) => ['bonus', 'allowance'].includes(type)
+
+const formatInputType = (type) => {
+  const map = {
+    bonus: 'حافز / مكافأة',
+    allowance: 'بدل متغير',
+    penalty: 'جزاء / مخالفة',
+    deduction: 'استقطاع إداري',
+  }
+  return map[type] || type
+}
+
 const contractBasicSalary = computed(() => {
   return Number(
     payrollStore.payslipPreview?.contract_basic || rawContext.value?.CONTRACT_BASIC || 0,
   )
 })
 
-// أيام الغياب والإجازات بدون راتب
 const absentDays = computed(() => Number(rawContext.value?.ABSENT_DAYS ?? 0))
 const unpaidLeaveDays = computed(() => Number(rawContext.value?.UNPAID_LEAVE_DAYS ?? 0))
 
-// نسبة وعاء الأجر (من السياسة، الافتراضي 1.0)
 const wageFactor = computed(() => {
   return Number(rawContext.value?.WAGE_FACTOR ?? 1.0)
 })
 
-// ساعات العمل المعيارية للشهر (من السياسة، الافتراضي 176 أو المحسوبة من الدوام)
 const standardMonthlyHours = computed(() => {
   return Number(rawContext.value?.STANDARD_HOURS ?? 176)
 })
 
-// نسبة الضريبة المقررة في السياسة
 const taxRate = computed(() => {
   return Number(rawContext.value?.TAX_RATE ?? 0)
 })
@@ -665,7 +916,6 @@ const hasTax = computed(() => {
   return taxRate.value > 0
 })
 
-// نص الشارة التعريفية بالمعادلة
 const formulaBadge = computed(() => {
   if (wageFactor.value !== 1.0) {
     return `طريقة الحساب: (المرتب × ${wageFactor.value} ÷ ${standardMonthlyHours.value} س)`
@@ -673,7 +923,6 @@ const formulaBadge = computed(() => {
   return `طريقة الحساب: (المرتب ÷ ${standardMonthlyHours.value} ساعة)`
 })
 
-// أجر الساعة العادية
 const normalHourRate = computed(() => {
   if (rawContext.value?.NORMAL_HOUR_RATE) {
     return Number(rawContext.value.NORMAL_HOUR_RATE)
@@ -684,17 +933,14 @@ const normalHourRate = computed(() => {
   return 0
 })
 
-// أجر ساعة الطوارئ والعطلات
 const holidayHourRate = computed(() => {
   return Number(rawContext.value?.HOLIDAY_HOUR_RATE || normalHourRate.value * 2.0)
 })
 
-// أجر ساعة الإضافي بعد الدوام
 const regularOtHourRate = computed(() => {
   return Number(rawContext.value?.REGULAR_OT_HOUR_RATE || normalHourRate.value * 1.5)
 })
 
-// استنتاج معامل الطوارئ والإضافي الفعلي بدقة من أجر الساعة المحسوب في الخلفية
 const holidayRateMultiplier = computed(() => {
   if (rawContext.value?.OT_HOL_RATE !== undefined) {
     return Number(rawContext.value.OT_HOL_RATE)
@@ -715,7 +961,6 @@ const regularRateMultiplier = computed(() => {
   return 1.5
 })
 
-// ساعات الطوارئ والراحة الأسبوعية والإضافي العادي المنفذة
 const totalHolidayHours = computed(() => {
   return Number(rawContext.value?.OT_HOL_HOURS ?? rawContext.value?.OT_HOLIDAY_HOURS ?? 0)
 })
@@ -728,17 +973,14 @@ const totalRegularOtHours = computed(() => {
   return Number(rawContext.value?.OT_REG_HOURS ?? rawContext.value?.OT_REGULAR_HOURS ?? 0)
 })
 
-// إجمالي استحقاق الطوارئ قبل الضريبة
 const holidayGrossEarnings = computed(() => {
   return totalHolidayHours.value * holidayHourRate.value
 })
 
-// إجمالي استحقاق الإضافي العادي قبل الضريبة
 const regularOtGrossEarnings = computed(() => {
   return totalRegularOtHours.value * regularOtHourRate.value
 })
 
-// إجمالي الاستحقاق قبل الضريبة (Gross)
 const grossOvertimeAmount = computed(() => {
   if (rawContext.value?.OVERTIME_GROSS !== undefined) {
     return Number(rawContext.value.OVERTIME_GROSS)
@@ -746,7 +988,6 @@ const grossOvertimeAmount = computed(() => {
   return holidayGrossEarnings.value + regularOtGrossEarnings.value
 })
 
-// استحقاق ساعات الراحة الأسبوعية (الفارق الدقيق من الإجمالي القادم من الخلفية)
 const weekendGrossEarnings = computed(() => {
   if (totalWeekendHours.value <= 0) return 0
   const remainder =
@@ -754,12 +995,10 @@ const weekendGrossEarnings = computed(() => {
   return remainder > 0 ? remainder : totalWeekendHours.value * holidayHourRate.value
 })
 
-// فحص عامل اليومية
 const isDailyWorker = computed(() => {
   return Boolean(rawContext.value?.IS_DAILY_WORKER)
 })
 
-// مبلغ الضريبة
 const overtimeTaxAmount = computed(() => {
   if (rawContext.value?.OVERTIME_TAX !== undefined) {
     return Number(rawContext.value.OVERTIME_TAX)
@@ -768,7 +1007,6 @@ const overtimeTaxAmount = computed(() => {
   return roundNumber(grossOvertimeAmount.value * (taxRate.value / 100.0))
 })
 
-// صافي الأجر الإضافي بعد الضريبة
 const netOvertimeAmount = computed(() => {
   if (rawContext.value?.NET_OVERTIME !== undefined) {
     return Number(rawContext.value.NET_OVERTIME)
@@ -776,7 +1014,6 @@ const netOvertimeAmount = computed(() => {
   return grossOvertimeAmount.value - overtimeTaxAmount.value
 })
 
-// فحص وجود استحقاق طوارئ أو عمل إضافي لعرض بطاقة الشفافية
 const hasOvertimeOrEmergency = computed(() => {
   if (!rawContext.value) return false
   return (
@@ -788,7 +1025,6 @@ const hasOvertimeOrEmergency = computed(() => {
   )
 })
 
-// استخراج قوائم الاستحقاقات والاستقطاعات ومساهمات المنشأة
 const displayedAllowances = computed(() => {
   if (!payrollStore.payslipPreview) return []
   const lines = payrollStore.payslipPreview.lines || []
@@ -807,7 +1043,6 @@ const companyContributions = computed(() => {
   return lines.filter((l) => l.category === 'company_contribution')
 })
 
-// إجماليات الراتب
 const totals = computed(() => {
   const t = payrollStore.payslipPreview?.totals
   return {
@@ -816,6 +1051,23 @@ const totals = computed(() => {
     total_company_contributions: Number(t?.total_company_contributions || 0),
     net_salary: Number(t?.net_salary || 0),
   }
+})
+
+// حساب الصرف الفعلي والمتبقي للموظف وفق نسبة الصرف النشطة في المسير
+const liveDisbursement = computed(() => {
+  const net = totals.value.net_salary
+  const pct = Number(payrollStore.disbursementPercentage ?? 100)
+  const paid = roundNumber(Math.min(net, Math.max(0, (net * pct) / 100)))
+  const remaining = roundNumber(Math.max(0, net - paid))
+  return {
+    percentage: pct,
+    paid_amount: paid,
+    remaining_amount: remaining,
+  }
+})
+
+const previousUnpaidBalance = computed(() => {
+  return Number(payrollStore.payslipPreview?.disbursement?.previous_unpaid_balance || 0)
 })
 
 const close = () => {

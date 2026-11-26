@@ -67,6 +67,11 @@ export default [
       { name: 'سجلات الحضور', routeName: 'AttendanceList', permission: 'hr.attendance.view' },
       { name: 'طلبات الإجازات', routeName: 'LeavesList', permission: 'hr.leaves.view' },
       {
+        name: 'المخالفون والجزاءات',
+        routeName: 'DisciplinaryActionsList',
+        permission: 'hr.disciplinary_actions.view',
+      },
+      {
         name: 'تبديل الورديات (تجاوزات)',
         routeName: 'ShiftOverridesList',
         permission: 'hr.shift_overrides.view',
@@ -99,6 +104,11 @@ export default [
         permission: 'hr.team_attendance.manage',
       },
       { name: 'سجلات الحضور', routeName: 'AttendanceList', permission: 'hr.attendance.view' },
+      {
+        name: 'المخالفات والجزاءات',
+        routeName: 'DisciplinaryActionsList',
+        permission: 'hr.disciplinary_actions.create',
+      },
       {
         name: 'أذونات الخروج المؤقت',
         routeName: 'LeavePassesList',
@@ -154,13 +164,18 @@ export default [
         permission: 'hr.working_schedules.view',
       },
 
-      // -- إعدادات السياسات والرواتب --
+      // -- إعدادات السياسات والرواتب واللوائح --
       { name: 'مجموعات الدفع', routeName: 'PayGroupsList', permission: 'hr.pay_groups.view' },
       { name: 'الفترات المالية', routeName: 'PayPeriodsList', permission: 'hr.pay_periods.view' },
       {
         name: 'سياسات العمل الإضافي',
         routeName: 'OvertimePoliciesList',
         permission: 'hr.overtime_policies.view',
+      },
+      {
+        name: 'لوائح المخالفات والجزاءات',
+        routeName: 'ViolationTypesList',
+        permission: 'hr.settings.manage',
       },
       {
         name: 'تعريف قواعد الرواتب',

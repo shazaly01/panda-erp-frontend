@@ -4,7 +4,7 @@
     class="bg-surface-header/60 p-4 rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs mb-6 space-y-4 transition-all duration-200"
     dir="rtl"
   >
-    <!-- الصف الأول: البحث ونوع السند والحالة -->
+    <!-- الصف الأول: البحث والسنة المالية والحالة -->
     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
       <div class="md:col-span-5">
         <label
@@ -24,19 +24,18 @@
       </div>
 
       <div class="md:col-span-3">
-        <label for="voucher-type-filter" class="block text-xs font-bold text-text-secondary mb-1.5">
-          نوع السند
+        <label
+          for="voucher-fiscal-year-filter"
+          class="block text-xs font-bold text-text-secondary mb-1.5"
+        >
+          السنة المالية
         </label>
         <AppDropdown
-          id="voucher-type-filter"
-          :model-value="typeFilter"
-          :options="[
-            { id: '', name: 'كل أنواع السندات' },
-            { id: 'payment', name: 'سندات صرف (دفع)' },
-            { id: 'receipt', name: 'سندات قبض (استلام)' },
-          ]"
+          id="voucher-fiscal-year-filter"
+          :model-value="fiscalYearFilter"
+          :options="fiscalYearOptions"
           class="bg-surface-card"
-          @update:model-value="$emit('update:typeFilter', $event)"
+          @update:model-value="$emit('update:fiscalYearFilter', $event)"
         />
       </div>
 
@@ -153,7 +152,8 @@ import AppDropdown from '@/components/ui/AppDropdown.vue'
 
 const props = defineProps({
   searchQuery: { type: String, default: '' },
-  typeFilter: { type: String, default: '' },
+  fiscalYearFilter: { type: [String, Number], default: '' },
+  fiscalYears: { type: Array, default: () => [] },
   statusFilter: { type: String, default: '' },
   dateFrom: { type: String, default: '' },
   dateTo: { type: String, default: '' },
@@ -162,7 +162,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'update:searchQuery',
-  'update:typeFilter',
+  'update:fiscalYearFilter',
   'update:statusFilter',
   'update:dateFrom',
   'update:dateTo',
@@ -170,6 +170,24 @@ const emit = defineEmits([
 ])
 
 const isReceipt = computed(() => props.type === 'receipt')
+
+const fiscalYearOptions = computed(() => {
+  const statusMap = {
+    open: 'مفتوحة',
+    closed: 'مغلقة',
+    locked: 'مجمدة',
+  }
+
+  const items = props.fiscalYears.map((fy) => {
+    const statusText = fy.status_label || statusMap[fy.status] || ''
+    return {
+      id: fy.id,
+      name: statusText ? `${fy.name} (${statusText})` : fy.name,
+    }
+  })
+
+  return [{ id: '', name: 'كل السنوات المالية' }, ...items]
+})
 
 const formatIsoDate = (d) => {
   const year = d.getFullYear()

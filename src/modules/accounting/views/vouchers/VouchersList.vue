@@ -14,14 +14,17 @@
       </AppButton>
     </div>
 
-    <!-- فلاتر البحث والحالة والتواريخ مع زر طباعة التقرير (تم تمرير نوع السند) -->
+    <!-- فلاتر البحث والسنة المالية والحالة والتواريخ مع زر طباعة التقرير -->
     <VouchersFilter
       :type="type"
       v-model:searchQuery="searchQuery"
+      v-model:fiscalYearFilter="fiscalYearFilter"
+      :fiscal-years="fiscalYears"
       v-model:statusFilter="statusFilter"
       v-model:dateFrom="dateFrom"
       v-model:dateTo="dateTo"
       @update:searchQuery="onSearch"
+      @update:fiscalYearFilter="handlePageChange(1)"
       @update:statusFilter="handlePageChange(1)"
       @update:dateFrom="handlePageChange(1)"
       @update:dateTo="handlePageChange(1)"
@@ -112,6 +115,7 @@ import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore'
 import { useVoucherStore } from '@/modules/accounting/stores/voucherStore'
+import { useFiscalYearStore } from '@/modules/accounting/stores/fiscalYearStore'
 
 import AppButton from '@/components/ui/AppButton.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
@@ -130,9 +134,11 @@ const props = defineProps({
 const router = useRouter()
 const authStore = useAuthStore()
 const voucherStore = useVoucherStore()
+const fiscalYearStore = useFiscalYearStore()
 const toast = useToast()
 
 const { vouchers, pagination, loading } = storeToRefs(voucherStore)
+const { fiscalYears } = storeToRefs(fiscalYearStore)
 
 const isReceipt = computed(() => props.type === 'receipt')
 
@@ -148,12 +154,37 @@ const createPermission = computed(() => (isReceipt.value ? 'receipt.create' : 'p
 const updatePermission = computed(() => (isReceipt.value ? 'receipt.update' : 'payment.update'))
 const deletePermission = computed(() => (isReceipt.value ? 'receipt.delete' : 'payment.delete'))
 
-// الفلاتر والبحث والتواريخ
+// الفلاتر والبحث والسنة المالية والتواريخ
 const searchQuery = ref('')
+const fiscalYearFilter = ref('')
 const statusFilter = ref('')
 const dateFrom = ref('')
 const dateTo = ref('')
 let searchTimeout = null
+
+const resolveDefaultFiscalYear = () => {
+  const years = fiscalYears.value || []
+  if (years.length === 0) return ''
+
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  const sortedYears = [...years].sort((a, b) =>
+    String(b.start_date || '').localeCompare(String(a.start_date || '')),
+  )
+
+  const openYears = sortedYears.filter((fy) => fy.status === 'open')
+
+  const currentOpenYear = openYears.find((fy) => {
+    const start = String(fy.start_date || '').slice(0, 10)
+    const end = String(fy.end_date || '').slice(0, 10)
+    return start && end && todayStr >= start && todayStr <= end
+  })
+
+  if (currentOpenYear) return currentOpenYear.id
+  if (openYears.length > 0) return openYears[0].id
+  return sortedYears[0].id
+}
 
 const onSearch = () => {
   clearTimeout(searchTimeout)
@@ -166,6 +197,7 @@ const handlePageChange = async (page = 1) => {
   const filters = {
     page,
     search: searchQuery.value,
+    fiscal_year_id: fiscalYearFilter.value || undefined,
     status: statusFilter.value,
     date_from: dateFrom.value || undefined,
     date_to: dateTo.value || undefined,
@@ -190,15 +222,22 @@ watch(
   },
 )
 
-onMounted(() => {
-  handlePageChange()
+onMounted(async () => {
+  if (fiscalYears.value.length === 0) {
+    await fiscalYearStore.fetchFiscalYears()
+  }
+  if (fiscalYearFilter.value === '') {
+    fiscalYearFilter.value = resolveDefaultFiscalYear()
+  }
+  await handlePageChange(1)
 })
 
-// فتح تقرير المصروفات / الإيرادات في نافذة مستقلة مع تمرير نوع السند الحالي
+// فتح تقرير المصروفات / الإيرادات في نافذة مستقلة مع تمرير نوع السند والسنة المالية
 const openExpensesReport = () => {
   const query = {
     type: props.type,
   }
+  if (fiscalYearFilter.value) query.fiscal_year_id = fiscalYearFilter.value
   if (dateFrom.value) query.date_from = dateFrom.value
   if (dateTo.value) query.date_to = dateTo.value
   if (statusFilter.value) query.status = statusFilter.value

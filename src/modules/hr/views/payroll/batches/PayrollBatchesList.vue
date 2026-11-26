@@ -1,47 +1,39 @@
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-16">
-    <!-- رأس الصفحة مع تبديل التبويبات -->
+  <div class="space-y-4 max-w-7xl mx-auto pb-16">
+    <!-- رأس الصفحة المدمج مع تبديل التبويبات -->
     <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-section p-5 rounded-2xl border border-surface-border shadow-sm"
+      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-surface-section px-5 py-3.5 rounded-2xl border border-surface-border shadow-sm"
     >
-      <div>
-        <h1 class="text-2xl font-bold text-text-primary flex items-center gap-2">
-          <span class="p-2 bg-primary/10 text-primary rounded-xl">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          </span>
-          مركز إدارة مسيرات الرواتب
-        </h1>
-        <p class="text-sm text-text-muted mt-1">
-          إعداد مسيرات جديدة، معاينة الاستحقاقات والخصومات، والترحيل المالي المباشر للحسابات.
-        </p>
+      <div class="flex items-center gap-3">
+        <span class="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        </span>
+        <div>
+          <h1 class="text-lg font-bold text-text-primary">إدارة مسيرات الرواتب</h1>
+          <p class="text-xs text-text-muted">
+            مراجعة مسير الشهر الحالي، توزيع المبلغ المستلم للصرف، والاعتماد المباشر.
+          </p>
+        </div>
       </div>
 
-      <div class="flex p-1 bg-surface-ground rounded-xl border border-surface-border">
+      <div class="flex p-1 bg-surface-ground rounded-xl border border-surface-border shrink-0">
         <button
           @click="activeTab = 'new'"
           :class="[
             activeTab === 'new'
               ? 'bg-surface-section shadow text-primary font-bold'
               : 'text-text-muted hover:text-text-primary font-medium',
-            'px-5 py-2.5 rounded-lg text-sm transition-all flex items-center gap-2',
+            'px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5',
           ]"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
-          إعداد مسير جديد
+          مسير الشهر الحالي
         </button>
         <button
           @click="activeTab = 'history'"
@@ -49,135 +41,112 @@
             activeTab === 'history'
               ? 'bg-surface-section shadow text-primary font-bold'
               : 'text-text-muted hover:text-text-primary font-medium',
-            'px-5 py-2.5 rounded-lg text-sm transition-all flex items-center gap-2',
+            'px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5',
           ]"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
           سجل المسيرات
         </button>
       </div>
     </div>
 
-    <!-- تبويب 1: إعداد مسير جديد -->
-    <div v-show="activeTab === 'new'" class="space-y-6">
-      <!-- شريط خطوات التحكم والتحديد (Control Toolbar) -->
-      <div
-        class="bg-surface-section p-5 rounded-2xl border border-surface-border shadow-sm space-y-4"
-      >
-        <div class="border-b border-surface-border pb-3 flex items-center justify-between">
-          <span
-            class="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2"
-          >
-            <span class="w-2 h-2 rounded-full bg-primary"></span>
-            معايير دورة الرواتب المستهدفة
-          </span>
-          <span
-            v-if="selectedPeriodObject"
-            class="text-xs font-mono bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold"
-          >
-            الفترة: {{ selectedPeriodObject.start_date }} إلى {{ selectedPeriodObject.end_date }}
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- الخطوة 1: مجموعة الدفع -->
-          <div>
-            <label
-              class="block text-xs font-bold text-text-primary mb-1.5 flex items-center gap-1.5"
-            >
-              <span
-                class="w-5 h-5 rounded-full bg-surface-ground border border-surface-border flex items-center justify-center text-[10px] font-bold"
-                >1</span
-              >
-              مجموعة الدفع *
-            </label>
+    <!-- تبويب 1: مسير الشهر الحالي -->
+    <div v-show="activeTab === 'new'" class="space-y-4">
+      <!-- شريط معايير الدورة المدمج -->
+      <div class="bg-surface-section p-4 rounded-2xl border border-surface-border shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+          <!-- 1. مجموعة الدفع -->
+          <div class="md:col-span-4">
+            <label class="block text-[11px] font-bold text-text-muted mb-1">مجموعة الدفع</label>
             <select
               v-model="selectedPayGroupId"
-              class="w-full px-3.5 py-2.5 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm transition-all"
+              @change="onGroupChanged"
+              :disabled="payrollStore.isInitializing"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm transition-all disabled:opacity-50"
             >
               <option value="">-- اختر مجموعة الدفع --</option>
-              <option v-for="group in payGroupStore.groups" :key="group.id" :value="group.id">
-                {{ group.name }} (دورية: {{ formatFrequency(group.frequency) }})
+              <option v-for="group in availableGroups" :key="group.id" :value="group.id">
+                {{ group.name }} ({{ formatFrequency(group.frequency) }})
               </option>
             </select>
           </div>
 
-          <!-- الخطوة 2: الفترة المالية -->
-          <div>
-            <label
-              class="block text-xs font-bold text-text-primary mb-1.5 flex items-center gap-1.5"
-            >
-              <span
-                class="w-5 h-5 rounded-full bg-surface-ground border border-surface-border flex items-center justify-center text-[10px] font-bold"
-                >2</span
-              >
-              الفترة المالية المفتوحة *
-            </label>
+          <!-- 2. الفترة المالية -->
+          <div class="md:col-span-4">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[11px] font-bold text-text-muted">الفترة المالية</label>
+              <span v-if="selectedPeriodObject" class="text-[11px] font-mono text-text-muted">
+                {{ formatDateOnly(selectedPeriodObject.start_date) }} —
+                {{ formatDateOnly(selectedPeriodObject.end_date) }}
+              </span>
+            </div>
             <select
               v-model="selectedPayPeriodId"
-              class="w-full px-3.5 py-2.5 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm transition-all disabled:opacity-50"
-              :disabled="!selectedPayGroupId || payPeriodStore.loading"
+              @change="onPeriodOrTypeChanged"
+              :disabled="!selectedPayGroupId || payrollStore.isInitializing"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm transition-all disabled:opacity-50"
             >
-              <option value="">
-                {{ !selectedPayGroupId ? 'اختر مجموعة الدفع أولاً' : '-- اختر الفترة المالية --' }}
-              </option>
-              <option v-for="period in payPeriodStore.periods" :key="period.id" :value="period.id">
-                {{ period.name }}
+              <option value="">-- اختر الفترة المالية --</option>
+              <option v-for="period in availablePeriods" :key="period.id" :value="period.id">
+                {{ period.name }} {{ period.status === 'closed' ? '(معتمدة)' : '' }}
               </option>
             </select>
-            <span
-              v-if="
-                selectedPayGroupId && payPeriodStore.periods.length === 0 && !payPeriodStore.loading
-              "
-              class="text-xs text-rose-500 block mt-1"
-            >
-              لا توجد فترات مالية مفتوحة لهذه المجموعة.
-            </span>
           </div>
 
-          <!-- الخطوة 3: نوع المسير -->
-          <div>
-            <label
-              class="block text-xs font-bold text-text-primary mb-1.5 flex items-center gap-1.5"
-            >
+          <!-- 3. نوع المسير وحالته -->
+          <div class="md:col-span-4">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-[11px] font-bold text-text-muted">نوع المسير</label>
               <span
-                class="w-5 h-5 rounded-full bg-surface-ground border border-surface-border flex items-center justify-center text-[10px] font-bold"
-                >3</span
+                v-if="payrollStore.activeBatch && payrollStore.activeBatch.can_edit"
+                class="text-[11px] font-bold text-primary"
               >
-              نوع المسير التشغيلي *
-            </label>
+                مُرحّل وقابل للتعديل ({{ payrollStore.activeBatch.number }})
+              </span>
+              <span
+                v-else-if="payrollStore.isCurrentBatchLocked"
+                class="text-[11px] font-bold text-amber-500"
+              >
+                مقفل زمنياً
+              </span>
+              <span v-else-if="isReadyToProcess" class="text-[11px] font-bold text-emerald-500">
+                جاهز للاعتماد
+              </span>
+            </div>
             <select
               v-model="selectedRunType"
-              class="w-full px-3.5 py-2.5 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm transition-all disabled:opacity-50"
-              :disabled="!selectedPayPeriodId"
+              @change="onPeriodOrTypeChanged"
+              :disabled="!selectedPayPeriodId || payrollStore.isInitializing"
+              class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm transition-all disabled:opacity-50"
             >
-              <option value="regular">مسير اعتيادي (شامل للأساسي والبدلات والخصومات)</option>
-              <option value="overtime_only">مسير عمل إضافي فقط (طوارئ الحرب والراحات)</option>
+              <option value="regular">مسير اعتيادي (شامل)</option>
+              <option value="overtime_only">مسير عمل إضافي فقط</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- حالة الشاشة عند اكتمال الاختيارات وبدء التجهيز -->
-      <template v-if="isReadyToProcess">
-        <!-- بطاقات الملخص المالي اللحظي -->
+      <!-- حالة التحميل الأولي التلقائي -->
+      <div
+        v-if="payrollStore.isInitializing"
+        class="bg-surface-section border border-surface-border p-12 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm"
+      >
+        <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-primary mb-3"></div>
+        <h3 class="text-sm font-bold text-text-primary">جاري تجهيز مسير الشهر الحالي...</h3>
+      </div>
+
+      <!-- محتوى المسير الجاهز -->
+      <template v-else-if="isReadyToProcess">
+        <!-- بطاقات الملخص المالي وإدخال المبلغ المستلم -->
         <PayrollSummaryCards />
 
-        <!-- شريط التصفية والبحث والإجراءات السريعة (Sticky Bar) -->
+        <!-- شريط التصفية والبحث والإجراءات السريعة -->
         <div
-          class="sticky top-4 z-20 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-surface-section/95 backdrop-blur-md p-4 rounded-2xl border border-surface-border shadow-md transition-all"
+          class="sticky top-3 z-20 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-surface-section/95 backdrop-blur-md px-4 py-3 rounded-2xl border border-surface-border shadow-md"
         >
-          <div class="flex flex-1 flex-col sm:flex-row items-center gap-3">
+          <div class="flex flex-1 flex-col sm:flex-row items-center gap-2.5">
             <div class="flex-1 w-full relative">
               <svg
-                class="w-4 h-4 absolute right-3.5 top-3 text-text-muted"
+                class="w-4 h-4 absolute right-3 top-2.5 text-text-muted"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -193,14 +162,14 @@
                 type="text"
                 v-model="searchQuery"
                 placeholder="بحث باسم الموظف أو رقمه الوظيفي..."
-                class="w-full pl-3.5 pr-10 py-2 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm"
+                class="w-full pl-3 pr-9 py-1.5 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm"
               />
             </div>
 
-            <div class="w-full sm:w-52">
+            <div class="w-full sm:w-48">
               <select
                 v-model="filterDepartment"
-                class="w-full px-3 py-2 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm"
+                class="w-full px-3 py-1.5 bg-surface-ground border border-surface-border rounded-xl text-text-primary focus:border-primary outline-none text-sm"
               >
                 <option value="">كافة الإدارات</option>
                 <option v-for="dept in availableDepartments" :key="dept.id" :value="dept.id">
@@ -209,34 +178,23 @@
               </select>
             </div>
 
-            <!-- إحصائيات سريعة وخيار إخفاء المرحلين -->
-            <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
-              <span
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold"
-                title="عدد الموظفين الجاهزين للمسير"
-              >
-                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                جاهز: {{ readyCount }}
-              </span>
-
-              <label
-                v-if="processedCount > 0"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-ground border border-surface-border text-xs text-text-muted hover:text-text-primary cursor-pointer select-none transition-colors"
-                title="إخفاء الموظفين الذين تم ترحيلهم بالفعل لهذه الدورة"
-              >
-                <input
-                  type="checkbox"
-                  v-model="hideProcessed"
-                  class="w-3.5 h-3.5 text-primary bg-surface-section border-surface-border rounded cursor-pointer"
-                />
-                <span>إخفاء المرحلين ({{ processedCount }})</span>
-              </label>
-            </div>
+            <label
+              v-if="processedCount > 0"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-ground border border-surface-border text-xs text-text-muted hover:text-text-primary cursor-pointer select-none shrink-0"
+            >
+              <input
+                type="checkbox"
+                v-model="hideProcessed"
+                class="w-3.5 h-3.5 text-primary bg-surface-section border-surface-border rounded cursor-pointer"
+              />
+              <span>إخفاء المرحلين ({{ processedCount }})</span>
+            </label>
           </div>
 
-          <!-- أزرار الإجراء السريع والاعتماد -->
-          <div class="flex items-center gap-3 shrink-0 justify-end">
+          <!-- أزرار التحديد والاعتماد / الحفظ -->
+          <div class="flex items-center gap-2.5 shrink-0 justify-end">
             <AppButton
+              v-if="!payrollStore.isCurrentBatchLocked"
               size="sm"
               variant="secondary"
               @click="selectAllSelectable"
@@ -247,11 +205,20 @@
             </AppButton>
 
             <AppButton
-              v-if="selectedEmployees.length > 0 && authStore.can('hr.payroll.post')"
+              v-if="
+                selectedEmployees.length > 0 &&
+                !payrollStore.isCurrentBatchLocked &&
+                authStore.can('hr.payroll.post')
+              "
               @click="openPostingModal"
-              class="bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-lg shadow-emerald-600/20 text-sm font-bold px-5"
+              :class="
+                payrollStore.editingBatchId
+                  ? 'bg-primary hover:bg-primary/90 shadow-primary/20'
+                  : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+              "
+              class="text-white border-none shadow-lg text-xs font-bold px-4 py-2"
             >
-              <span class="flex items-center gap-2">
+              <span class="flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     stroke-linecap="round"
@@ -260,13 +227,17 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                اعتماد مسير ({{ selectedEmployees.length }}) موظف
+                {{
+                  payrollStore.editingBatchId
+                    ? `حفظ وتحديث المسير (${selectedEmployees.length})`
+                    : `اعتماد مسير (${selectedEmployees.length}) موظف`
+                }}
               </span>
             </AppButton>
           </div>
         </div>
 
-        <!-- جدول الموظفين وحالة الاستحقاق -->
+        <!-- جدول الموظفين المرتب أبجدياً مع تحديث الصرف والمتبقي لحظياً -->
         <AppCard class="overflow-hidden border border-surface-border rounded-2xl">
           <AppTable
             :headers="tableHeaders"
@@ -279,7 +250,7 @@
                 <input
                   type="checkbox"
                   :checked="isAllSelected"
-                  :disabled="selectableEmployees.length === 0"
+                  :disabled="selectableEmployees.length === 0 || payrollStore.isCurrentBatchLocked"
                   @change="toggleSelectAll"
                   class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer disabled:opacity-40"
                   title="تحديد الكل"
@@ -293,7 +264,7 @@
                 <span
                   v-if="item.is_processed"
                   class="p-1 bg-emerald-500/10 text-emerald-600 rounded-full"
-                  title="تم اعتماد راتب هذا الموظف مسبقاً في هذه الدورة"
+                  title="تم اعتماد راتب هذا الموظف في مسير آخر لهذه الدورة"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -309,16 +280,17 @@
                   type="checkbox"
                   :value="item.id"
                   v-model="selectedEmployees"
-                  class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer"
+                  :disabled="payrollStore.isCurrentBatchLocked"
+                  class="w-4 h-4 text-primary bg-surface-ground border-surface-border rounded cursor-pointer disabled:opacity-50"
                 />
               </div>
             </template>
 
             <!-- خلية الموظف -->
             <template #cell-employee_info="{ item }">
-              <div class="flex items-center gap-3 py-1">
+              <div class="flex items-center gap-2.5 py-0.5">
                 <div
-                  class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0"
+                  class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0"
                 >
                   {{ item.full_name?.charAt(0) || 'م' }}
                 </div>
@@ -348,20 +320,60 @@
               </div>
             </template>
 
+            <!-- خلية صافي الاستحقاق (100%) -->
+            <template #cell-net_salary="{ item }">
+              <span
+                v-if="employeeDisbursementMap[item.id]"
+                class="font-mono font-bold text-sm text-text-primary"
+              >
+                {{ formatCurrency(employeeDisbursementMap[item.id].net_salary) }}
+              </span>
+              <span v-else class="text-xs text-text-muted">---</span>
+            </template>
+
+            <!-- خلية المقرر صرفه حالياً (تتحدث لحظياً أثناء الإدخال) -->
+            <template #cell-paid_amount="{ item }">
+              <span
+                v-if="employeeDisbursementMap[item.id]"
+                class="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400"
+              >
+                {{ formatCurrency(employeeDisbursementMap[item.id].paid_amount) }}
+              </span>
+              <span v-else class="text-xs text-text-muted">---</span>
+            </template>
+
+            <!-- خلية المتبقي (مديونية للموظف - تتحدث لحظياً أثناء الإدخال) -->
+            <template #cell-remaining_amount="{ item }">
+              <template v-if="employeeDisbursementMap[item.id]">
+                <span
+                  v-if="employeeDisbursementMap[item.id].remaining_amount > 0"
+                  class="font-mono font-bold text-xs px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20"
+                >
+                  {{ formatCurrency(employeeDisbursementMap[item.id].remaining_amount) }}
+                </span>
+                <span v-else class="font-mono text-xs text-text-muted">0.00</span>
+              </template>
+              <span v-else class="text-xs text-text-muted">---</span>
+            </template>
+
             <!-- خلية الحالة -->
             <template #cell-status="{ item }">
               <span
                 v-if="item.is_processed"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
               >
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                تم الترحيل مسبقاً
+                مُرحّل بمسير آخر
+              </span>
+              <span
+                v-else-if="isEmployeeInActiveBatch(item.id)"
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+              >
+                مدرج في المسير
               </span>
               <span
                 v-else
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
               >
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                 جاهز للمسير
               </span>
             </template>
@@ -389,7 +401,7 @@
                       d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                     />
                   </svg>
-                  معاينة القسيمة
+                  القسيمة
                 </AppButton>
               </div>
             </template>
@@ -397,37 +409,24 @@
         </AppCard>
       </template>
 
-      <!-- شاشة الإرشاد قبل اختيار المعايير -->
+      <!-- حالة عدم وجود مجموعات دفع نشطة -->
       <div
         v-else
-        class="bg-surface-section border border-surface-border p-14 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm"
+        class="bg-surface-section border border-surface-border p-12 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm"
       >
-        <div
-          class="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4"
-        >
-          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-        </div>
-        <h3 class="text-lg font-bold text-text-primary mb-1">ابدأ بتحديد معايير المسير</h3>
-        <p class="text-sm text-text-muted max-w-md mx-auto leading-relaxed">
-          يرجى اختيار مجموعة الدفع ثم تحديد الفترة المالية ونوع المسير من الشريط العلوي لاستعراض
-          قائمة الموظفين المستحقين والبدء في المعاينة والاعتماد.
+        <h3 class="text-base font-bold text-text-primary mb-1">لا توجد دورة رواتب متاحة حالياً</h3>
+        <p class="text-xs text-text-muted max-w-md mx-auto">
+          يرجى التأكد من وجود مجموعة دفع نشطة وفترة مالية معرفة في إعدادات الرواتب.
         </p>
       </div>
     </div>
 
     <!-- تبويب 2: سجل المسيرات السابقة -->
     <div v-if="activeTab === 'history'">
-      <PayrollHistoryTable @rolled-back="onPayrollRolledBack" />
+      <PayrollHistoryTable @edit-batch="onEditBatchFromHistory" />
     </div>
 
-    <!-- النافذة المنبثقة لمعاينة قسيمة الراتب -->
+    <!-- النافذة المنبثقة لمعاينة قسيمة الراتب الشفافة -->
     <PayslipPreviewModal
       v-if="isPreviewModalOpen && selectedPeriodObject"
       v-model="isPreviewModalOpen"
@@ -436,11 +435,11 @@
       :run-type="selectedRunType"
     />
 
-    <!-- النافذة المنبثقة للاعتماد النهائي والترحيل المحاسبي -->
+    <!-- النافذة المنبثقة للاعتماد النهائي أو التحديث المباشر -->
     <PayrollPostingModal
       v-if="isPostingModalOpen && selectedPeriodObject"
       v-model="isPostingModalOpen"
-      :employee-ids="selectedEmployees"
+      :employee-ids="orderedSelectedEmployeeIds"
       :pay-period="selectedPeriodObject"
       :run-type="selectedRunType"
       @posted="onPayrollPosted"
@@ -452,8 +451,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { usePayrollStore } from '@/modules/hr/stores/payrollStore'
-import { usePayGroupStore } from '@/modules/hr/stores/payGroupStore'
-import { usePayPeriodStore } from '@/modules/hr/stores/payPeriodStore'
 
 import PayrollSummaryCards from './PayrollSummaryCards.vue'
 import PayrollHistoryTable from './PayrollHistoryTable.vue'
@@ -465,10 +462,12 @@ import AppButton from '@/components/ui/AppButton.vue'
 
 const authStore = useAuthStore()
 const payrollStore = usePayrollStore()
-const payGroupStore = usePayGroupStore()
-const payPeriodStore = usePayPeriodStore()
 
 const activeTab = ref('new')
+
+// قوائم المجموعات والفترات القادمة من التهيئة التلقائية
+const availableGroups = ref([])
+const availablePeriods = ref([])
 
 // حالات معايير المسير
 const selectedPayGroupId = ref('')
@@ -481,7 +480,6 @@ const searchQuery = ref('')
 const filterDepartment = ref('')
 const hideProcessed = ref(false)
 
-// دالة مساعدة لترجمة دورية الدفع
 const formatFrequency = (freq) => {
   const map = {
     monthly: 'شهري',
@@ -492,31 +490,37 @@ const formatFrequency = (freq) => {
   return map[freq] || freq
 }
 
-// كائن الفترة المحدد كاملاً
+const formatDateOnly = (val) => {
+  if (!val) return ''
+  return String(val).slice(0, 10)
+}
+
+const formatCurrency = (value) => {
+  return Number(value || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
 const selectedPeriodObject = computed(() => {
-  return payPeriodStore.periods.find((p) => p.id === selectedPayPeriodId.value) || null
+  return availablePeriods.value.find((p) => p.id === selectedPayPeriodId.value) || null
 })
 
-// فحص اكتمال متطلبات بدء المعالجة
 const isReadyToProcess = computed(() => {
   return Boolean(selectedPayGroupId.value && selectedPayPeriodId.value && selectedRunType.value)
 })
 
-// قائمة الموظفين المؤهلين القادمة مباشرة ومحسوبة بدقة من الخادم
+// ترتيب الموظفين أبجدياً بالاسم
 const groupEmployees = computed(() => {
-  return payrollStore.eligibleEmployees
+  return [...payrollStore.eligibleEmployees].sort((a, b) =>
+    (a.full_name || '').localeCompare(b.full_name || '', 'ar'),
+  )
 })
 
-// أعداد سريعة للإحصائيات بناءً على خاصية is_processed المباشرة
 const processedCount = computed(() => {
   return groupEmployees.value.filter((emp) => emp.is_processed).length
 })
 
-const readyCount = computed(() => {
-  return groupEmployees.value.filter((emp) => !emp.is_processed).length
-})
-
-// فلترة الموظفين حسب البحث، الإدارة، وخيار إخفاء المرحلين
 const filteredEmployees = computed(() => {
   return groupEmployees.value.filter((emp) => {
     const search = searchQuery.value.trim().toLowerCase()
@@ -535,7 +539,6 @@ const filteredEmployees = computed(() => {
   })
 })
 
-// قائمة الإدارات المتاحة من كافة موظفي المجموعة حتى لا تختفي الإدارات عند التصفية
 const availableDepartments = computed(() => {
   const deps = new Map()
   groupEmployees.value.forEach((emp) => {
@@ -546,62 +549,101 @@ const availableDepartments = computed(() => {
   return Array.from(deps, ([id, name]) => ({ id, name }))
 })
 
-// الموظفون المؤهلون للاختيار (الذين لم يتم ترحيل رواتبهم بعد)
 const selectableEmployees = computed(() => {
   return filteredEmployees.value.filter((emp) => !emp.is_processed)
 })
 
-// أعمدة الجدول
+// معرفات الموظفين المحددين مرتبة أبجدياً لمطابقة ترتيب العرض والتقريب مع الخلفية
+const orderedSelectedEmployeeIds = computed(() => {
+  const selectedSet = new Set(selectedEmployees.value.map((id) => Number(id)))
+  return groupEmployees.value.filter((emp) => selectedSet.has(Number(emp.id))).map((emp) => emp.id)
+})
+
+// خريطة توزيع الصرف والمتبقي لكل موظف محدد (تتحدث لحظياً أثناء كتابة المبلغ)
+const employeeDisbursementMap = computed(() => {
+  return payrollStore.computeEmployeesDisbursement(orderedSelectedEmployeeIds.value)
+})
+
+// فحص هل الموظف كان مدرجاً أصلاً في المسير القائم الجاري تعديله
+const activeBatchEmployeeSet = computed(() => {
+  const ids = payrollStore.activeBatch?.payslips
+    ? Object.keys(payrollStore.activeBatch.payslips).map((id) => Number(id))
+    : []
+  return new Set(ids)
+})
+
+const isEmployeeInActiveBatch = (empId) => {
+  return activeBatchEmployeeSet.value.has(Number(empId))
+}
+
 const tableHeaders = computed(() => [
-  { key: 'selection', label: '', class: 'w-12 text-center' },
-  { key: 'employee_info', label: 'الموظف / الرقم الوظيفي', class: 'min-w-[220px]' },
-  { key: 'job_details', label: 'الوظيفة والإدارة', class: 'min-w-[170px]' },
-  { key: 'status', label: 'حالة الصرف', class: 'min-w-[140px]' },
-  { key: 'actions', label: 'الإجراءات', class: 'text-left min-w-[120px]' },
+  { key: 'selection', label: '', class: 'w-11 text-center' },
+  { key: 'employee_info', label: 'الموظف', class: 'min-w-[190px]' },
+  { key: 'job_details', label: 'الوظيفة والإدارة', class: 'min-w-[150px]' },
+  { key: 'net_salary', label: 'صافي المستحق', class: 'text-left min-w-[120px]' },
+  { key: 'paid_amount', label: 'المقرر صرفه', class: 'text-left min-w-[120px]' },
+  { key: 'remaining_amount', label: 'المتبقي (مديونية)', class: 'text-left min-w-[120px]' },
+  { key: 'status', label: 'الحالة', class: 'min-w-[125px]' },
+  { key: 'actions', label: 'الإجراءات', class: 'text-left min-w-[105px]' },
 ])
 
+// دالة موحدة لتطبيق استجابة التهيئة التلقائية على حالة الشاشة
+const applyInitializationData = (data) => {
+  availableGroups.value = data.groups || []
+  availablePeriods.value = data.periods || []
+  selectedPayGroupId.value = data.selected_group_id || ''
+  selectedPayPeriodId.value = data.selected_period?.id || ''
+  selectedRunType.value = data.run_type || 'regular'
+  selectedEmployees.value = Array.isArray(data.selected_employee_ids)
+    ? [...data.selected_employee_ids]
+    : []
+}
+
+// التحميل التلقائي لمسير الشهر الحالي فور فتح الصفحة
 onMounted(async () => {
-  await payGroupStore.fetchPayGroups({ is_active: 1 })
+  const data = await payrollStore.initializePayroll()
+  applyInitializationData(data)
 })
 
-// مراقب 1: تغيير مجموعة الدفع يفرغ الفترات السابقة ويجلب الفترات المفتوحة للمجموعة الجديدة
-watch(selectedPayGroupId, async (newGroupId) => {
-  selectedPayPeriodId.value = ''
-  selectedEmployees.value = []
+// عند تغيير مجموعة الدفع يدوياً
+const onGroupChanged = async () => {
   filterDepartment.value = ''
-  payrollStore.eligibleEmployees = []
-  if (newGroupId) {
-    await payPeriodStore.fetchOpenPeriods(newGroupId)
-  } else {
-    payPeriodStore.periods = []
-  }
-})
+  const params = selectedPayGroupId.value
+    ? { pay_group_id: selectedPayGroupId.value, run_type: selectedRunType.value }
+    : {}
+  const data = await payrollStore.initializePayroll(params)
+  applyInitializationData(data)
+}
 
-// مراقب 2: جلب الموظفين المؤهلين بدقة من الخادم والتحديد التلقائي لغير المرحلين
-watch([selectedPayPeriodId, selectedRunType], async ([newPeriodId, newRunType]) => {
-  selectedEmployees.value = []
-  if (newPeriodId && newRunType) {
-    await payrollStore.fetchEligibleEmployees(newPeriodId, newRunType)
-    selectedEmployees.value = selectableEmployees.value.map((emp) => emp.id)
-  } else {
-    payrollStore.eligibleEmployees = []
-  }
-})
+// عند تغيير الفترة المالية أو نوع المسير يدوياً
+const onPeriodOrTypeChanged = async () => {
+  if (!selectedPayGroupId.value || !selectedPayPeriodId.value) return
+  const data = await payrollStore.initializePayroll({
+    pay_group_id: selectedPayGroupId.value,
+    pay_period_id: selectedPayPeriodId.value,
+    run_type: selectedRunType.value,
+  })
+  applyInitializationData(data)
+}
 
-// مراقب 3: تحديث ملخص الحساب المالي عند تغيير اختيار الموظفين
+// تحديث ملخص الحساب المالي وتوزيع الصرف عند تغيير اختيار الموظفين
 watch(
   [selectedEmployees, selectedPayPeriodId, selectedRunType],
   async ([newEmployees, newPeriodId, newRunType]) => {
     if (newEmployees.length > 0 && newPeriodId && newRunType) {
-      await payrollStore.fetchBatchSummary(newEmployees, newPeriodId, newRunType)
+      await payrollStore.fetchBatchSummary(
+        newEmployees,
+        newPeriodId,
+        newRunType,
+        payrollStore.editingBatchId,
+      )
     } else {
-      payrollStore.fetchBatchSummary([], null, null)
+      await payrollStore.fetchBatchSummary([], null, null)
     }
   },
   { deep: true },
 )
 
-// فحص اختيار الكل للموظفين المؤهلين
 const isAllSelected = computed(() => {
   return (
     selectableEmployees.value.length > 0 &&
@@ -610,6 +652,7 @@ const isAllSelected = computed(() => {
 })
 
 const toggleSelectAll = (event) => {
+  if (payrollStore.isCurrentBatchLocked) return
   if (event.target.checked) {
     selectedEmployees.value = selectableEmployees.value.map((emp) => emp.id)
   } else {
@@ -618,6 +661,7 @@ const toggleSelectAll = (event) => {
 }
 
 const selectAllSelectable = () => {
+  if (payrollStore.isCurrentBatchLocked) return
   selectedEmployees.value = selectableEmployees.value.map((emp) => emp.id)
 }
 
@@ -630,49 +674,29 @@ const openPreviewModal = (employee) => {
   isPreviewModalOpen.value = true
 }
 
-// التحكم بنافذة الاعتماد النهائي
+// التحكم بنافذة الاعتماد أو التحديث المباشر
 const isPostingModalOpen = ref(false)
 
 const openPostingModal = () => {
-  if (selectedEmployees.value.length === 0) return
+  if (selectedEmployees.value.length === 0 || payrollStore.isCurrentBatchLocked) return
   isPostingModalOpen.value = true
 }
 
-// عند اكتمال الترحيل بنجاح (يدعم الترحيل الجزئي والإغلاق التلقائي للفترة عند اكتمال الموظفين)
+// بعد الاعتماد أو التحديث: إعادة تحميل حالة المسير المحدث وسجل المسيرات
 const onPayrollPosted = async () => {
-  selectedEmployees.value = []
-
-  if (selectedRunType.value === 'regular' && selectedPayGroupId.value) {
-    await payPeriodStore.fetchOpenPeriods(selectedPayGroupId.value)
-
-    const isPeriodStillOpen = payPeriodStore.periods.some(
-      (period) => period.id === selectedPayPeriodId.value,
-    )
-
-    if (isPeriodStillOpen && selectedPayPeriodId.value) {
-      await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
-    } else {
-      selectedPayPeriodId.value = ''
-      payrollStore.eligibleEmployees = []
-    }
-  } else if (selectedPayPeriodId.value && selectedRunType.value) {
-    await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
-  }
-
-  activeTab.value = 'history'
+  const data = await payrollStore.initializePayroll({
+    pay_group_id: selectedPayGroupId.value,
+    pay_period_id: selectedPayPeriodId.value,
+    run_type: selectedRunType.value,
+  })
+  applyInitializationData(data)
   payrollStore.fetchBatchesHistory()
 }
 
-// عند التراجع عن مسير من السجل: تحديث الفترات المفتوحة وحالة الموظفين فوراً
-const onPayrollRolledBack = async () => {
-  selectedEmployees.value = []
-
-  if (selectedPayGroupId.value) {
-    await payPeriodStore.fetchOpenPeriods(selectedPayGroupId.value)
-  }
-
-  if (selectedPayPeriodId.value && selectedRunType.value) {
-    await payrollStore.fetchEligibleEmployees(selectedPayPeriodId.value, selectedRunType.value)
-  }
+// عند طلب تعديل مسير من جدول السجل
+const onEditBatchFromHistory = async (batch) => {
+  activeTab.value = 'new'
+  const data = await payrollStore.initializePayroll({ batch_id: batch.id })
+  applyInitializationData(data)
 }
 </script>

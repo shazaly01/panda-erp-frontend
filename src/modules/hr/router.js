@@ -41,6 +41,10 @@ const TeamAttendancePage = () => import('./views/attendance/TeamAttendancePage.v
 const LeavesList = () => import('./views/leaves/LeavesList.vue')
 const LoansList = () => import('./views/loans/LoansList.vue')
 
+// 🌟 منظومة اللوائح والمخالفات والجزاءات التأديبية
+const ViolationTypesList = () => import('./views/disciplinary/ViolationTypesList.vue')
+const DisciplinaryActionsList = () => import('./views/disciplinary/DisciplinaryActionsList.vue')
+
 // 🌟 إضافات الجدولة الذكية (التجاوزات الفردية والطوارئ)
 const ShiftOverridesList = () => import('./views/schedules/ShiftOverridesList.vue')
 const CalendarExceptionsList = () => import('./views/schedules/CalendarExceptionsList.vue')
@@ -198,6 +202,14 @@ export const hrDashboardRoutes = [
         component: LoansList,
         meta: { permission: 'hr.loans.view' },
       },
+      {
+        path: 'disciplinary-actions',
+        name: 'DisciplinaryActionsList',
+        component: DisciplinaryActionsList,
+        meta: {
+          pageTitle: 'سجل المخالفات والجزاءات التأديبية',
+        },
+      },
 
       {
         path: 'shift-overrides',
@@ -293,7 +305,7 @@ export const hrDashboardRoutes = [
         meta: { permission: 'hr.working_schedules.update' },
       },
 
-      // --- الإعدادات (هياكل وقواعد الرواتب) ---
+      // --- الإعدادات (هياكل وقواعد الرواتب واللوائح) ---
       {
         path: 'salary-rules',
         name: 'SalaryRulesList',
@@ -347,6 +359,15 @@ export const hrDashboardRoutes = [
         name: 'overtime-policies.edit',
         component: OvertimePolicyFormPage,
         meta: { permission: 'hr.overtime_policies.manage' },
+      },
+      {
+        path: 'violation-types',
+        name: 'ViolationTypesList',
+        component: ViolationTypesList,
+        meta: {
+          permission: 'hr.settings.manage',
+          pageTitle: 'لوائح المخالفات وسلالم الجزاءات',
+        },
       },
     ],
   },

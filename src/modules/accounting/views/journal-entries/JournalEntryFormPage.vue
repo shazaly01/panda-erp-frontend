@@ -248,15 +248,17 @@ onMounted(async () => {
 watch(
   () => form.value.date,
   async (newDate) => {
-    if (newDate) {
-      const isOpen = await fiscalYearStore.checkDateStatus(newDate)
-      if (!isOpen) {
-        fiscalYearError.value = 'هذا التاريخ يقع في سنة مالية مغلقة أو غير معرفة.'
-      } else {
-        fiscalYearError.value = ''
-      }
+    if (!newDate) {
+      fiscalYearError.value = ''
+      return
+    }
+
+    const isOpen = await fiscalYearStore.checkDateStatus(newDate)
+    if (form.value.date === newDate) {
+      fiscalYearError.value = isOpen ? '' : 'هذا التاريخ يقع في سنة مالية مغلقة أو غير معرفة.'
     }
   },
+  { immediate: true },
 )
 
 watch(
